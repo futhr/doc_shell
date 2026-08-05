@@ -1,0 +1,21 @@
+/_build/
+/cover/
+/deps/
+/doc/
+/priv/doc_shell/
+/priv/plts/
+/tmp/
+erl_crash.dump
+*.ez
+*.tar
+*.beam
+.DS_Store
+.elixir_ls/
+.lexical/
+
+# Dexter source index
+/.dexter/
+
+# Local agent files
+/.agents/
+/.codex/
