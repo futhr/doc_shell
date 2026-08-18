@@ -56,12 +56,18 @@ Every file has the same outer shape:
 {
   "schema_version": "doc-shell/v1",
   "generated_at": "2026-08-05T09:12:44.000000Z",
+  "generation_id": "Lve95gjOVATpfV8EL5X4nx",
   "data": {}
 }
 ```
 
 `generated_at` is an ISO 8601 UTC timestamp. `data` holds the payload described
-below. `DocShell.Artifact.read/1` returns only `data`, after checking the rest.
+below. `generation_id` is an opaque identifier shared by every artifact and
+manifest written by one build. It prevents a runtime reload racing a build
+from publishing files taken from different generations. Consumers compare it
+for equality and must not infer ordering or content from it.
+
+`DocShell.Artifact.read/1` returns only `data`, after checking the rest.
 
 Files are written atomically, so a reader concurrent with a build sees either
 the previous artifact or the complete new one.
@@ -224,6 +230,11 @@ somewhere of your choosing — outside the artifact directories, since
 ```
 
 A renderer can use it to discover what is available without probing for files.
+
+The manifest is also the commit marker for a generation. Writers emit it after
+the artifacts it lists. `DocShell.Web.Cache` accepts a snapshot only when the
+manifest exactly names the other JSON files in its directory and every
+envelope carries the manifest's `generation_id`.
 
 Each manifest describes only its own directory, so the one in `private/` lists
 what is in `private/` — today, nothing. A manifest is a promise that those

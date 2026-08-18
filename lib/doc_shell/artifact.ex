@@ -8,6 +8,7 @@ defmodule DocShell.Artifact do
       {
         "schema_version": "doc-shell/v1",
         "generated_at": "2026-08-05T09:12:44.000000Z",
+        "generation_id": "Lve95gjOVATpfV8EL5X4nx",
         "data": { ... }
       }
 
@@ -41,35 +42,71 @@ defmodule DocShell.Artifact do
 
   `generated_at` defaults to now and is accepted explicitly so a caller
   stamping several artifacts in one build can give them all the same timestamp.
+  `generation_id` identifies the complete build that the artifact belongs to;
+  pass the same value for every file in one artifact tree.
 
   ## Examples
 
-      iex> DocShell.Artifact.envelope(%{"id" => "intro"}, ~U[2026-08-05 09:12:44Z])
+      iex> DocShell.Artifact.envelope(
+      ...>   %{"id" => "intro"},
+      ...>   ~U[2026-08-05 09:12:44Z],
+      ...>   "example-generation"
+      ...> )
       %{
         "schema_version" => "doc-shell/v1",
         "generated_at" => "2026-08-05T09:12:44Z",
+        "generation_id" => "example-generation",
         "data" => %{"id" => "intro"}
       }
   """
+  @spec envelope(term()) :: map()
   @spec envelope(term(), DateTime.t()) :: map()
-  def envelope(payload, generated_at \\ DateTime.utc_now()) do
+  @spec envelope(term(), DateTime.t(), String.t()) :: map()
+  def envelope(
+        payload,
+        generated_at \\ DateTime.utc_now(),
+        generation_id \\ new_generation_id()
+      ) do
     %{
       "schema_version" => DocShell.schema_version(),
       "generated_at" => DateTime.to_iso8601(generated_at),
+      "generation_id" => generation_id,
       "data" => payload
     }
+  end
+
+  @doc """
+  Creates an opaque identifier for one complete artifact generation.
+
+  Build pipelines should create one identifier and pass it to every
+  `write/3` call in that generation. The value carries no ordering semantics.
+  """
+  @spec new_generation_id() :: String.t()
+  def new_generation_id do
+    16
+    |> :crypto.strong_rand_bytes()
+    |> Base.url_encode64(padding: false)
   end
 
   @doc """
   Writes a payload to `path` as a pretty-printed, enveloped JSON artifact.
 
   Creates the destination directory if needed, and swaps the file into place
-  with a rename so concurrent readers never observe a partial write.
+  with a rename so concurrent readers never observe a partial write. Pass
+  `:generated_at` and `:generation_id` when writing a complete tree so every
+  file carries the same build identity.
   """
   @spec write(Path.t(), term()) :: :ok | {:error, term()}
-  def write(path, payload) do
+  @spec write(Path.t(), term(), keyword()) :: :ok | {:error, term()}
+  def write(path, payload, opts \\ []) do
+    generated_at = Keyword.get_lazy(opts, :generated_at, &DateTime.utc_now/0)
+    generation_id = Keyword.get_lazy(opts, :generation_id, &new_generation_id/0)
+
     with :ok <- path |> Path.dirname() |> File.mkdir_p(),
-         {:ok, json} <- payload |> envelope() |> Jason.encode_to_iodata(pretty: true) do
+         {:ok, json} <-
+           payload
+           |> envelope(generated_at, generation_id)
+           |> Jason.encode_to_iodata(pretty: true) do
       write_atomically(path, [json, "\n"])
     end
   end

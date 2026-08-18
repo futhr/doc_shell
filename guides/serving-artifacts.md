@@ -43,9 +43,11 @@ Requires Plug — both modules are only compiled when it is installed.
 ### Reloading
 
 After a rebuild, `DocShell.Web.Cache.reload/1` re-reads the directory. It is
-all-or-nothing: the table is only replaced once every file has parsed and
-validated, so a reload racing a build cannot leave a mix of old and new
-artifacts behind.
+all-or-nothing: the manifest must exactly describe the directory and every
+file must carry its `generation_id`. The cache fills a new immutable ETS
+generation, then atomically switches the active generation. A reader racing a
+reload therefore sees the complete old or complete new snapshot, never an
+empty or mixed one. A failed validation leaves the prior snapshot active.
 
 ```elixir
 :ok = DocShell.Web.Cache.reload()

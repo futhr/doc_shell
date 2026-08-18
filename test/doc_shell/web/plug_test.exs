@@ -6,13 +6,13 @@ defmodule DocShell.Web.PlugTest do
   import Plug.Test
   import DocShell.TmpDir
 
-  alias DocShell.Artifact
+  alias DocShell.ArtifactFixture
   alias DocShell.Web.Cache
   alias DocShell.Web.Plug
 
   setup do
     root = tmp_dir!()
-    :ok = Artifact.write(Path.join(root, "guide.json"), %{"id" => "intro"})
+    ArtifactFixture.write_snapshot!(root, [{"guide.json", %{"id" => "intro"}}])
     start_supervised!({Cache, dir: root})
     {:ok, root: root}
   end
@@ -77,7 +77,12 @@ defmodule DocShell.Web.PlugTest do
 
     test "a non-JSON-encodable cache entry yields 500, not a crash" do
       # Tuples are not JSON-encodable; inject one directly into the cache table.
-      :ets.insert(Cache, {"bad.json", %{"data" => {:not, :encodable}}})
+      generation_id = ArtifactFixture.active_generation(Cache)
+
+      :ets.insert(
+        Cache,
+        {{:artifact, generation_id, "bad.json"}, %{"data" => {:not, :encodable}}}
+      )
 
       assert request("/bad").status == 500
     end

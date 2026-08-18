@@ -44,6 +44,9 @@ dependencies — install them only when the host uses those integrations.
   literal `"doc-shell/v1"`.
 - Read and write artifacts through `DocShell.Artifact`. Do not bypass the
   envelope or encode artifact JSON by hand.
+- Treat `generation_id` as an opaque snapshot identity. Every artifact and the
+  manifest from one build must carry the same value; never synthesize or reuse
+  one across builds.
 - Keep generated content renderer-neutral: no host UI, routing, tenant, or
   authorization assumptions inside an artifact.
 - Produce presentation data with `DocShell.Presentation.NavigationItem`,
@@ -74,6 +77,8 @@ dependencies — install them only when the host uses those integrations.
 
 - Add `DocShell.Web.Cache` to a supervision tree before serving artifacts, and
   call `DocShell.Web.Cache.reload/1` after a rebuild.
+- Keep `manifest.json` beside the artifacts it lists. Cache startup and reload
+  reject missing manifests, unlisted files, and mixed generation identifiers.
 - Use `DocShell.Web.Plug` only when Plug is installed. Both web modules are
   compiled conditionally.
 - Supply host authorization through the plug's `:gate` option — a unary function

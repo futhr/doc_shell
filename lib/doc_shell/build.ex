@@ -147,6 +147,9 @@ defmodule DocShell.Build do
   defp write_tree(config, result) do
     public = Config.fetch!(config, :public_dir)
     private = Config.fetch!(config, :private_dir)
+    generated_at = DateTime.utc_now()
+    generation_id = DocShell.Artifact.new_generation_id()
+    write_opts = [generated_at: generated_at, generation_id: generation_id]
 
     artifacts = [
       {"modules.json", index_only(result.modules)},
@@ -158,17 +161,21 @@ defmodule DocShell.Build do
       {"content.json", result.presentation.content}
     ]
 
-    with :ok <- write_all(public, artifacts),
-         :ok <- write_manifest(public, Enum.map(artifacts, &elem(&1, 0))),
-         :ok <- write_manifest(private, []) do
+    with :ok <- write_all(public, artifacts, write_opts),
+         :ok <- write_manifest(public, Enum.map(artifacts, &elem(&1, 0)), write_opts),
+         :ok <- write_manifest(private, [], write_opts) do
       write_openapi_spec(config, result.openapi)
     end
   end
 
   defp index_only(entries), do: Enum.map(entries, &Map.delete(&1, "ast"))
 
-  defp write_manifest(dir, names) do
-    DocShell.Artifact.write(Path.join(dir, "manifest.json"), %{"artifacts" => names})
+  defp write_manifest(dir, names, write_opts) do
+    DocShell.Artifact.write(
+      Path.join(dir, "manifest.json"),
+      %{"artifacts" => names},
+      write_opts
+    )
   end
 
   defp write_openapi_spec(config, openapi) do
@@ -178,9 +185,9 @@ defmodule DocShell.Build do
     end
   end
 
-  defp write_all(dir, artifacts) do
+  defp write_all(dir, artifacts, write_opts) do
     Enum.reduce_while(artifacts, :ok, fn {name, data}, :ok ->
-      case DocShell.Artifact.write(Path.join(dir, name), data) do
+      case DocShell.Artifact.write(Path.join(dir, name), data, write_opts) do
         :ok -> {:cont, :ok}
         error -> {:halt, error}
       end

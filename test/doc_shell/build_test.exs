@@ -56,6 +56,16 @@ defmodule DocShell.BuildTest do
 
     assert {:ok, content} = Artifact.read(Path.join(public, "content.json"))
     assert is_map(content)
+
+    generation_ids =
+      [public, private]
+      |> Enum.flat_map(&Path.wildcard(Path.join(&1, "*.json")))
+      |> Enum.map(fn path ->
+        {:ok, envelope} = Artifact.read_envelope(path)
+        envelope["generation_id"]
+      end)
+
+    assert [_] = Enum.uniq(generation_ids)
   end
 
   test "build returns an error tuple (not a crash) when the output tree is unwritable" do

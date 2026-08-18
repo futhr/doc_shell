@@ -10,13 +10,14 @@ defmodule DocShell.ArtifactTest do
 
   doctest DocShell.Artifact
 
-  describe "envelope/2" do
-    test "wraps a payload with schema version and an ISO8601 timestamp" do
+  describe "envelope/3" do
+    test "wraps a payload with schema version, timestamp, and generation" do
       at = ~U[2026-07-23 10:20:30Z]
-      env = Artifact.envelope(%{"a" => 1}, at)
+      env = Artifact.envelope(%{"a" => 1}, at, "generation-one")
 
       assert env["schema_version"] == DocShell.schema_version()
       assert env["generated_at"] == "2026-07-23T10:20:30Z"
+      assert env["generation_id"] == "generation-one"
       assert env["data"] == %{"a" => 1}
     end
   end
@@ -137,6 +138,7 @@ defmodule DocShell.ArtifactTest do
       assert data == %{"a" => 1}
       assert envelope["data"] == %{"a" => 1}
       assert envelope["schema_version"] == DocShell.schema_version()
+      assert is_binary(envelope["generation_id"])
       assert {:ok, _, _} = DateTime.from_iso8601(envelope["generated_at"])
     end
 
@@ -194,11 +196,13 @@ defmodule DocShell.ArtifactTest do
       end
     end
 
-    property "every envelope carries the current version and a parseable timestamp" do
+    property "every envelope carries the current version, generation, and timestamp" do
       check all(value <- payload_generator()) do
         envelope = Artifact.envelope(value)
 
         assert envelope["schema_version"] == DocShell.schema_version()
+        assert is_binary(envelope["generation_id"])
+        assert envelope["generation_id"] != ""
         assert envelope["data"] == value
         assert {:ok, _, _} = DateTime.from_iso8601(envelope["generated_at"])
       end

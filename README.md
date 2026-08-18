@@ -159,9 +159,14 @@ Every file is wrapped in a versioned envelope:
 {
   "schema_version": "doc-shell/v1",
   "generated_at": "2026-08-05T09:12:44.000000Z",
+  "generation_id": "Lve95gjOVATpfV8EL5X4nx",
   "data": {}
 }
 ```
+
+Every file from one build carries the same opaque `generation_id`. Runtime
+caches use it with each directory's manifest to reject a partially observed
+build instead of combining artifacts from different generations.
 
 Markdown from every source becomes the same recursive node shape, so a renderer
 writes one walker rather than one per source:

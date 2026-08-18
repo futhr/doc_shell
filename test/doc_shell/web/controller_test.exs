@@ -6,12 +6,13 @@ defmodule DocShell.Web.ControllerTest do
   import Plug.Test
   import DocShell.TmpDir
 
+  alias DocShell.ArtifactFixture
   alias DocShell.Web.Cache
   alias DocShell.Web.Controller
 
   setup do
     root = tmp_dir!("doc-shell-controller")
-    :ok = DocShell.Artifact.write(Path.join(root, "guide.json"), %{"id" => "intro"})
+    ArtifactFixture.write_snapshot!(root, [{"guide.json", %{"id" => "intro"}}])
     start_supervised!({Cache, dir: root})
     :ok
   end
@@ -43,7 +44,12 @@ defmodule DocShell.Web.ControllerTest do
   end
 
   test "returns 500 for a non-JSON-encodable cache entry" do
-    :ets.insert(Cache, {"bad.json", {:not, :encodable}})
+    generation_id = ArtifactFixture.active_generation(Cache)
+
+    :ets.insert(
+      Cache,
+      {{:artifact, generation_id, "bad.json"}, %{"data" => {:not, :encodable}}}
+    )
 
     conn = Controller.show(conn(:get, "/docs/bad"), %{"artifact" => "bad"})
     assert conn.status == 500
