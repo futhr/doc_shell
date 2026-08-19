@@ -14,13 +14,14 @@ defmodule DocShell.Generate.OpenApi do
   `DocShell.Generate.OpenApi.Adapters.OpenApiSpex`, and
   `DocShell.Generate.OpenApi.Adapters.RawJson` — and hosts add their own by
   implementing one callback. Writing one is covered in the
-  [OpenAPI adapters guide](openapi-adapters.html).
+  [OpenAPI adapters notebook](openapi-adapters.html).
 
   ## What this module guarantees
 
   `extract/2` is the trust boundary between the build and code it does not
-  own. It checks that the adapter module exists and exports `load/1`, calls it
-  inside a rescue so an adapter raising cannot take down a build with a
+  own. It asks Elixir to load the adapter module, checks that loaded modules
+  export `load/1`, calls the callback inside a rescue so an adapter raising
+  cannot take down a build with a
   stacktrace instead of a reason, and validates that whatever came back
   actually claims to be OpenAPI 3.0 or 3.1.
 
@@ -32,7 +33,8 @@ defmodule DocShell.Generate.OpenApi do
 
   ## Errors
 
-    * `{:error, :invalid_adapter}` — the module does not export `load/1`
+    * `{:error, :nofile}` — the adapter module could not be loaded
+    * `{:error, :invalid_adapter}` — the loaded module does not export `load/1`
     * `{:error, :invalid_openapi_source}` — the adapter returned something
       other than `{:ok, map}` or `{:error, reason}`
     * `{:error, :invalid_openapi_document}` — no usable `openapi` version key

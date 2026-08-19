@@ -44,7 +44,7 @@ defmodule DocShell.Generate.OpenApi.Adapter do
   that, which is why they can live in the package without either library being
   a hard dependency.
 
-  See the [OpenAPI adapters guide](openapi-adapters.html) for a fuller walk
+  See the [OpenAPI adapters notebook](openapi-adapters.html) for a fuller walk
   through, and `DocShell.Generate.OpenApi` for what happens to the result.
   """
 
