@@ -10,8 +10,27 @@ Documentation extraction for Elixir, without a renderer attached.
 [Installation](#installation) |
 [Quick start](#quick-start) |
 [Configuration](#configuration) |
+[Try it interactively](#try-it-interactively) |
 [Artifacts](#what-comes-out) |
 [Serving](#serving-it)
+
+---
+
+## Try It Interactively
+
+The Livebook notebooks are executable tutorials, not extra API reference pages.
+Start with the build-pipeline notebook in a browser:
+
+[![Run in Livebook](https://livebook.dev/badge/v1/blue.svg)](https://livebook.dev/run?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fmain%2Fnotebooks%2Fbuild-pipeline.livemd)
+
+- **[The Build Pipeline](https://livebook.dev/run?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fmain%2Fnotebooks%2Fbuild-pipeline.livemd)** -
+  Follow one build from source files to generated artifacts.
+- **[Artifact Contract](https://livebook.dev/run?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fmain%2Fnotebooks%2Fartifact-contract.livemd)** -
+  Inspect the public JSON shapes, envelopes, manifests, and presentation indexes.
+- **[OpenAPI Adapters](https://livebook.dev/run?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fmain%2Fnotebooks%2Fopenapi-adapters.livemd)** -
+  Work through the default document, shipped adapters, custom adapters, and validation errors.
+- **[Serving Artifacts](https://livebook.dev/run?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fmain%2Fnotebooks%2Fserving-artifacts.livemd)** -
+  Walk through static serving, runtime caching, reloads, gates, and controller usage.
 
 ---
 
@@ -141,7 +160,9 @@ For a guided walkthrough, start with
 [artifact contract notebook](notebooks/artifact-contract.livemd) documents every
 file DocShell writes, and the
 [OpenAPI adapters notebook](notebooks/openapi-adapters.livemd) covers adapter
-selection and implementation.
+selection and implementation. Use the
+[serving artifacts notebook](notebooks/serving-artifacts.livemd) when wiring the
+runtime cache, Plug, or a host controller.
 
 ## What comes out
 
