@@ -12,11 +12,17 @@ This tutorial shows the default behavior, the three shipped adapters, a custom
 adapter, and the shallow validation DocShell applies before accepting a
 document.
 
-## Prerequisites
+## Setup
 
-Run this notebook in a project where `:doc_shell` is available.
+Run this notebook from Livebook's default standalone runtime. The setup cell
+installs DocShell from this repository's `main` branch so the examples match the
+notebook you opened.
 
 ```elixir
+Mix.install([
+  {:doc_shell, github: "futhr/doc_shell", branch: "main"}
+])
+
 Application.ensure_all_started(:doc_shell)
 ```
 

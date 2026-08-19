@@ -17,14 +17,17 @@ this repository.
 - Where filtering, paths, search text, and OpenAPI fit in the pipeline
 - How DocShell fails when a configured source is invalid
 
-## Prerequisites
+## Setup
 
-Run this notebook in a project where `:doc_shell` is available. In this
-repository, run `mix setup` first and open the notebook with the project runtime.
-If you copy the notebook into another Livebook environment, install the package
-there before running the cells.
+Run this notebook from Livebook's default standalone runtime. The setup cell
+installs DocShell from this repository's `main` branch so the examples match the
+notebook you opened.
 
 ```elixir
+Mix.install([
+  {:doc_shell, github: "futhr/doc_shell", branch: "main"}
+])
+
 Application.ensure_all_started(:doc_shell)
 ```
 

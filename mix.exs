@@ -86,10 +86,17 @@ defmodule DocShell.MixProject do
 
   # Declared in :dev and :test, where this library's own tests exercise the
   # integrations, and where `mix hex.build` reads them for the published
-  # metadata. Dropped elsewhere: AshOaskit's tree needs Plug and StreamData,
-  # which are not available in :prod or :no_optional, and it would fail inside
-  # those dependencies long before reaching any DocShell module.
-  defp optional_integrations(env) when env in [:prod, :no_optional], do: []
+  # metadata. Plug remains declared in :prod so hosts that install Plug compile
+  # the optional web modules in dependency order. AshOaskit is dropped in :prod
+  # because its tree needs development-only support libraries in this package's
+  # own build, and the adapter resolves it at runtime instead.
+  defp optional_integrations(:no_optional), do: []
+
+  defp optional_integrations(:prod) do
+    [
+      {:plug, "~> 1.16", optional: true}
+    ]
+  end
 
   defp optional_integrations(_) do
     [

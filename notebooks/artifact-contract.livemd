@@ -23,7 +23,17 @@ The contract includes:
 Changing one of those shapes is a breaking change unless it is strictly
 backward-compatible.
 
+## Setup
+
+Run this notebook from Livebook's default standalone runtime. The setup cell
+installs DocShell from this repository's `main` branch so the examples match the
+notebook you opened.
+
 ```elixir
+Mix.install([
+  {:doc_shell, github: "futhr/doc_shell", branch: "main"}
+])
+
 Application.ensure_all_started(:doc_shell)
 DocShell.schema_version()
 ```

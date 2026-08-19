@@ -12,12 +12,21 @@ This tutorial shows the three normal serving choices:
 The examples build artifacts in a temporary directory so the notebook is safe to
 run repeatedly.
 
-## Prerequisites
+## Setup
 
 `DocShell.Web.Cache` is always available. `DocShell.Web.Plug` and
 `DocShell.Web.Controller` are compiled only when Plug is installed.
 
+Run this notebook from Livebook's default standalone runtime. The setup cell
+installs Plug before DocShell so the optional web modules are available in the
+tutorial cells that exercise request handling.
+
 ```elixir
+Mix.install([
+  {:plug, "~> 1.16"},
+  {:doc_shell, github: "futhr/doc_shell", branch: "main"}
+])
+
 Application.ensure_all_started(:doc_shell)
 ```
 
