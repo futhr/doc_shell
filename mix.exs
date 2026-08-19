@@ -132,7 +132,8 @@ defmodule DocShell.MixProject do
     [
       files: ~w(
         lib
-        guides
+        notebooks
+        bench/output
         .formatter.exs
         mix.exs
         README.md
@@ -154,9 +155,10 @@ defmodule DocShell.MixProject do
       main: "readme",
       extras: [
         "README.md": [title: "Overview"],
-        "guides/artifact-contract.md": [title: "Artifact Contract"],
-        "guides/openapi-adapters.md": [title: "OpenAPI Adapters"],
-        "guides/serving-artifacts.md": [title: "Serving Artifacts"],
+        "notebooks/build-pipeline.livemd": [title: "The Build Pipeline"],
+        "notebooks/openapi-adapters.livemd": [title: "OpenAPI Adapters"],
+        "notebooks/artifact-contract.livemd": [title: "Artifact Contract"],
+        "notebooks/serving-artifacts.livemd": [title: "Serving Artifacts"],
         "bench/output/ast.md": [title: "Markdown Parsing"],
         "bench/output/presentation.md": [title: "Presentation Projection"],
         "bench/output/json.md": [title: "Term Coercion"],
@@ -166,7 +168,7 @@ defmodule DocShell.MixProject do
         "usage-rules.md": [title: "Usage Rules (LLM)"]
       ],
       groups_for_extras: [
-        Guides: ~r/guides\//,
+        Tutorials: ~r/notebooks\//,
         Performance: ~r/bench\/output\//,
         Reference: ~r/CHANGELOG|CONTRIBUTING|usage-rules|LICENSE/
       ],

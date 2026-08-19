@@ -1,0 +1,340 @@
+# Artifact Contract
+
+DocShell writes JSON artifacts for renderers that may live in other
+repositories and release on their own cadence. Those JSON shapes are public API,
+not an internal data structure. This notebook walks through the contract using a
+real build so each field is tied to something you can inspect.
+
+The examples write to a disposable temp directory. They do not modify
+`priv/doc_shell/`.
+
+## What is public API
+
+The contract includes:
+
+- the artifact tree
+- the envelope around every JSON payload
+- the `doc-shell/v1` schema version
+- the shape of `navigation.json`, `search-index.json`, `content.json`,
+  `modules.json`, `guides.json`, `livebooks.json`, `openapi.json`, and
+  `manifest.json`
+- the in-memory presentation shape accepted from graph-backed hosts
+
+Changing one of those shapes is a breaking change unless it is strictly
+backward-compatible.
+
+```elixir
+Application.ensure_all_started(:doc_shell)
+DocShell.schema_version()
+```
+
+## Build a small artifact tree
+
+The fixture has one module, one Markdown guide, one Livebook notebook, and the
+default empty OpenAPI document.
+
+````elixir
+workspace =
+  Path.join(
+    System.tmp_dir!(),
+    "doc_shell_artifact_contract_#{System.unique_integer([:positive])}"
+  )
+
+File.rm_rf!(workspace)
+
+guide_dir = Path.join(workspace, "guides")
+livebook_dir = Path.join(workspace, "notebooks")
+public_dir = Path.join(workspace, "public")
+private_dir = Path.join(workspace, "private")
+
+Enum.each([guide_dir, livebook_dir, public_dir, private_dir], &File.mkdir_p!/1)
+
+File.write!(Path.join(guide_dir, "contract-guide.md"), """
+---
+id: contract-guide
+title: Contract Guide
+audience: developers
+locale: en
+---
+
+# Contract Guide
+
+The renderer reads this guide through `content.json`.
+""")
+
+File.write!(Path.join(livebook_dir, "operator-runbook.livemd"), """
+# Operator Runbook
+
+Operational notebooks are indexed as documentation, but DocShell does not run
+their code.
+
+```elixir
+:ok
+```
+""")
+
+build_opts = [
+  modules: [DocShell.Config],
+  guide_bases: [guide_dir],
+  livebook_base: livebook_dir,
+  public_dir: public_dir,
+  private_dir: private_dir
+]
+
+{:ok, result} = DocShell.Build.run(build_opts)
+
+%{
+  public_dir: public_dir,
+  private_dir: private_dir,
+  presentation_keys: Map.keys(result.presentation) |> Enum.sort()
+}
+````
+
+## The artifact tree
+
+DocShell writes public renderer artifacts under `:public_dir` and a separate
+manifest under `:private_dir`.
+
+```elixir
+Path.wildcard(Path.join(workspace, "**/*.json"))
+|> Enum.map(&Path.relative_to(&1, workspace))
+|> Enum.sort()
+```
+
+The three files most renderers read directly are:
+
+- `navigation.json`
+- `search-index.json`
+- `content.json`
+
+The source indexes and `openapi.json` are still public artifacts. They are
+useful for ingestion, search, coverage reporting, and API reference tooling.
+
+## The envelope
+
+Every artifact file has the same outer object. `DocShell.Artifact.read/1`
+returns only `"data"`; use `read_envelope/1` when the envelope itself matters.
+
+```elixir
+{:ok, navigation_envelope} =
+  DocShell.Artifact.read_envelope(Path.join(public_dir, "navigation.json"))
+
+Map.take(navigation_envelope, ["schema_version", "generated_at", "generation_id"])
+```
+
+The fields are:
+
+| Field | Meaning |
+| --- | --- |
+| `schema_version` | The public contract version, currently `doc-shell/v1` |
+| `generated_at` | ISO 8601 UTC timestamp for the build |
+| `generation_id` | Opaque id shared by every artifact in one build |
+| `data` | The payload for that artifact |
+
+`generation_id` is only for equality checks. Do not sort by it, decode meaning
+from it, or reuse it between builds.
+
+## One generation per tree
+
+Every public artifact and the public manifest from one build share a generation
+id. The runtime cache uses that to reject mixed snapshots.
+
+```elixir
+Path.wildcard(Path.join(public_dir, "*.json"))
+|> Map.new(fn path ->
+  {:ok, envelope} = DocShell.Artifact.read_envelope(path)
+  {Path.basename(path), envelope["generation_id"]}
+end)
+```
+
+The value should be the same for every file in that map.
+
+## manifest.json
+
+The manifest describes exactly the artifacts beside it. It is written last and
+acts as the commit marker for a generation.
+
+```elixir
+{:ok, public_manifest} = DocShell.Artifact.read(Path.join(public_dir, "manifest.json"))
+
+public_manifest["artifacts"] |> Enum.sort()
+```
+
+The private directory has its own manifest. Today the default build writes no
+private artifacts, so the list is empty.
+
+```elixir
+DocShell.Artifact.read(Path.join(private_dir, "manifest.json"))
+```
+
+Each manifest describes its own directory. A shared manifest would lie about at
+least one side of a public/private split.
+
+## navigation.json
+
+`navigation.json` is a list of navigation items. On disk, structs have encoded
+to maps with string keys.
+
+```elixir
+{:ok, navigation} = DocShell.Artifact.read(Path.join(public_dir, "navigation.json"))
+
+navigation
+|> Enum.map(&Map.take(&1, ["id", "title", "path", "kind", "children", "meta"]))
+```
+
+The default `DocShell.Presentation.StaticGenerator` sorts entries by kind then
+title and leaves `children` empty. Hierarchy belongs to the host: maybe modules
+group by namespace, guides group by product area, and notebooks group by team.
+DocShell cannot guess that correctly.
+
+## search-index.json
+
+`search-index.json` has document identity, route path, flattened text, optional
+tokens, and scoping fields.
+
+```elixir
+{:ok, search} = DocShell.Artifact.read(Path.join(public_dir, "search-index.json"))
+
+search
+|> Enum.find(&(&1["id"] == "contract-guide"))
+|> Map.take(["id", "title", "path", "kind", "audience", "locale", "content", "tokens"])
+```
+
+`audience` and `locale` are present as `null` when unset. For guides, they come
+from frontmatter. For modules and Livebooks they are usually `null`.
+
+Tokens are present but empty by default because they duplicate data already in
+`content`. Enable them only when a host search backend wants a pre-split field.
+
+```elixir
+{:ok, token_result} = DocShell.Build.run(Keyword.put(build_opts, :search_tokens, true))
+
+token_result.presentation.search
+|> Enum.find(&(&1.id == "contract-guide"))
+|> Map.take([:id, :tokens])
+```
+
+## content.json
+
+`content.json` maps each entry id to its parsed Markdown AST. This is where page
+bodies live.
+
+```elixir
+{:ok, content} = DocShell.Artifact.read(Path.join(public_dir, "content.json"))
+
+Map.keys(content) |> Enum.sort()
+```
+
+A content node is recursive. Text nodes are plain strings. Element nodes always
+carry the same four keys: `tag`, `attrs`, `content`, and `meta`.
+
+```elixir
+content["contract-guide"] |> List.first()
+```
+
+That uniform shape is why a renderer can use one walker for module docs,
+guides, and notebooks.
+
+## modules.json, guides.json, and livebooks.json
+
+The per-source indexes carry identity and metadata for every extracted entry.
+They intentionally do not carry `"ast"`; the body already lives once in
+`content.json`.
+
+```elixir
+{:ok, module_index} = DocShell.Artifact.read(Path.join(public_dir, "modules.json"))
+{:ok, guide_index} = DocShell.Artifact.read(Path.join(public_dir, "guides.json"))
+{:ok, livebook_index} = DocShell.Artifact.read(Path.join(public_dir, "livebooks.json"))
+
+%{
+  modules: Enum.map(module_index, &Map.take(&1, ["id", "title", "kind", "meta"])),
+  guides: Enum.map(guide_index, &Map.take(&1, ["id", "title", "kind", "meta"])),
+  livebooks: Enum.map(livebook_index, &Map.take(&1, ["id", "title", "kind", "meta"]))
+}
+```
+
+The source indexes are unfiltered. If `skip_empty` removes an undocumented
+module from presentation, the module still appears in `modules.json`, which
+makes the file useful as a coverage report.
+
+```elixir
+module_index
+|> List.first()
+|> Map.has_key?("ast")
+```
+
+## openapi.json
+
+`openapi.json` contains the OpenAPI document returned by the configured adapter.
+With no adapter, DocShell writes a valid empty OpenAPI 3.1 document.
+
+```elixir
+{:ok, openapi} = DocShell.Artifact.read(Path.join(public_dir, "openapi.json"))
+
+Map.take(openapi, ["openapi", "info", "paths"])
+```
+
+Because the artifact is enveloped, standard OpenAPI tooling should not be
+pointed at `priv/doc_shell/public/openapi.json`. Set `:openapi_spec_path` when a
+tool needs the bare OpenAPI document.
+
+## In-memory presentation vs. disk JSON
+
+Before encoding, presentation data uses structs and atom keys.
+
+```elixir
+result.presentation.navigation |> List.first()
+```
+
+After reading from disk, the same artifact is JSON data with string keys.
+
+```elixir
+navigation |> List.first()
+```
+
+Both are intentional. Application code gets typed structs while artifacts stay
+plain JSON.
+
+## Graph-backed presentation
+
+Graph-backed hosts can provide their own presentation data through
+`DocShell.Presentation.GraphProjector`. The required shape is the same concept:
+schema version, navigation, search, and content. `backlinks` are optional.
+
+```elixir
+presentation = %{
+  schema_version: DocShell.schema_version(),
+  navigation: [],
+  search: [],
+  content: %{},
+  backlinks: %{
+    "contract-guide" => [
+      %DocShell.Presentation.Backlink{
+        id: "operator-runbook",
+        title: "Operator Runbook",
+        path: "/docs/livebook/operator-runbook"
+      }
+    ]
+  }
+}
+
+DocShell.Presentation.GraphProjector.validate(presentation)
+```
+
+The validator exists because a projector may live in another repository. A shape
+mistake should fail at the boundary, not later as a renderer bug.
+
+## Contract change checklist
+
+Before changing any `doc-shell/v1` shape, answer these questions:
+
+| Question | Why it matters |
+| --- | --- |
+| Does a renderer already read this field? | Removing or retyping it is breaking |
+| Can the change be additive and optional? | Optional additions are usually safe |
+| Does the value stay JSON-native? | Artifacts must not leak Elixir-only terms |
+| Does the schema version need to change? | Breaking changes require coordination |
+| Are README, usage rules, and tutorials updated? | The contract docs are part of the API |
+
+The safest rule is conservative: if a renderer could observe the change, treat
+it as public API work.

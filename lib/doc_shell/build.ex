@@ -55,7 +55,7 @@ defmodule DocShell.Build do
   its parsed body, which lives once in `content.json` under the same id.
   Writing the AST in both places doubled the tree for no reader.
 
-  See the [artifact contract guide](artifact-contract.html) for the full tree.
+  See the [artifact contract notebook](artifact-contract.html) for the full tree.
   """
 
   alias DocShell.Config
@@ -88,7 +88,7 @@ defmodule DocShell.Build do
   defp extract(config) do
     with {:ok, modules} <- ExDoc.extract(config[:modules] || []),
          {:ok, guides} <- Guides.extract(config[:guide_bases] || []),
-         {:ok, livebooks} <- Livebooks.extract(config[:livebook_base] || "livebooks"),
+         {:ok, livebooks} <- Livebooks.extract(config[:livebook_base] || "notebooks"),
          {:ok, openapi} <- openapi(config) do
       {:ok, %{modules: modules, guides: guides, livebooks: livebooks, openapi: openapi}}
     end

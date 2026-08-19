@@ -20,7 +20,7 @@ defmodule DocShell.Config do
   | --- | --- | --- |
   | `:modules` | `[]` | Modules to document. `mix doc_shell.build` fills this from the application spec. |
   | `:guide_bases` | `["guides"]` | Directories searched recursively for Markdown guides. |
-  | `:livebook_base` | `"livebooks"` | Directory searched recursively for `.livemd` notebooks. |
+  | `:livebook_base` | `"notebooks"` | Directory searched recursively for `.livemd` notebooks. |
   | `:public_dir` | `"priv/doc_shell/public"` | Where the artifact tree is written. |
   | `:private_dir` | `"priv/doc_shell/private"` | Where the private manifest is written. |
   | `:open_api_adapter` | unset | Adapter module, or unset for an empty OpenAPI document. |
@@ -77,7 +77,7 @@ defmodule DocShell.Config do
     public_dir: "priv/doc_shell/public",
     private_dir: "priv/doc_shell/private",
     guide_bases: ["guides"],
-    livebook_base: "livebooks",
+    livebook_base: "notebooks",
     open_api_options: [],
     modules: [],
     skip_empty: true,

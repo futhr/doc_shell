@@ -72,7 +72,7 @@ mix doc_shell.build
 ```
 
 That documents every module in the current application, picks up Markdown under
-`guides/` and notebooks under `livebooks/`, and writes JSON to
+`guides/` and notebooks under `notebooks/`, and writes JSON to
 `priv/doc_shell/`. It works with no configuration at all — a project that has
 set nothing still gets a complete, well-formed artifact tree.
 
@@ -100,14 +100,14 @@ former until a reader does.
 ## Configuration
 
 Everything lives under `:doc_shell`. Per-call options to `DocShell.Build.run/1`
-win over application config, which wins over the package defaults.
+win over host config, which wins over the package defaults.
 
 ```elixir
 config :doc_shell,
   # What to document
   modules: [MyApp.Accounts, MyApp.Billing],
   guide_bases: ["guides"],
-  livebook_base: "livebooks",
+  livebook_base: "notebooks",
 
   # Where it goes
   public_dir: "priv/doc_shell/public",
@@ -136,7 +136,14 @@ DocShell reads `:doc_shell` and nothing else. It will not look under your
 application's key, infer settings from `Mix.Project`, or reach into another
 library's environment.
 
-### What comes out
+For a guided walkthrough, start with
+[the build pipeline notebook](notebooks/build-pipeline.livemd). The
+[artifact contract notebook](notebooks/artifact-contract.livemd) documents every
+file DocShell writes, and the
+[OpenAPI adapters notebook](notebooks/openapi-adapters.livemd) covers adapter
+selection and implementation.
+
+## What comes out
 
 ```text
 priv/doc_shell/
@@ -190,8 +197,7 @@ keyed by the same id.
 These shapes are public API. They are consumed by renderers in other
 repositories on their own release cadence, so a schema-version bump is a
 coordinated change across all of them, not a local refactor. The
-[artifact contract guide](guides/artifact-contract.md) documents every file and
-field.
+[notebook](notebooks/artifact-contract.livemd) documents every file and field.
 
 ---
 
@@ -226,7 +232,7 @@ package:
 
 Both library-backed adapters resolve their dependency at runtime, so neither
 library is a dependency of DocShell. Writing your own means implementing one
-callback — see the [OpenAPI adapters guide](guides/openapi-adapters.md).
+callback — see the [OpenAPI adapters notebook](notebooks/openapi-adapters.livemd).
 
 ## Serving it
 
@@ -256,8 +262,8 @@ sessions, roles, or tenancy, and that callback is the whole extension point.
 Hosts that would rather keep their own pipeline can call
 `DocShell.Web.Controller.show/2` from an ordinary controller action instead.
 
-See the [serving guide](guides/serving-artifacts.md) for reloading, running
-public and internal artifact sets side by side, and the response codes.
+The [serving artifacts notebook](notebooks/serving-artifacts.livemd) walks
+through static serving, runtime caching, reloads, gates, and controller usage.
 
 ---
 

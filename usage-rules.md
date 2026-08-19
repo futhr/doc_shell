@@ -22,7 +22,7 @@ dependencies — install them only when the host uses those integrations.
   first error and names the module or file at fault; it does not skip bad
   sources.
 - Pass explicit `:modules`, `:guide_bases`, and `:livebook_base` values when the
-  host layout differs from the defaults (`[]`, `["guides"]`, `"livebooks"`).
+  host layout differs from the defaults (`[]`, `["guides"]`, `"notebooks"`).
 - Leave `:open_api_adapter` unset to emit a valid empty OpenAPI 3.1 document.
   This is a supported configuration, not a degraded one.
 - Use `DocShell.Build.run/1`'s return value to feed a database or knowledge
@@ -90,6 +90,7 @@ dependencies — install them only when the host uses those integrations.
 
 ## Further reading
 
+- [Build pipeline](https://hexdocs.pm/doc_shell/build-pipeline.html)
 - [Artifact contract](https://hexdocs.pm/doc_shell/artifact-contract.html)
 - [OpenAPI adapters](https://hexdocs.pm/doc_shell/openapi-adapters.html)
 - [Serving artifacts](https://hexdocs.pm/doc_shell/serving-artifacts.html)

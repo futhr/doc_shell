@@ -1,0 +1,344 @@
+# The Build Pipeline
+
+`DocShell.Build.run/1` is the top of DocShell's generation pipeline. It reads
+modules, Markdown guides, Livebook notebooks, and an OpenAPI document, then
+projects them into the JSON artifacts a renderer can consume.
+
+This tutorial follows one complete build from source files to artifacts. The
+examples create a disposable documentation set under your system temp directory,
+so running the notebook does not touch `priv/doc_shell/` or depend on files in
+this repository.
+
+## What you will learn
+
+- How to prepare guide and notebook sources for a build
+- What `DocShell.Build.run/1` returns in memory
+- Which files are written to disk
+- Where filtering, paths, search text, and OpenAPI fit in the pipeline
+- How DocShell fails when a configured source is invalid
+
+## Prerequisites
+
+Run this notebook in a project where `:doc_shell` is available. In this
+repository, run `mix setup` first and open the notebook with the project runtime.
+If you copy the notebook into another Livebook environment, install the package
+there before running the cells.
+
+```elixir
+Application.ensure_all_started(:doc_shell)
+```
+
+## Create a small documentation set
+
+A real host project already has modules, guides, and maybe notebooks. For a
+tutorial, a tiny generated fixture is easier to reason about. The fixture has:
+
+- one Markdown guide with YAML frontmatter
+- one `.livemd` notebook
+- one real module from DocShell itself, `DocShell.Config`
+
+````elixir
+workspace =
+  Path.join(
+    System.tmp_dir!(),
+    "doc_shell_build_pipeline_#{System.unique_integer([:positive])}"
+  )
+
+File.rm_rf!(workspace)
+
+guide_dir = Path.join(workspace, "guides")
+livebook_dir = Path.join(workspace, "notebooks")
+public_dir = Path.join(workspace, "public")
+private_dir = Path.join(workspace, "private")
+
+Enum.each([guide_dir, livebook_dir, public_dir, private_dir], &File.mkdir_p!/1)
+
+guide_path = Path.join(guide_dir, "getting-started.md")
+
+File.write!(guide_path, """
+---
+id: getting-started
+title: Getting Started
+audience: developers
+locale: en
+---
+
+# Getting Started
+
+Start with a small documentation set and add sources deliberately.
+""")
+
+livebook_path = Path.join(livebook_dir, "incident-playbook.livemd")
+
+File.write!(livebook_path, """
+# Incident Playbook
+
+This notebook is documentation too. DocShell indexes the source; it does not
+evaluate the code cell.
+
+```elixir
+System.system_time(:second)
+```
+""")
+
+%{
+  workspace: workspace,
+  guide_path: guide_path,
+  livebook_path: livebook_path,
+  public_dir: public_dir,
+  private_dir: private_dir
+}
+````
+
+## Run the build
+
+`DocShell.Build.run/1` accepts per-call options. These override host
+configuration, which overrides DocShell defaults. In tutorials and release tasks,
+explicit options make the example deterministic.
+
+```elixir
+build_opts = [
+  modules: [DocShell.Config],
+  guide_bases: [guide_dir],
+  livebook_base: livebook_dir,
+  public_dir: public_dir,
+  private_dir: private_dir
+]
+
+{:ok, result} = DocShell.Build.run(build_opts)
+
+Map.keys(result) |> Enum.sort()
+```
+
+The return value always has the same top-level keys:
+
+- `:modules` — module documentation extracted from the BEAM docs chunk
+- `:guides` — Markdown guides with parsed body and metadata
+- `:livebooks` — `.livemd` notebooks with parsed body and source metadata
+- `:openapi` — a valid OpenAPI document
+- `:presentation` — navigation, search, and content indexes
+
+## Inspect module extraction
+
+Module documentation is read from compiled BEAM documentation. That is the same
+source IEx uses for `h DocShell.Config`, which keeps the artifact aligned with
+what developers see locally.
+
+```elixir
+module_entry = Enum.find(result.modules, &(&1["id"] == "DocShell.Config"))
+
+Map.take(module_entry, ["id", "title", "kind"])
+```
+
+The module metadata carries structural information useful for renderers and
+coverage tooling.
+
+```elixir
+module_entry["meta"]
+|> Map.take(["module", "language", "moduledoc"])
+```
+
+Function, callback, and type docs are exposed as member metadata. Member docs
+stay as Markdown strings; renderers can parse them lazily instead of paying the
+cost for every member up front.
+
+```elixir
+module_entry["meta"]["members"]
+|> Enum.map(&Map.take(&1, ["kind", "name", "arity", "signatures"]))
+|> Enum.take(5)
+```
+
+## Inspect guide extraction
+
+Guides are Markdown files. Frontmatter is optional, but when it exists DocShell
+passes it through as metadata. `audience` and `locale` get a small amount of
+special treatment later because the search index exposes them as first-class
+filter fields.
+
+```elixir
+guide_entry = List.first(result.guides)
+
+Map.take(guide_entry, ["id", "title", "kind", "meta"])
+```
+
+The parsed body lives under `"ast"` in the in-memory result.
+
+```elixir
+guide_entry["ast"] |> List.first()
+```
+
+## Inspect Livebook extraction
+
+Livebooks are indexed from `.livemd` files. Unlike guides, they do not use YAML
+frontmatter; Livebook owns the top of the file, and DocShell takes the id from
+the filename and the title from the first Markdown H1.
+
+```elixir
+livebook_entry = List.first(result.livebooks)
+
+Map.take(livebook_entry, ["id", "title", "kind", "meta"])
+```
+
+Code cells remain source text in the AST. DocShell is an extractor, not a
+notebook runner.
+
+```elixir
+livebook_entry["ast"]
+|> Enum.find(fn node ->
+  node["tag"] == "pre"
+end)
+```
+
+## Inspect the OpenAPI output
+
+If no OpenAPI adapter is configured, DocShell still emits a valid empty OpenAPI
+3.1 document. That means renderers can always expect `openapi.json` to exist.
+
+```elixir
+Map.take(result.openapi, ["openapi", "info", "paths"])
+```
+
+Use the OpenAPI adapters notebook for Ash, OpenApiSpex, raw JSON, and custom
+adapter examples.
+
+## Inspect the presentation indexes
+
+The presentation layer turns all extracted entries into three renderer-facing
+indexes:
+
+- navigation — what to list
+- search — what to index
+- content — what to render for a page
+
+```elixir
+Map.keys(result.presentation) |> Enum.sort()
+```
+
+Navigation items are structs in memory. The default generator keeps the tree
+flat because hierarchy is a host product decision.
+
+```elixir
+result.presentation.navigation
+|> Enum.map(&Map.take(&1, [:id, :title, :path, :kind, :children]))
+```
+
+Search entries contain the same identity and path information plus flattened
+plain text content. Tokens are present but empty unless `search_tokens: true` is
+set.
+
+```elixir
+result.presentation.search
+|> Enum.map(&Map.take(&1, [:id, :title, :path, :kind, :audience, :locale, :tokens]))
+```
+
+Content maps ids to AST node lists. The body is stored once, keyed by id, rather
+than duplicated in the navigation and search indexes.
+
+```elixir
+Map.keys(result.presentation.content) |> Enum.sort()
+```
+
+## Inspect the written files
+
+Because `write` defaults to `true`, the build also wrote an artifact tree.
+
+```elixir
+Path.wildcard(Path.join(public_dir, "*.json"))
+|> Enum.map(&Path.basename/1)
+|> Enum.sort()
+```
+
+Use `DocShell.Artifact.read/1` to read an artifact payload. It validates the
+envelope before returning the `"data"` field.
+
+```elixir
+{:ok, manifest} = DocShell.Artifact.read(Path.join(public_dir, "manifest.json"))
+
+Map.take(manifest, ["artifacts"])
+```
+
+The private directory currently receives only its own manifest. Hosts can use
+the public and private directories with different cache processes and
+authorization rules.
+
+```elixir
+DocShell.Artifact.read(Path.join(private_dir, "manifest.json"))
+```
+
+## Skip file writes when you only need data
+
+Hosts that ingest documentation into a database or knowledge graph can keep the
+in-memory result and skip the files.
+
+```elixir
+dry_workspace =
+  Path.join(
+    System.tmp_dir!(),
+    "doc_shell_build_pipeline_dry_#{System.unique_integer([:positive])}"
+  )
+
+dry_public_dir = Path.join(dry_workspace, "public")
+dry_private_dir = Path.join(dry_workspace, "private")
+
+dry_opts =
+  build_opts
+  |> Keyword.put(:public_dir, dry_public_dir)
+  |> Keyword.put(:private_dir, dry_private_dir)
+  |> Keyword.put(:write, false)
+
+{:ok, dry_result} = DocShell.Build.run(dry_opts)
+
+%{
+  returned_keys: Map.keys(dry_result) |> Enum.sort(),
+  wrote_public_dir?: File.exists?(dry_public_dir)
+}
+```
+
+## Fail loudly on invalid sources
+
+Extraction stops at the first configured source that cannot be read. The error
+names the module or file at fault. That is intentional: silently losing a page
+is worse than failing the build.
+
+```elixir
+DocShell.Build.run(Keyword.put(build_opts, :modules, [Nonexistent.Module]))
+```
+
+Guide frontmatter is treated the same way. A malformed configured guide returns
+an error instead of disappearing from the documentation set.
+
+````elixir
+bad_guide_dir = Path.join(workspace, "bad-guides")
+File.mkdir_p!(bad_guide_dir)
+
+File.write!(Path.join(bad_guide_dir, "broken.md"), """
+---
+title: Broken
+
+# This frontmatter never closes
+""")
+
+DocShell.Build.run(
+  build_opts
+  |> Keyword.put(:modules, [])
+  |> Keyword.put(:guide_bases, [bad_guide_dir])
+)
+````
+
+## Build configuration checklist
+
+When wiring DocShell into a host application, make these decisions explicitly:
+
+| Question | Option |
+| --- | --- |
+| Which modules should be documented? | `modules: [...]`, or `mix doc_shell.build` for the current app |
+| Where do guides live? | `guide_bases: ["guides", "handbook"]` |
+| Where do notebooks live? | `livebook_base: "notebooks"` |
+| Where should JSON be written? | `public_dir:` and `private_dir:` |
+| Where does OpenAPI come from? | `open_api_adapter:` plus `open_api_options:` |
+| Does presentation come from files or a graph? | `presentation_source:` |
+| Should empty pages appear? | `skip_empty: false` if coverage views need them |
+| Should search tokens be precomputed? | `search_tokens: true` if your search backend wants them |
+
+The important boundary is simple: DocShell owns extraction and artifact shapes.
+Routing, visual hierarchy, authorization, and rendering stay in the host.

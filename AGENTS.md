@@ -14,7 +14,7 @@ keep optional integrations optional.
   identity policy to this package.
 - Add a source integration through `DocShell.Generate.OpenApi.Adapter`; do not
   couple the build pipeline directly to a host framework.
-- Update `README.md`, `usage-rules.md`, and the `guides/` whenever public
+- Update `README.md`, `usage-rules.md`, and the `notebooks/` whenever public
   configuration, behavior, or artifact shapes change. Never hand-edit
   `CHANGELOG.md`; git_ops generates it from Conventional Commit subjects.
 

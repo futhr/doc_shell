@@ -50,7 +50,7 @@ defmodule DocShell do
   and reachable from `DocShell.Presentation.Source`. Treat it as public API:
   the JSON shapes are consumed by renderers in other repositories, and a
   version bump is a coordinated change across all of them rather than a local
-  refactor. The [artifact contract guide](artifact-contract.html) documents
+  refactor. The [artifact contract notebook](artifact-contract.html) documents
   every file and field.
 
   ## Serving

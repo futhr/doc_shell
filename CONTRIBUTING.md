@@ -119,7 +119,7 @@ inputs are the ones nobody thinks to write by hand.
 
 ## Changing the artifact contract
 
-The shapes in the [artifact contract guide](guides/artifact-contract.md) are
+The shapes in the [artifact contract notebook](notebooks/artifact-contract.livemd) are
 public API. Adding an optional field is usually safe. Renaming one, removing
 one, or changing its type is not, and needs a `schema_version` bump plus a
 coordinated release across every producer and renderer.

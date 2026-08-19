@@ -29,7 +29,7 @@ defmodule DocShell.ConfigTest do
     assert config[:private_dir] == "priv/doc_shell/private"
     assert config[:title] == "Documentation"
     assert config[:guide_bases] == ["guides"]
-    assert config[:livebook_base] == "livebooks"
+    assert config[:livebook_base] == "notebooks"
     assert config[:modules] == []
   end
 

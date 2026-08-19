@@ -12,7 +12,7 @@ defmodule DocShell.Generate.Livebooks do
         "title" => "Onboarding walkthrough",
         "kind" => "livebook",
         "ast" => [...],
-        "meta" => %{"source_path" => "livebooks/onboarding.livemd"}
+        "meta" => %{"source_path" => "notebooks/onboarding.livemd"}
       }
 
   Livebook's format is Markdown, so the notebook parses with the ordinary

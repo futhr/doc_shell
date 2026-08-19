@@ -1,0 +1,301 @@
+# Serving Artifacts
+
+DocShell's primary job is generation: turn documentation sources into versioned
+JSON. Serving those JSON files is optional and belongs to the host application.
+
+This tutorial shows the three normal serving choices:
+
+- serve the files statically
+- load them into `DocShell.Web.Cache` and serve from memory
+- call `DocShell.Web.Controller.show/2` from a host-owned pipeline
+
+The examples build artifacts in a temporary directory so the notebook is safe to
+run repeatedly.
+
+## Prerequisites
+
+`DocShell.Web.Cache` is always available. `DocShell.Web.Plug` and
+`DocShell.Web.Controller` are compiled only when Plug is installed.
+
+```elixir
+Application.ensure_all_started(:doc_shell)
+```
+
+## Build artifacts to serve
+
+First create a tiny guide and build the public artifact tree.
+
+```elixir
+workspace =
+  Path.join(
+    System.tmp_dir!(),
+    "doc_shell_serving_#{System.unique_integer([:positive])}"
+  )
+
+File.rm_rf!(workspace)
+
+guide_dir = Path.join(workspace, "guides")
+public_dir = Path.join(workspace, "public")
+private_dir = Path.join(workspace, "private")
+
+Enum.each([guide_dir, public_dir, private_dir], &File.mkdir_p!/1)
+
+guide_path = Path.join(guide_dir, "serving-intro.md")
+
+File.write!(guide_path, """
+---
+id: serving-intro
+title: Serving Intro
+audience: operators
+---
+
+# Serving Intro
+
+Serve the generated JSON in the host application.
+""")
+
+build_opts = [
+  modules: [],
+  guide_bases: [guide_dir],
+  livebook_base: Path.join(workspace, "notebooks"),
+  public_dir: public_dir,
+  private_dir: private_dir
+]
+
+{:ok, _result} = DocShell.Build.run(build_opts)
+
+Path.wildcard(Path.join(public_dir, "*.json"))
+|> Enum.map(&Path.basename/1)
+|> Enum.sort()
+```
+
+## Option 1: serve files statically
+
+The simplest answer is often correct: put `priv/doc_shell/public/` behind a
+static file handler, CDN, or frontend build step and let clients fetch JSON.
+
+The files are plain JSON, but every payload is wrapped in DocShell's envelope.
+
+```elixir
+{:ok, navigation_envelope} =
+  DocShell.Artifact.read_envelope(Path.join(public_dir, "navigation.json"))
+
+Map.take(navigation_envelope, ["schema_version", "generated_at", "generation_id"])
+```
+
+Static serving works well when documentation is public and changes only on
+deploy. It does not require any module under `DocShell.Web`.
+
+## Option 2: load artifacts into the runtime cache
+
+Use `DocShell.Web.Cache` when documentation should update without a full
+redeploy, or when requests need to go through authorization before JSON is
+served.
+
+The cache reads the whole artifact directory once, validates the manifest and
+generation ids, and stores the envelopes in ETS.
+
+```elixir
+cache_name = :"doc_shell_livebook_cache_#{System.unique_integer([:positive])}"
+
+{:ok, _pid} = DocShell.Web.Cache.start_link(name: cache_name, dir: public_dir)
+
+DocShell.Web.Cache.fetch("navigation.json", cache_name)
+```
+
+`fetch/2` returns the artifact payload. `fetch_envelope/2` returns the stored
+envelope, which is what HTTP serving uses so `generated_at` stays the build
+time rather than the request time.
+
+```elixir
+{:ok, search_payload} = DocShell.Web.Cache.fetch("search-index.json", cache_name)
+{:ok, search_envelope} = DocShell.Web.Cache.fetch_envelope("search-index.json", cache_name)
+
+%{
+  payload_is_list?: is_list(search_payload),
+  envelope_keys: Map.keys(search_envelope) |> Enum.sort()
+}
+```
+
+## Reload after a rebuild
+
+`reload/1` is all-or-nothing. If the rebuilt directory is invalid, the previous
+cache generation remains active.
+
+Update the guide, rebuild into the same directory, and reload.
+
+```elixir
+File.write!(guide_path, """
+---
+id: serving-intro
+title: Serving Intro
+audience: operators
+---
+
+# Serving Intro
+
+Serve the generated JSON in the host application.
+
+This paragraph was added after the first cache load.
+""")
+
+{:ok, _updated_result} = DocShell.Build.run(build_opts)
+:ok = DocShell.Web.Cache.reload(cache_name)
+
+{:ok, updated_content} = DocShell.Web.Cache.fetch("content.json", cache_name)
+
+updated_content["serving-intro"]
+|> Enum.map(& &1["tag"])
+```
+
+Because `DocShell.Artifact.write/3` writes files atomically and the cache
+validates one generation id across the directory, readers see the old complete
+snapshot or the new complete snapshot. They do not see a half-written build.
+
+## Serve through `DocShell.Web.Plug`
+
+When Plug is installed, mount `DocShell.Web.Plug` at the route where JSON
+artifacts should be served.
+
+```text
+forward "/docs/api",
+  to: DocShell.Web.Plug,
+  init_opts: [cache: :docs_public, gate: &MyApp.Auth.allow_docs?/1]
+```
+
+The final path segment names the artifact. `.json` is optional:
+
+| Request path under the forward | Artifact |
+| --- | --- |
+| `/navigation` | `navigation.json` |
+| `/navigation.json` | `navigation.json` |
+| `/search-index` | `search-index.json` |
+| `/content` | `content.json` |
+
+The gate is the authorization boundary. Return `:ok` or `true` to allow; return
+anything else to deny.
+
+If Plug is available in this runtime, the next cell exercises the plug directly
+with `Plug.Test`.
+
+```elixir
+plug_test = Module.concat([Plug, Test])
+plug = Module.concat([DocShell, Web, Plug])
+
+if Code.ensure_loaded?(plug_test) and Code.ensure_loaded?(plug) do
+  opts = apply(plug, :init, [[cache: cache_name, gate: fn _conn -> :ok end]])
+
+  conn =
+    plug_test
+    |> apply(:conn, [:get, "/navigation", nil])
+    |> then(&apply(plug, :call, [&1, opts]))
+
+  %{
+    status: conn.status,
+    halted?: conn.halted,
+    response_keys: conn.resp_body |> Jason.decode!() |> Map.keys() |> Enum.sort()
+  }
+else
+  :plug_not_installed
+end
+```
+
+A denied gate yields `403`.
+
+```elixir
+plug_test = Module.concat([Plug, Test])
+plug = Module.concat([DocShell, Web, Plug])
+
+if Code.ensure_loaded?(plug_test) and Code.ensure_loaded?(plug) do
+  opts = apply(plug, :init, [[cache: cache_name, gate: fn _conn -> false end]])
+
+  conn =
+    plug_test
+    |> apply(:conn, [:get, "/navigation", nil])
+    |> then(&apply(plug, :call, [&1, opts]))
+
+  %{status: conn.status, body: conn.resp_body, halted?: conn.halted}
+else
+  :plug_not_installed
+end
+```
+
+Omitting a gate serves everything to everyone. That is correct for public
+documentation and wrong for internal documentation. Decide deliberately.
+
+## Run public and internal caches side by side
+
+The cache name is also the ETS table name. Use separate names for separate
+artifact directories.
+
+```text
+children = [
+  {DocShell.Web.Cache, name: :docs_public, dir: "priv/doc_shell/public"},
+  {DocShell.Web.Cache, name: :docs_internal, dir: "priv/doc_shell/private"}
+]
+```
+
+Mount them with different routes and gates:
+
+```text
+forward "/docs",
+  to: DocShell.Web.Plug,
+  init_opts: [cache: :docs_public]
+
+forward "/internal/docs",
+  to: DocShell.Web.Plug,
+  init_opts: [cache: :docs_internal, gate: &MyApp.Auth.employee?/1]
+```
+
+DocShell does not decide which reader belongs in which audience. It only gives
+the host a clean place to enforce that decision.
+
+## Serve from a host controller
+
+If the host already owns the pipeline — authentication, tenant loading,
+telemetry, rate limiting — keep that pipeline and call
+`DocShell.Web.Controller.show/2` for the response.
+
+```text
+defmodule MyAppWeb.DocsController do
+  use MyAppWeb, :controller
+
+  plug :require_authenticated_user
+
+  def show(conn, params), do: DocShell.Web.Controller.show(conn, params)
+end
+```
+
+```text
+get "/docs/api/:artifact", MyAppWeb.DocsController, :show
+```
+
+There is no gate option in the controller helper because authorization already
+belongs in the host pipeline before the helper is called.
+
+## Response behavior
+
+`DocShell.Web.Plug` and `DocShell.Web.Controller` return the same kinds of
+responses:
+
+| Status | Meaning |
+| --- | --- |
+| `200` | The stored envelope as `application/json` |
+| `403` | The plug gate refused the request |
+| `404` | No such artifact, or an invalid artifact path |
+| `500` | The artifact was cached but could not be encoded |
+
+Multi-segment paths are rejected. A request can ask for one artifact name; it
+cannot walk the filesystem.
+
+## Common deployment mistakes
+
+| Mistake | Fix |
+| --- | --- |
+| Serving an artifact directory before `manifest.json` is written | Run `mix doc_shell.build` before asset packaging or cache reload |
+| Writing a bare OpenAPI file inside the artifact directory | Use `:openapi_spec_path` outside `priv/doc_shell/public` and `private` |
+| Forgetting to reload after an out-of-band rebuild | Call `DocShell.Web.Cache.reload/1` from the deploy hook or admin action |
+| Omitting a gate on internal docs | Add a host authorization function or use a host controller pipeline |
+| Sharing one cache name for two directories | Give each cache a distinct `:name` |
+
+Generation stays renderer-neutral. Serving stays host-controlled.

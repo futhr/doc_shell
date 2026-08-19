@@ -1,0 +1,342 @@
+# OpenAPI Adapters
+
+DocShell includes `openapi.json` in every build, but it does not assume where
+the API description comes from. Some hosts derive OpenAPI from Ash domains, some
+already expose an OpenApiSpex module, and some receive a JSON file from another
+language's build pipeline.
+
+The boundary is one callback:
+`c:DocShell.Generate.OpenApi.Adapter.load/1`.
+
+This tutorial shows the default behavior, the three shipped adapters, a custom
+adapter, and the shallow validation DocShell applies before accepting a
+document.
+
+## Prerequisites
+
+Run this notebook in a project where `:doc_shell` is available.
+
+```elixir
+Application.ensure_all_started(:doc_shell)
+```
+
+## No adapter: the supported default
+
+Leaving `:open_api_adapter` unset is a valid configuration. DocShell emits an
+empty OpenAPI 3.1 document so renderers can always rely on `openapi.json`
+existing.
+
+```elixir
+{:ok, default_result} =
+  DocShell.Build.run(
+    write: false,
+    title: "Tutorial API"
+  )
+
+Map.take(default_result.openapi, ["openapi", "info", "paths"])
+```
+
+Use this when the project has no public API yet, or when the API reference is
+handled somewhere else and the renderer simply needs a parseable artifact.
+
+## Raw JSON from a map
+
+`DocShell.Generate.OpenApi.Adapters.RawJson` is the escape hatch for anything
+that already has an OpenAPI map.
+
+```elixir
+sample_spec = %{
+  "openapi" => "3.1.0",
+  "info" => %{
+    "title" => "Payments API",
+    "version" => "2026.08"
+  },
+  "paths" => %{
+    "/charges" => %{
+      "get" => %{
+        "responses" => %{
+          "200" => %{"description" => "OK"}
+        }
+      }
+    }
+  }
+}
+
+{:ok, raw_map_result} =
+  DocShell.Build.run(
+    write: false,
+    open_api_adapter: DocShell.Generate.OpenApi.Adapters.RawJson,
+    open_api_options: [spec: sample_spec]
+  )
+
+raw_map_result.openapi["paths"] |> Map.keys()
+```
+
+The adapter does not transform the map. DocShell only checks that the result
+claims to be OpenAPI 3.0 or 3.1.
+
+## Raw JSON from a file
+
+The same adapter can read a JSON file. This is the usual path when another
+toolchain writes the API description.
+
+```elixir
+workspace =
+  Path.join(
+    System.tmp_dir!(),
+    "doc_shell_openapi_#{System.unique_integer([:positive])}"
+  )
+
+File.rm_rf!(workspace)
+File.mkdir_p!(workspace)
+
+spec_path = Path.join(workspace, "openapi.json")
+File.write!(spec_path, Jason.encode!(sample_spec))
+
+{:ok, raw_file_result} =
+  DocShell.Build.run(
+    write: false,
+    open_api_adapter: DocShell.Generate.OpenApi.Adapters.RawJson,
+    open_api_options: [path: spec_path]
+  )
+
+raw_file_result.openapi["info"]
+```
+
+If both `:spec` and `:path` are provided, `:spec` wins. That rule makes tests
+straightforward because they can pass an in-memory document even when production
+configuration points at a file.
+
+## Ash domains through AshOaskit
+
+For Ash applications, the API description is usually implied by domains,
+resources, actions, and routes. The AshOaskit adapter keeps DocShell out of
+those details.
+
+Use this in host configuration:
+
+```text
+config :doc_shell,
+  open_api_adapter: DocShell.Generate.OpenApi.Adapters.AshOaskit,
+  domains: [MyApp.Blog, MyApp.Accounts],
+  title: "My API",
+  api_version: "1.0.0"
+```
+
+Add `{:ash_oaskit, "~> 0.3"}` to the host's dependencies when using real Ash
+domains. DocShell keeps the dependency optional and resolves it at runtime.
+
+With no domains configured, the adapter returns a valid empty document. That is
+useful while wiring a host incrementally.
+
+```elixir
+{:ok, ash_placeholder_result} =
+  DocShell.Build.run(
+    write: false,
+    open_api_adapter: DocShell.Generate.OpenApi.Adapters.AshOaskit,
+    domains: [],
+    title: "Ash Tutorial API",
+    api_version: "1.0.0",
+    security_schemes: %{"bearer" => %{"type" => "http", "scheme" => "bearer"}}
+  )
+
+Map.take(ash_placeholder_result.openapi, ["openapi", "info", "components", "paths"])
+```
+
+If domains are configured but AshOaskit is not installed, the adapter returns
+`{:error, :ash_oaskit_not_available}` instead of pretending the API has no
+endpoints.
+
+Pass AshOaskit-specific options through `:open_api_options`:
+
+```text
+config :doc_shell,
+  open_api_adapter: DocShell.Generate.OpenApi.Adapters.AshOaskit,
+  domains: [MyApp.Blog],
+  open_api_options: [version: "3.0", resource_scope: :routed]
+```
+
+## Existing OpenApiSpex module
+
+Phoenix applications often already have a module exporting `spec/0`. Point
+DocShell at that module instead of describing the API twice.
+
+The real OpenApiSpex path works with `%OpenApiSpex.OpenApi{}` structs. This
+tutorial uses a plain map so the cell stays runnable without requiring
+OpenApiSpex.
+
+```elixir
+defmodule DocShellLivebook.ExistingSpec do
+  def spec do
+    %{
+      "openapi" => "3.0.3",
+      "info" => %{"title" => "Existing Spec", "version" => "1.0.0"},
+      "paths" => %{}
+    }
+  end
+end
+
+{:ok, spex_result} =
+  DocShell.Build.run(
+    write: false,
+    open_api_adapter: DocShell.Generate.OpenApi.Adapters.OpenApiSpex,
+    open_api_options: [module: DocShellLivebook.ExistingSpec]
+  )
+
+Map.take(spex_result.openapi, ["openapi", "info", "paths"])
+```
+
+Host configuration looks like this:
+
+```text
+config :doc_shell,
+  open_api_adapter: DocShell.Generate.OpenApi.Adapters.OpenApiSpex,
+  open_api_options: [module: MyAppWeb.ApiSpec]
+```
+
+The adapter round-trips structs through the library's JSON encoder, so the
+artifact matches what the application would serve over HTTP.
+
+## Write a custom adapter
+
+A custom adapter is a module that implements `load/1` and returns either
+`{:ok, document}` or `{:error, reason}`. Keep the error reason specific enough
+for a failed build log.
+
+```elixir
+defmodule DocShellLivebook.GatewaySpec do
+  @behaviour DocShell.Generate.OpenApi.Adapter
+
+  @impl true
+  def load(opts) do
+    path = Keyword.fetch!(opts, :cached_spec_path)
+
+    with {:ok, json} <- File.read(path),
+         {:ok, document} <- Jason.decode(json) do
+      {:ok, document}
+    else
+      {:error, reason} -> {:error, {:gateway_spec_unavailable, path, reason}}
+    end
+  end
+end
+
+gateway_spec_path = Path.join(workspace, "gateway-openapi.json")
+File.write!(gateway_spec_path, Jason.encode!(sample_spec))
+
+{:ok, custom_result} =
+  DocShell.Build.run(
+    write: false,
+    open_api_adapter: DocShellLivebook.GatewaySpec,
+    open_api_options: [cached_spec_path: gateway_spec_path]
+  )
+
+custom_result.openapi["info"]
+```
+
+In a host, configure the module directly:
+
+```text
+config :doc_shell,
+  open_api_adapter: MyApp.Docs.GatewaySpec,
+  open_api_options: [cached_spec_path: "priv/gateway/openapi.json"]
+```
+
+## What `load/1` receives
+
+DocShell passes adapter options after merging known OpenAPI configuration with
+`:open_api_options`. The latter wins.
+
+| Key | Source |
+| --- | --- |
+| `:domains` | `config :doc_shell, :domains` |
+| `:title` | `config :doc_shell, :title` |
+| `:api_version` | `config :doc_shell, :api_version` |
+| `:security_schemes` | `config :doc_shell, :security_schemes` |
+| anything else | `config :doc_shell, :open_api_options` |
+
+Ignore keys that do not matter to your source.
+
+## Validation
+
+`DocShell.Generate.OpenApi.validate/1` is a shallow shape check. It accepts
+OpenAPI 3.0 and 3.1 with either string or atom `openapi` keys.
+
+```elixir
+%{
+  valid_31: DocShell.Generate.OpenApi.validate(%{"openapi" => "3.1.0"}),
+  valid_30_atom_key: DocShell.Generate.OpenApi.validate(%{openapi: "3.0.3"}),
+  invalid_swagger: DocShell.Generate.OpenApi.validate(%{"swagger" => "2.0"})
+}
+```
+
+It is not full schema validation. The library or tool that produced the
+document should own that. DocShell's check catches common integration mistakes:
+returning config, an enveloped artifact, a struct that was never JSON-normalized,
+or a non-OpenAPI document.
+
+## Error vocabulary
+
+These are the common errors from `DocShell.Generate.OpenApi.extract/2`:
+
+```elixir
+%{
+  missing_adapter_module: DocShell.Generate.OpenApi.extract(Nonexistent.OpenApiAdapter, []),
+  loaded_module_without_load_callback: DocShell.Generate.OpenApi.extract(String, []),
+  invalid_document:
+    DocShell.Generate.OpenApi.extract(
+      DocShell.Generate.OpenApi.Adapters.RawJson,
+      spec: %{"swagger" => "2.0"}
+    ),
+  missing_raw_json_source:
+    DocShell.Generate.OpenApi.extract(DocShell.Generate.OpenApi.Adapters.RawJson, [])
+}
+```
+
+Interpret them as follows:
+
+| Error | Cause |
+| --- | --- |
+| `{:error, :nofile}` | The adapter module could not be loaded |
+| `{:error, :invalid_adapter}` | The loaded module does not export `load/1` |
+| `{:error, :invalid_openapi_source}` | The adapter returned neither `{:ok, map}` nor `{:error, reason}` |
+| `{:error, :invalid_openapi_document}` | No usable OpenAPI 3.0 or 3.1 version key |
+| `{:error, {:openapi_adapter_failed, message}}` | The adapter raised |
+| any other `{:error, reason}` | The adapter returned its own error |
+
+## Optional dependency rule
+
+Adapters for optional libraries must check availability at runtime. A compile
+time reference to a library the host did not install produces warnings, and this
+project compiles with `--warnings-as-errors`.
+
+```text
+defmodule DocShellLivebook.OptionalLibraryAdapter do
+  @behaviour DocShell.Generate.OpenApi.Adapter
+
+  @impl true
+  def load(opts) do
+    if Code.ensure_loaded?(SomeSpecLibrary) and
+         function_exported?(SomeSpecLibrary, :spec, 1) do
+      {:ok, SomeSpecLibrary.spec(opts)}
+    else
+      {:error, :some_spec_library_not_available}
+    end
+  end
+end
+```
+
+That pattern is what lets DocShell ship AshOaskit and OpenApiSpex adapters
+without forcing every host to depend on AshOaskit or OpenApiSpex.
+
+## Choosing an adapter
+
+| Source of truth | Adapter |
+| --- | --- |
+| No API yet, or API docs handled elsewhere | no adapter |
+| Ash domains | `DocShell.Generate.OpenApi.Adapters.AshOaskit` |
+| Existing OpenApiSpex `spec/0` module | `DocShell.Generate.OpenApi.Adapters.OpenApiSpex` |
+| Checked-in JSON or another toolchain's output | `DocShell.Generate.OpenApi.Adapters.RawJson` |
+| Anything else | a small custom `DocShell.Generate.OpenApi.Adapter` |
+
+The main design rule is that the build pipeline talks to adapters, not to host
+frameworks. That keeps DocShell renderer-neutral and integration-neutral.
