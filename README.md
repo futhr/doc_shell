@@ -3,6 +3,7 @@
 [![Hex.pm](https://img.shields.io/hexpm/v/doc_shell.svg)](https://hex.pm/packages/doc_shell)
 [![Docs](https://img.shields.io/badge/docs-hexdocs-blue.svg)](https://hexdocs.pm/doc_shell)
 [![CI](https://github.com/futhr/doc_shell/actions/workflows/ci.yml/badge.svg)](https://github.com/futhr/doc_shell/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/futhr/doc_shell/branch/main/graph/badge.svg)](https://codecov.io/gh/futhr/doc_shell)
 [![License](https://img.shields.io/hexpm/l/doc_shell.svg)](LICENSE.md)
 
 Documentation extraction for Elixir, without a renderer attached.
