@@ -20,6 +20,7 @@ defmodule DocShell.Config do
   | --- | --- | --- |
   | `:modules` | `[]` | Modules to document. `mix doc_shell.build` fills this from the application spec. |
   | `:guide_bases` | `["guides"]` | Directories searched recursively for Markdown guides. |
+  | `:changelog_path` | `"CHANGELOG.md"` | Changelog parsed into release entries; a missing file yields none. |
   | `:livebook_base` | `"notebooks"` | Directory searched recursively for `.livemd` notebooks. |
   | `:public_dir` | `"priv/doc_shell/public"` | Where the artifact tree is written. |
   | `:private_dir` | `"priv/doc_shell/private"` | Where the private manifest is written. |
@@ -58,6 +59,7 @@ defmodule DocShell.Config do
     :private_dir,
     :guide_bases,
     :livebook_base,
+    :changelog_path,
     :open_api_adapter,
     :open_api_options,
     :openapi_spec_path,
@@ -77,6 +79,7 @@ defmodule DocShell.Config do
     public_dir: "priv/doc_shell/public",
     private_dir: "priv/doc_shell/private",
     guide_bases: ["guides"],
+    changelog_path: "CHANGELOG.md",
     livebook_base: "notebooks",
     open_api_options: [],
     modules: [],

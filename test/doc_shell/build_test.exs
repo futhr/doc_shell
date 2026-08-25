@@ -46,7 +46,7 @@ defmodule DocShell.BuildTest do
 
     assert Enum.sort(File.ls!(public)) ==
              Enum.sort(
-               ~w(content.json guides.json livebooks.json manifest.json modules.json navigation.json openapi.json search-index.json)
+               ~w(changelog.json content.json guides.json livebooks.json manifest.json modules.json navigation.json openapi.json search-index.json)
              )
 
     assert File.ls!(private) == ["manifest.json"]

@@ -30,7 +30,7 @@ defmodule DocShell.Build do
   ## The return value
 
   `run/1` returns the complete extraction, keyed by `:modules`, `:guides`,
-  `:livebooks`, `:openapi`, and `:presentation`. Hosts that ingest
+  `:livebooks`, `:changelog`, `:openapi`, and `:presentation`. Hosts that ingest
   documentation into a database or knowledge graph should use this rather than
   reading the JSON back off disk — it is richer than what gets written, since
   entries here keep their parsed `ast` and nothing is filtered out. Pass
@@ -59,6 +59,7 @@ defmodule DocShell.Build do
   """
 
   alias DocShell.Config
+  alias DocShell.Generate.Changelog
   alias DocShell.Generate.ExDoc
   alias DocShell.Generate.Guides
   alias DocShell.Generate.Livebooks
@@ -89,13 +90,23 @@ defmodule DocShell.Build do
     with {:ok, modules} <- ExDoc.extract(config[:modules] || []),
          {:ok, guides} <- Guides.extract(config[:guide_bases] || []),
          {:ok, livebooks} <- Livebooks.extract(config[:livebook_base] || "notebooks"),
+         {:ok, changelog} <- Changelog.extract(config[:changelog_path]),
          {:ok, openapi} <- openapi(config) do
-      {:ok, %{modules: modules, guides: guides, livebooks: livebooks, openapi: openapi}}
+      {:ok,
+       %{
+         modules: modules,
+         guides: guides,
+         livebooks: livebooks,
+         changelog: changelog,
+         openapi: openapi
+       }}
     end
   end
 
   defp project(extracted, config) do
-    entries = extracted.modules ++ extracted.guides ++ extracted.livebooks
+    entries =
+      extracted.modules ++ extracted.guides ++ extracted.livebooks ++ extracted.changelog
+
     source = config[:presentation_source] || StaticGenerator
 
     opts =
@@ -155,6 +166,7 @@ defmodule DocShell.Build do
       {"modules.json", index_only(result.modules)},
       {"guides.json", index_only(result.guides)},
       {"livebooks.json", index_only(result.livebooks)},
+      {"changelog.json", index_only(result.changelog)},
       {"openapi.json", result.openapi},
       {"navigation.json", result.presentation.navigation},
       {"search-index.json", result.presentation.search},
