@@ -100,7 +100,7 @@ defmodule DocShell.MixProject do
 
   defp optional_integrations(_) do
     [
-      {:ash_oaskit, "~> 0.3", optional: true},
+      {:ash_oaskit, "~> 0.4.0", optional: true},
       {:plug, "~> 1.16", optional: true}
     ]
   end
