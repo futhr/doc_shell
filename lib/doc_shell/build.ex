@@ -3,9 +3,9 @@ defmodule DocShell.Build do
   Runs every extractor and writes the complete artifact tree to disk.
 
   This is the top of the pipeline. `run/1` resolves configuration, extracts
-  modules, guides, notebooks, and the OpenAPI document, projects the result
-  into navigation and search indexes, and writes the lot as versioned JSON.
-  `mix doc_shell.build` is a thin wrapper around it.
+  modules, guides, notebooks, changelog entries, and the OpenAPI document,
+  projects the result into navigation and search indexes, and writes the lot as
+  versioned JSON. `mix doc_shell.build` is a thin wrapper around it.
 
       {:ok, result} =
         DocShell.Build.run(
@@ -37,6 +37,10 @@ defmodule DocShell.Build do
   `write: false` to skip the files entirely.
 
   ## Choosing a presentation producer
+
+  `:changelog_source` selects the module that loads release notes. The default
+  source reads `CHANGELOG.md`, but graph-backed hosts can point it at their own
+  adapter and pass source-specific `:changelog_options`.
 
   `:presentation_source` selects the module that builds navigation, search, and
   content, defaulting to `DocShell.Presentation.StaticGenerator`. A
@@ -90,7 +94,7 @@ defmodule DocShell.Build do
     with {:ok, modules} <- ExDoc.extract(config[:modules] || []),
          {:ok, guides} <- Guides.extract(config[:guide_bases] || []),
          {:ok, livebooks} <- Livebooks.extract(config[:livebook_base] || "notebooks"),
-         {:ok, changelog} <- Changelog.extract(config[:changelog_path]),
+         {:ok, changelog} <- Changelog.extract(config),
          {:ok, openapi} <- openapi(config) do
       {:ok,
        %{

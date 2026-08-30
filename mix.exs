@@ -193,6 +193,11 @@ defmodule DocShell.MixProject do
           DocShell.Generate.Livebooks,
           DocShell.Generate.Collector
         ],
+        Changelog: [
+          DocShell.Generate.Changelog,
+          DocShell.Generate.Changelog.Source,
+          DocShell.Generate.Changelog.Sources.MarkdownFile
+        ],
         OpenAPI: [
           DocShell.Generate.OpenApi,
           DocShell.Generate.OpenApi.Adapter,

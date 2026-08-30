@@ -8,7 +8,7 @@ defmodule DocShell.Presentation.StaticGenerator do
   documentation site needs:
 
     * **navigation** — one `DocShell.Presentation.NavigationItem` per entry,
-      sorted by kind then title, so modules, guides, and notebooks group
+      sorted by kind then title, so modules, guides, notebooks, and release notes group
       together and each group reads alphabetically.
     * **search** — one `DocShell.Presentation.SearchEntry` per entry, with the
       document flattened to plain text and pre-tokenized.

@@ -16,13 +16,21 @@ dependencies — install them only when the host uses those integrations.
   `DocShell.Config`, not in a config file, so a host that configures nothing
   still gets a valid artifact tree.
 - Use `mix doc_shell.build` for host builds. It documents every module in the
-  current application. Call `DocShell.Build.run/1` directly, with an explicit
-  `:modules` list, when you need a different set.
+  current application. The default task starts the app; pass `--no-start` to
+  compile and load the app spec without starting the supervision tree. Call
+  `DocShell.Build.run/1` directly, with an explicit `:modules` list, when you
+  need a different set.
 - Handle both `{:ok, result}` and `{:error, reason}`. Extraction stops at the
   first error and names the module or file at fault; it does not skip bad
   sources.
 - Pass explicit `:modules`, `:guide_bases`, and `:livebook_base` values when the
   host layout differs from the defaults (`[]`, `["guides"]`, `"notebooks"`).
+- Treat changelog/release notes as a source adapter. The default
+  `DocShell.Generate.Changelog.Sources.MarkdownFile` reads `CHANGELOG.md`, but
+  graph/database/CMS hosts should implement
+  `DocShell.Generate.Changelog.Source` and pass `:changelog_options`. Use
+  `DocShell.Generate.Changelog.from_markdown/2` when the dynamic source stores
+  Markdown.
 - Leave `:open_api_adapter` unset to emit a valid empty OpenAPI 3.1 document.
   This is a supported configuration, not a degraded one.
 - Use `DocShell.Build.run/1`'s return value to feed a database or knowledge
@@ -62,6 +70,10 @@ dependencies — install them only when the host uses those integrations.
 - Implement `c:DocShell.Generate.OpenApi.Adapter.load/1` for a new OpenAPI
   source. Return `{:ok, map}` with an `openapi` key of `"3.0.x"` or `"3.1.x"`,
   or `{:error, reason}` with a reason worth reading in a failed build.
+- Implement `c:DocShell.Generate.Changelog.Source.load/1` for a new
+  release-note source. Return validated DocShell changelog entries, or fetch
+  Markdown dynamically and pass it through
+  `DocShell.Generate.Changelog.from_markdown/2`.
 - Resolve optional libraries at runtime with `Code.ensure_loaded?/1`. A
   compile-time reference breaks every host that does not install the library.
 - Preserve Markdown as the renderer-neutral AST from `DocShell.Ast`. Never emit

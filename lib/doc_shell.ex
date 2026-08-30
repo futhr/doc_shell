@@ -9,8 +9,9 @@ defmodule DocShell do
   suddenly the renderer owns your content.
 
   DocShell splits the two. It reads module documentation, Markdown guides,
-  Livebook notebooks, and OpenAPI documents, and writes them as versioned JSON
-  under `priv/doc_shell/`. What renders that JSON is entirely up to the host.
+  Livebook notebooks, release notes, and OpenAPI documents, and writes them as
+  versioned JSON under `priv/doc_shell/`. What renders that JSON is entirely up
+  to the host.
 
   ## What DocShell owns
 
@@ -26,13 +27,15 @@ defmodule DocShell do
 
       {:ok, result} = DocShell.Build.run(modules: [MyApp.Accounts])
 
-  Four extractors feed it, each independently usable:
+  Five extractors feed it, each independently usable:
 
     * `DocShell.Generate.ExDoc` reads compiled modules through the BEAM docs
       chunk, so it sees exactly what `h MyApp.Accounts` sees.
     * `DocShell.Generate.Guides` reads Markdown files, with optional YAML
       frontmatter for titles and arbitrary metadata.
     * `DocShell.Generate.Livebooks` indexes `.livemd` notebooks.
+    * `DocShell.Generate.Changelog` loads release notes through a source
+      adapter, with Markdown as the built-in default.
     * `DocShell.Generate.OpenApi` loads an API description through a pluggable
       adapter — Ash domains, an OpenApiSpex module, or raw JSON.
 

@@ -105,6 +105,21 @@ defmodule DocShell.BuildTest do
     end
   end
 
+  defmodule GraphChangelogSource do
+    @moduledoc false
+
+    @behaviour DocShell.Generate.Changelog.Source
+
+    alias DocShell.Generate.Changelog
+
+    @impl true
+    def load(opts) do
+      opts
+      |> Keyword.fetch!(:markdown)
+      |> Changelog.from_markdown("graph://docs/releases")
+    end
+  end
+
   test "each manifest describes the directory it sits in" do
     {public, private, _} = dirs("manifest")
 
@@ -155,6 +170,24 @@ defmodule DocShell.BuildTest do
     {:ok, result} = Build.run(opts)
 
     assert Enum.map(result.presentation.navigation, & &1.id) == ["g"]
+  end
+
+  test "changelog_source selects a host release-note source" do
+    {public, private, _} = dirs("changelog-source")
+
+    opts =
+      [
+        changelog_source: GraphChangelogSource,
+        changelog_options: [markdown: "## v1.0.0 (2026-08-28)\n\n* release: from graph"]
+      ] ++ base_opts(public, private)
+
+    {:ok, result} = Build.run(opts)
+
+    assert [%{"id" => "changelog-v1.0.0", "meta" => %{"source_path" => "graph://docs/releases"}}] =
+             result.changelog
+
+    assert {:ok, [%{"id" => "changelog-v1.0.0"}]} =
+             Artifact.read(Path.join(public, "changelog.json"))
   end
 
   test "an invalid host projector fails the build rather than writing bad artifacts" do

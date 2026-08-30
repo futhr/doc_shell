@@ -45,9 +45,9 @@ renderer owns your content, and getting it back out means scraping HTML or
 running the extractor a second way.
 
 DocShell only does the first half. It reads module documentation, Markdown
-guides, Livebook notebooks, and OpenAPI documents, and writes them as versioned
-JSON. What renders that JSON — Svelte, LiveView, React, a static site
-generator, nothing at all — is entirely up to you.
+guides, Livebook notebooks, release notes, and OpenAPI documents, and writes
+them as versioned JSON. What renders that JSON — Svelte, LiveView, React, a
+static site generator, nothing at all — is entirely up to you.
 
 That boundary is enforced rather than suggested. The package holds no routes,
 no templates, no tenancy model, and no authorization policy, and it is
@@ -96,6 +96,14 @@ That documents every module in the current application, picks up Markdown under
 `priv/doc_shell/`. It works with no configuration at all — a project that has
 set nothing still gets a complete, well-formed artifact tree.
 
+If the host application starts dev servers, sockets, or other side effects that
+are not needed for static docs generation, compile and load the app spec without
+starting the supervision tree:
+
+```sh
+mix doc_shell.build --no-start
+```
+
 The same pipeline is available from code, which is what you want from a release
 task or when feeding a database rather than a directory:
 
@@ -107,7 +115,7 @@ task or when feeding a database rather than a directory:
   )
 ```
 
-`result` holds `:modules`, `:guides`, `:livebooks`, `:openapi`, and
+`result` holds `:modules`, `:guides`, `:livebooks`, `:changelog`, `:openapi`, and
 `:presentation` — the same data that was written to disk.
 
 Extraction stops at the first error and names the module or file at fault. A
@@ -127,6 +135,9 @@ config :doc_shell,
   # What to document
   modules: [MyApp.Accounts, MyApp.Billing],
   guide_bases: ["guides"],
+  changelog_source: DocShell.Generate.Changelog.Sources.MarkdownFile,
+  changelog_options: [],
+  changelog_path: "CHANGELOG.md",
   livebook_base: "notebooks",
 
   # Where it goes
@@ -150,7 +161,10 @@ config :doc_shell,
 
 Every key is optional, including the OpenAPI adapter — without one the build
 emits a valid empty OpenAPI 3.1 document, so `openapi.json` is always there and
-always parseable. `DocShell.Config` documents each key and its default.
+always parseable. `changelog_source` defaults to Markdown-file extraction, but a
+host can replace it with a graph, database, CMS, or service adapter and pass
+source-specific `changelog_options`. `changelog_path` is kept as the default
+Markdown-file shortcut. `DocShell.Config` documents each key and its default.
 
 DocShell reads `:doc_shell` and nothing else. It will not look under your
 application's key, infer settings from `Mix.Project`, or reach into another
@@ -177,7 +191,8 @@ priv/doc_shell/
 │   ├── openapi.json
 │   ├── modules.json
 │   ├── guides.json
-│   └── livebooks.json
+│   ├── livebooks.json
+│   └── changelog.json
 └── private/
     └── manifest.json
 ```
@@ -210,11 +225,11 @@ names to agree on — an `h2` can be a heading component or an anchor target,
 whichever suits the renderer.
 
 `navigation.json`, `search-index.json`, and `content.json` are the three files a
-renderer actually reads. `modules.json`, `guides.json`, and `livebooks.json` are
-per-source indexes for hosts that ingest documentation rather than display it —
-including the entries the presentation filtered out, so they double as a
-coverage report. A document's parsed body is stored once, in `content.json`,
-keyed by the same id.
+renderer actually reads. `modules.json`, `guides.json`, `livebooks.json`, and
+`changelog.json` are per-source indexes for hosts that ingest documentation
+rather than display it — including the entries the presentation filtered out, so
+they double as a coverage report. A document's parsed body is stored once, in
+`content.json`, keyed by the same id.
 
 These shapes are public API. They are consumed by renderers in other
 repositories on their own release cadence, so a schema-version bump is a
@@ -225,7 +240,7 @@ coordinated change across all of them, not a local refactor. The
 
 ## Sources
 
-Four extractors, each usable on its own:
+Five extractors, each usable on its own:
 
 - **`DocShell.Generate.ExDoc`** reads compiled modules through the BEAM docs
   chunk — the same chunk `h MyApp.Accounts` reads, so the artifact can never
@@ -235,6 +250,10 @@ Four extractors, each usable on its own:
   the renderer.
 - **`DocShell.Generate.Livebooks`** indexes `.livemd` notebooks, so runnable
   onboarding docs stop being invisible to your documentation site.
+- **`DocShell.Generate.Changelog`** loads release notes through a source
+  adapter. The built-in Markdown source reads `CHANGELOG.md`; hosts can supply
+  graph-, database-, CMS-, or service-backed adapters without changing the
+  artifact contract.
 - **`DocShell.Generate.OpenApi`** loads an API description through a pluggable
   adapter.
 

@@ -301,7 +301,7 @@ cannot walk the filesystem.
 
 | Mistake | Fix |
 | --- | --- |
-| Serving an artifact directory before `manifest.json` is written | Run `mix doc_shell.build` before asset packaging or cache reload |
+| Serving an artifact directory before `manifest.json` is written | Run `mix doc_shell.build` before asset packaging or cache reload; use `mix doc_shell.build --no-start` if the host supervision tree has build-time side effects |
 | Writing a bare OpenAPI file inside the artifact directory | Use `:openapi_spec_path` outside `priv/doc_shell/public` and `private` |
 | Forgetting to reload after an out-of-band rebuild | Call `DocShell.Web.Cache.reload/1` from the deploy hook or admin action |
 | Omitting a gate on internal docs | Add a host authorization function or use a host controller pipeline |

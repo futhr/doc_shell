@@ -1,8 +1,8 @@
 # The Build Pipeline
 
 `DocShell.Build.run/1` is the top of DocShell's generation pipeline. It reads
-modules, Markdown guides, Livebook notebooks, and an OpenAPI document, then
-projects them into the JSON artifacts a renderer can consume.
+modules, Markdown guides, Livebook notebooks, release notes, and an OpenAPI
+document, then projects them into the JSON artifacts a renderer can consume.
 
 This tutorial follows one complete build from source files to artifacts. The
 examples create a disposable documentation set under your system temp directory,
@@ -103,6 +103,7 @@ explicit options make the example deterministic.
 build_opts = [
   modules: [DocShell.Config],
   guide_bases: [guide_dir],
+  changelog_source: nil,
   livebook_base: livebook_dir,
   public_dir: public_dir,
   private_dir: private_dir
@@ -118,8 +119,37 @@ The return value always has the same top-level keys:
 - `:modules` — module documentation extracted from the BEAM docs chunk
 - `:guides` — Markdown guides with parsed body and metadata
 - `:livebooks` — `.livemd` notebooks with parsed body and source metadata
+- `:changelog` — release-note entries from the configured source
 - `:openapi` — a valid OpenAPI document
 - `:presentation` — navigation, search, and content indexes
+
+## Loading release notes from another store
+
+`CHANGELOG.md` is only the default source. A host whose documentation lives in
+a graph, database, CMS, or service implements one callback and returns the same
+renderer-neutral changelog entries:
+
+```elixir
+defmodule MyApp.Docs.ReleaseNotes do
+  @behaviour DocShell.Generate.Changelog.Source
+
+  @impl true
+  def load(opts) do
+    opts
+    |> Keyword.fetch!(:markdown)
+    |> DocShell.Generate.Changelog.from_markdown("graph://docs/releases")
+  end
+end
+
+DocShell.Build.run(
+  changelog_source: MyApp.Docs.ReleaseNotes,
+  changelog_options: [markdown: "## v1.0.0 (2026-08-28)\n\nInitial release"],
+  write: false
+)
+```
+
+Sources that already store structured entries can return those maps directly;
+DocShell validates them before projection or artifact writing.
 
 ## Inspect module extraction
 
@@ -334,8 +364,9 @@ When wiring DocShell into a host application, make these decisions explicitly:
 
 | Question | Option |
 | --- | --- |
-| Which modules should be documented? | `modules: [...]`, or `mix doc_shell.build` for the current app |
+| Which modules should be documented? | `modules: [...]`, `mix doc_shell.build` for the current app, or `mix doc_shell.build --no-start` when the app spec is enough and the host supervision tree has build-time side effects |
 | Where do guides live? | `guide_bases: ["guides", "handbook"]` |
+| Where do release notes live? | default `CHANGELOG.md`, or `changelog_source:` plus `changelog_options:` for graph/database/CMS-backed release notes |
 | Where do notebooks live? | `livebook_base: "notebooks"` |
 | Where should JSON be written? | `public_dir:` and `private_dir:` |
 | Where does OpenAPI come from? | `open_api_adapter:` plus `open_api_options:` |

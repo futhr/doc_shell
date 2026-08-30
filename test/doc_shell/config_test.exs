@@ -30,6 +30,9 @@ defmodule DocShell.ConfigTest do
     assert config[:title] == "Documentation"
     assert config[:guide_bases] == ["guides"]
     assert config[:livebook_base] == "notebooks"
+    assert config[:changelog_source] == DocShell.Generate.Changelog.Sources.MarkdownFile
+    assert config[:changelog_options] == []
+    assert config[:changelog_path] == "CHANGELOG.md"
     assert config[:modules] == []
   end
 

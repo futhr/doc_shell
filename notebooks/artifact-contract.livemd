@@ -16,8 +16,8 @@ The contract includes:
 - the envelope around every JSON payload
 - the `doc-shell/v1` schema version
 - the shape of `navigation.json`, `search-index.json`, `content.json`,
-  `modules.json`, `guides.json`, `livebooks.json`, `openapi.json`, and
-  `manifest.json`
+  `modules.json`, `guides.json`, `livebooks.json`, `changelog.json`,
+  `openapi.json`, and `manifest.json`
 - the in-memory presentation shape accepted from graph-backed hosts
 
 Changing one of those shapes is a breaking change unless it is strictly
@@ -245,7 +245,7 @@ content["contract-guide"] |> List.first()
 That uniform shape is why a renderer can use one walker for module docs,
 guides, and notebooks.
 
-## modules.json, guides.json, and livebooks.json
+## modules.json, guides.json, livebooks.json, and changelog.json
 
 The per-source indexes carry identity and metadata for every extracted entry.
 They intentionally do not carry `"ast"`; the body already lives once in
@@ -255,11 +255,13 @@ They intentionally do not carry `"ast"`; the body already lives once in
 {:ok, module_index} = DocShell.Artifact.read(Path.join(public_dir, "modules.json"))
 {:ok, guide_index} = DocShell.Artifact.read(Path.join(public_dir, "guides.json"))
 {:ok, livebook_index} = DocShell.Artifact.read(Path.join(public_dir, "livebooks.json"))
+{:ok, changelog_index} = DocShell.Artifact.read(Path.join(public_dir, "changelog.json"))
 
 %{
   modules: Enum.map(module_index, &Map.take(&1, ["id", "title", "kind", "meta"])),
   guides: Enum.map(guide_index, &Map.take(&1, ["id", "title", "kind", "meta"])),
-  livebooks: Enum.map(livebook_index, &Map.take(&1, ["id", "title", "kind", "meta"]))
+  livebooks: Enum.map(livebook_index, &Map.take(&1, ["id", "title", "kind", "meta"])),
+  changelog: Enum.map(changelog_index, &Map.take(&1, ["id", "title", "kind", "meta"]))
 }
 ```
 
