@@ -100,7 +100,9 @@ defmodule DocShell.MixProject do
 
   defp optional_integrations(_) do
     [
-      {:ash_oaskit, "~> 0.4.0", optional: true},
+      # DocShell uses only AshOaskit.spec/1, which is stable across both minor
+      # lines. Keep the optional metadata honest for hosts still on 0.3.
+      {:ash_oaskit, "~> 0.3 or ~> 0.4", optional: true},
       {:plug, "~> 1.16", optional: true}
     ]
   end
