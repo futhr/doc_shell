@@ -69,6 +69,24 @@ defmodule DocShell.Generate.ChangelogTest do
   * compat: provider parity by futhr
   """
 
+  @keep_a_changelog """
+  # Changelog
+
+  ## [1.2.3] - 2026-08-01
+
+  * Stable release through a reference-style version link.
+
+  ## [1.2.3-rc.1](https://example.com/compare/1.2.2...1.2.3-rc.1) - 2026-07-28
+
+  * Prerelease through an inline version link.
+
+  ## 1.2.2
+
+  * Unlinked release without a date.
+
+  [1.2.3]: https://example.com/compare/1.2.2...1.2.3
+  """
+
   describe "extract/1" do
     test "turns each release into a renderer-neutral AST entry" do
       root = tmp_dir!()
@@ -97,6 +115,27 @@ defmodule DocShell.Generate.ChangelogTest do
 
       assert {:ok, entries} = Changelog.extract(path)
       refute Enum.any?(entries, &(inspect(&1["ast"]) =~ "Preamble"))
+    end
+
+    test "supports Keep a Changelog dates, links, and prerelease versions" do
+      assert {:ok, [stable, prerelease, unlinked]} =
+               Changelog.from_markdown(@keep_a_changelog, "CHANGELOG.md")
+
+      assert stable["id"] == "changelog-1.2.3"
+      assert stable["meta"]["date"] == "2026-08-01"
+
+      assert stable["meta"]["compare_url"] ==
+               "https://example.com/compare/1.2.2...1.2.3"
+
+      assert prerelease["id"] == "changelog-1.2.3-rc.1"
+      assert prerelease["meta"]["date"] == "2026-07-28"
+
+      assert prerelease["meta"]["compare_url"] ==
+               "https://example.com/compare/1.2.2...1.2.3-rc.1"
+
+      assert unlinked["id"] == "changelog-1.2.2"
+      assert unlinked["meta"]["date"] == nil
+      assert unlinked["meta"]["compare_url"] == nil
     end
 
     test "a missing file and a nil path extract to no entries" do

@@ -269,6 +269,13 @@ The source indexes are unfiltered. If `skip_empty` removes an undocumented
 module from presentation, the module still appears in `modules.json`, which
 makes the file useful as a coverage report.
 
+The `doc-shell/v1` source catalogue is additive. Producers may add a new
+per-source index to `manifest.json`, and entry `kind` values are open strings.
+Generic renderers ignore unknown source files and kinds; selective consumers
+may continue reading only their supported artifacts. Removing a known artifact
+or removing, renaming, or retyping a known field requires a schema-version
+change.
+
 ```elixir
 module_index
 |> List.first()

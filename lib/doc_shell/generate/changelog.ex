@@ -7,6 +7,11 @@ defmodule DocShell.Generate.Changelog do
   git_ops, and friends) as a sequence of release headings:
 
       ## [v1.2.0](https://host/compare/v1.1.0...v1.2.0) (2026-08-01)
+      ## [1.2.0] - 2026-08-01
+
+  Keep a Changelog reference links (`[1.2.0]: https://...`) and inline links
+  are preserved as `"compare_url"`; linked and unlinked prerelease versions
+  are accepted.
 
   Each release becomes one entry whose `"ast"` is the release's own
   Markdown body parsed through `DocShell.Ast`, so navigation, search, and
@@ -25,7 +30,8 @@ defmodule DocShell.Generate.Changelog do
   alias DocShell.Ast
   alias DocShell.Generate.Changelog.Sources.MarkdownFile
 
-  @release ~r/^##\s+\[?(v?\d[\w.+-]*)\]?(?:\(([^)]+)\))?(?:\s*\(([^)]+)\))?\s*$/
+  @release ~r/^##\s+(?:\[(?<bracketed>v?\d[\w.+-]*)\](?:\((?<inline_url>[^)]+)\))?|(?<plain>v?\d[\w.+-]*))(?:\s*(?:-\s*(?<hyphen_date>\d{4}-\d{2}-\d{2})|\((?<paren_date>[^)]+)\)))?\s*$/
+  @reference ~r/^\[(?<version>v?\d[\w.+-]*)\]:\s*(?<url>\S+)/
 
   @doc """
   Extracts release entries from a configured source or a Markdown file path.
@@ -62,11 +68,13 @@ defmodule DocShell.Generate.Changelog do
   """
   @spec from_markdown(String.t(), String.t()) :: {:ok, [map()]} | {:error, term()}
   def from_markdown(source, source_ref) when is_binary(source) and is_binary(source_ref) do
+    references = reference_links(source)
+
     source
     |> String.split("\n")
     |> Enum.chunk_while([], &chunk_release/2, &finish_release/1)
     |> Enum.reduce_while({:ok, []}, fn {header, body}, {:ok, acc} ->
-      case entry(header, body, source_ref) do
+      case entry(header, body, source_ref, references) do
         {:ok, entry} -> {:cont, {:ok, [entry | acc]}}
         {:error, reason} -> {:halt, {:error, {source_ref, reason}}}
       end
@@ -163,17 +171,17 @@ defmodule DocShell.Generate.Changelog do
   # Chunks lines into {release_header_match, body_lines} pairs; the preamble
   # before the first release heading is dropped.
   defp chunk_release(line, acc) do
-    case Regex.run(@release, line) do
+    case release_header(line) do
       nil ->
         case acc do
           [] -> {:cont, []}
           [{header, body} | rest] -> {:cont, [{header, [line | body]} | rest]}
         end
 
-      match ->
+      header ->
         case acc do
-          [] -> {:cont, [{match, []}]}
-          chunks -> {:cont, emit(chunks), [{match, []}]}
+          [] -> {:cont, [{header, []}]}
+          chunks -> {:cont, emit(chunks), [{header, []}]}
         end
     end
   end
@@ -183,9 +191,10 @@ defmodule DocShell.Generate.Changelog do
 
   defp emit([{header, body}]), do: {header, Enum.reverse(body)}
 
-  defp entry([_, version | rest], body_lines, source_ref) do
+  defp entry(header, body_lines, source_ref, references) do
     markdown = Enum.join(body_lines, "\n")
-    {compare_url, date} = classify_parens(rest)
+    version = header.version
+    compare_url = header.compare_url || Map.get(references, version)
 
     with {:ok, ast} <- Ast.from_markdown(markdown) do
       {:ok,
@@ -197,23 +206,38 @@ defmodule DocShell.Generate.Changelog do
          "meta" => %{
            "version" => version,
            "compare_url" => compare_url,
-           "date" => date,
+           "date" => header.date,
            "source_path" => source_ref
          }
        }}
     end
   end
 
-  # An unbracketed heading has only one parenthesised value — the date —
-  # which the regex captures in the URL position. Classify by shape, not
-  # position: anything without a scheme is the date.
-  defp classify_parens(captures) do
-    values = Enum.reject(captures, &(&1 in [nil, ""]))
+  defp release_header(line) do
+    case Regex.named_captures(@release, line) do
+      nil ->
+        nil
 
-    case values do
-      [] -> {nil, nil}
-      [one] -> if String.contains?(one, "://"), do: {one, nil}, else: {nil, one}
-      [url, date | _] -> {url, date}
+      captures ->
+        %{
+          version: present(captures["bracketed"]) || present(captures["plain"]),
+          compare_url: present(captures["inline_url"]),
+          date: present(captures["hyphen_date"]) || present(captures["paren_date"])
+        }
     end
   end
+
+  defp reference_links(source) do
+    source
+    |> String.split("\n")
+    |> Enum.reduce(%{}, fn line, links ->
+      case Regex.named_captures(@reference, line) do
+        %{"url" => url, "version" => version} -> Map.put(links, version, String.trim(url, "<>"))
+        nil -> links
+      end
+    end)
+  end
+
+  defp present(value) when value in [nil, ""], do: nil
+  defp present(value), do: value
 end

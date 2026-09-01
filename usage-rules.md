@@ -48,6 +48,11 @@ dependencies — install them only when the host uses those integrations.
 
 - Treat `DocShell.schema_version/0` and the `doc-shell/v1` shapes as public API.
   Never invent fields or change a field's type in place.
+- Treat the v1 source catalogue as additive. A manifest may list a new
+  per-source artifact and `kind` is an open string; generic consumers ignore
+  unknown files and kinds, while selective consumers may read only their
+  allow-listed artifacts. Removing an existing file or changing an existing
+  field's name or type requires a schema-version change.
 - Read the version from `DocShell.schema_version/0` rather than writing the
   literal `"doc-shell/v1"`.
 - Read and write artifacts through `DocShell.Artifact`. Do not bypass the
@@ -74,6 +79,9 @@ dependencies — install them only when the host uses those integrations.
   release-note source. Return validated DocShell changelog entries, or fetch
   Markdown dynamically and pass it through
   `DocShell.Generate.Changelog.from_markdown/2`.
+- The bundled Markdown parser accepts git_ops headings and Keep a Changelog
+  headings, including parenthesised or hyphenated dates, inline or
+  reference-style links, unlinked releases, and SemVer prereleases.
 - Resolve optional libraries at runtime with `Code.ensure_loaded?/1`. A
   compile-time reference breaks every host that does not install the library.
 - Preserve Markdown as the renderer-neutral AST from `DocShell.Ast`. Never emit

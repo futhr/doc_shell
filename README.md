@@ -236,6 +236,13 @@ repositories on their own release cadence, so a schema-version bump is a
 coordinated change across all of them, not a local refactor. The
 [notebook](notebooks/artifact-contract.livemd) documents every file and field.
 
+Within `doc-shell/v1`, the source catalogue is additive: a producer may add a
+new per-source index file to the manifest, and `kind` is an open string carried
+through navigation and search. Generic consumers must ignore unrecognised
+manifest entries and kinds; selective consumers may continue reading only the
+artifacts they support. Removing an existing artifact, or removing, renaming,
+or retyping an existing field, still requires a schema-version change.
+
 ---
 
 ## Sources
@@ -253,7 +260,9 @@ Five extractors, each usable on its own:
 - **`DocShell.Generate.Changelog`** loads release notes through a source
   adapter. The built-in Markdown source reads `CHANGELOG.md`; hosts can supply
   graph-, database-, CMS-, or service-backed adapters without changing the
-  artifact contract.
+  artifact contract. Its parser accepts git_ops parenthesised dates and Keep a
+  Changelog hyphenated dates, with inline, reference-style, or absent version
+  links and SemVer prereleases.
 - **`DocShell.Generate.OpenApi`** loads an API description through a pluggable
   adapter.
 
