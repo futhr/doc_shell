@@ -9,6 +9,22 @@ defmodule Mix.Tasks.DocShell.BuildTest do
 
   alias Mix.Tasks.DocShell.Build
 
+  defmodule ChangelogSource do
+    @moduledoc false
+
+    @behaviour DocShell.Generate.Changelog.Source
+
+    alias DocShell.Generate.Changelog
+
+    @impl true
+    def load(_) do
+      Changelog.from_markdown(
+        "## 1.0.0 - 2026-08-31\n\nRelease notes",
+        "memory://release-notes"
+      )
+    end
+  end
+
   setup do
     root = tmp_dir!("doc-shell-task")
     saved_public = Application.get_env(:doc_shell, :public_dir)
@@ -62,6 +78,20 @@ defmodule Mix.Tasks.DocShell.BuildTest do
     assert File.exists?(Path.join(root, "private/manifest.json"))
   end
 
+  test "the reported document count includes changelog entries" do
+    saved_source = Application.get_env(:doc_shell, :changelog_source)
+
+    on_exit(fn -> restore(:changelog_source, saved_source) end)
+
+    Application.put_env(:doc_shell, :changelog_source, nil)
+    without_changelog = run_and_read_count()
+
+    Application.put_env(:doc_shell, :changelog_source, ChangelogSource)
+    with_changelog = run_and_read_count()
+
+    assert with_changelog == without_changelog + 1
+  end
+
   test "mix doc_shell.build rejects unsupported arguments" do
     assert_raise Mix.Error, ~r/does not accept positional arguments/, fn ->
       Build.run(["extra"])
@@ -86,6 +116,18 @@ defmodule Mix.Tasks.DocShell.BuildTest do
 
   defp restore(key, nil), do: Application.delete_env(:doc_shell, key)
   defp restore(key, value), do: Application.put_env(:doc_shell, key, value)
+
+  defp run_and_read_count do
+    reenable_build_tasks()
+    output = capture_io(fn -> Build.run([]) end)
+
+    [count] =
+      Regex.run(~r/Generated DocShell artifacts for (\d+) documents/, output,
+        capture: :all_but_first
+      )
+
+    String.to_integer(count)
+  end
 
   defp reenable_build_tasks do
     Mix.Task.reenable("app.start")

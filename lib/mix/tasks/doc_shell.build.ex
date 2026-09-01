@@ -49,7 +49,10 @@ defmodule Mix.Tasks.DocShell.Build do
 
     case DocShell.Build.run(modules: project_modules()) do
       {:ok, result} ->
-        count = length(result.modules) + length(result.guides) + length(result.livebooks)
+        count =
+          length(result.modules) + length(result.guides) + length(result.livebooks) +
+            length(result.changelog)
+
         Mix.shell().info("Generated DocShell artifacts for #{count} documents")
 
       {:error, reason} ->
