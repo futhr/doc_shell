@@ -5,6 +5,25 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.2.0](https://github.com/futhr/doc_shell/compare/v0.1.0...v0.2.0) (2026-09-01)
+
+
+
+
+### Features:
+
+* build: decouple host extraction from files and supervision by futhr
+
+* generate: extract changelog releases as documentation entries by futhr
+
+### Bug Fixes:
+
+* deps: support compatible AshOaskit hosts by futhr
+
+* build: report every generated document by futhr
+
+* generate: support conventional changelog releases by futhr
+
 ## [v0.1.0](https://github.com/futhr/doc_shell/compare/v0.1.0...v0.1.0) (2026-08-24)
 
 

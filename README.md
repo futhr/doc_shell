@@ -60,7 +60,7 @@ deliberately awkward to make it hold any.
 ```elixir
 def deps do
   [
-    {:doc_shell, "~> 0.1.0"}
+    {:doc_shell, "~> 0.2.0"}
   ]
 end
 ```
@@ -70,7 +70,7 @@ Two integrations are optional and only needed if you use them:
 ```elixir
 def deps do
   [
-    {:doc_shell, "~> 0.1.0"},
+    {:doc_shell, "~> 0.2.0"},
     # Derive the OpenAPI document from Ash domains
     {:ash_oaskit, "~> 0.3"},
     # Serve artifacts over HTTP
