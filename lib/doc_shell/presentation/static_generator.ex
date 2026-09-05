@@ -88,8 +88,13 @@ defmodule DocShell.Presentation.StaticGenerator do
     }
 
     case is_list(entries) do
-      true -> project_entries(entries, settings)
-      false -> {:error, :entries_must_be_a_list}
+      true ->
+        with :ok <- DocShell.Presentation.Source.validate_ids(entries) do
+          project_entries(entries, settings)
+        end
+
+      false ->
+        {:error, :entries_must_be_a_list}
     end
   end
 

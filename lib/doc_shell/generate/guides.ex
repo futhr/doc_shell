@@ -62,6 +62,7 @@ defmodule DocShell.Generate.Guides do
       |> Path.join("**/*.md")
       |> Path.wildcard()
     end)
+    |> Enum.uniq_by(&Path.expand/1)
     |> Enum.sort()
     |> Collector.map_ok(fn path ->
       case extract_file(path) do

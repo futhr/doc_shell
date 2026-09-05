@@ -38,4 +38,23 @@ defmodule DocShell.Presentation.Source do
         }
 
   @callback project(keyword()) :: {:ok, presentation()} | {:error, term()}
+  @doc "Rejects duplicate document IDs, retaining source locations in the error."
+  @spec validate_ids([map()]) :: :ok | {:error, term()}
+  def validate_ids(entries) do
+    case Enum.reduce_while(entries, {:ok, %{}}, &collect_id/2) do
+      {:ok, _} -> :ok
+      error -> error
+    end
+  end
+
+  defp collect_id(%{"id" => id} = entry, {:ok, seen}) when is_binary(id) and id != "" do
+    source = get_in(entry, ["meta", "source_path"]) || id
+
+    case Map.fetch(seen, id) do
+      {:ok, previous} -> {:halt, {:error, {:duplicate_document_id, id, [previous, source]}}}
+      :error -> {:cont, {:ok, Map.put(seen, id, source)}}
+    end
+  end
+
+  defp collect_id(entry, _), do: {:halt, {:error, {:invalid_document_id, entry}}}
 end

@@ -233,4 +233,22 @@ defmodule DocShell.Presentation.StaticGeneratorTest do
       end
     end
   end
+
+  test "duplicate IDs fail with source locations even across kinds" do
+    entries =
+      for {kind, path} <- [{"guide", "a/intro.md"}, {"livebook", "b/intro.livemd"}] do
+        %{
+          "id" => "intro",
+          "title" => "Intro",
+          "kind" => kind,
+          "ast" => body(),
+          "meta" => %{"source_path" => path}
+        }
+      end
+
+    assert {:error, {:duplicate_document_id, "intro", ["a/intro.md", "b/intro.livemd"]}} =
+             StaticGenerator.project(entries: entries)
+
+    assert {:error, {:invalid_document_id, _}} = StaticGenerator.project(entries: [%{"id" => ""}])
+  end
 end

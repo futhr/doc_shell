@@ -386,3 +386,9 @@ entries return `{:error, {:invalid_changelog_entry, entry}}`.
 
 YAML frontmatter accepts LF, CRLF, and CR line endings, including a closing
 `---` delimiter at end of file.
+
+## Document identities
+
+Document IDs must be nonempty and unique across all sources, including entries
+filtered from presentation. Duplicate IDs return an error naming both sources.
+Overlapping guide directories extract each normalized path once.

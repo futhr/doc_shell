@@ -119,7 +119,9 @@ defmodule DocShell.Build do
       |> put_option(config, :skip_empty)
       |> put_option(config, :search_tokens)
 
-    GraphProjector.project(source, opts)
+    with :ok <- DocShell.Presentation.Source.validate_ids(entries) do
+      GraphProjector.project(source, opts)
+    end
   end
 
   defp put_option(opts, config, key) do

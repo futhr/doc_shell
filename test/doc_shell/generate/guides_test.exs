@@ -109,4 +109,11 @@ defmodule DocShell.Generate.GuidesTest do
       assert {:ok, %{"id" => "explicit", "title" => "Explicit"}} = Guides.extract_file(path)
     end
   end
+
+  test "overlapping bases extract each path once" do
+    root = tmp_dir!()
+    File.mkdir_p!(Path.join(root, "nested"))
+    File.write!(Path.join(root, "nested/intro.md"), "# Intro")
+    assert {:ok, [_]} = Guides.extract([root, Path.join(root, "nested"), root <> "/."])
+  end
 end
