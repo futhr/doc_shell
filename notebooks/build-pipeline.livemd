@@ -381,3 +381,8 @@ Routing, visual hierarchy, authorization, and rendering stay in the host.
 
 Every changelog source entry must be a valid entry map; `nil` and other invalid
 entries return `{:error, {:invalid_changelog_entry, entry}}`.
+
+## Guide line endings
+
+YAML frontmatter accepts LF, CRLF, and CR line endings, including a closing
+`---` delimiter at end of file.

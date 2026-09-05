@@ -392,3 +392,8 @@ The default OpenAPI 3.1 document includes `info.title` and the configured
 
 Every changelog source entry must be a valid entry map; `nil` and other invalid
 entries return `{:error, {:invalid_changelog_entry, entry}}`.
+
+## Guide line endings
+
+YAML frontmatter accepts LF, CRLF, and CR line endings, including a closing
+`---` delimiter at end of file.

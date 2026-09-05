@@ -93,19 +93,25 @@ defmodule DocShell.Generate.Guides do
     end
   end
 
-  defp split_frontmatter("---\n" <> rest) do
-    case String.split(rest, "\n---\n", parts: 2) do
-      [yaml, markdown] ->
-        case YamlElixir.read_from_string(yaml) do
-          {:ok, data} when is_map(data) -> {:ok, data, markdown}
-          {:ok, _} -> {:error, :frontmatter_must_be_a_map}
-          {:error, reason} -> {:error, reason}
-        end
-
-      _ ->
-        {:error, :unterminated_frontmatter}
+  defp split_frontmatter(source) do
+    case String.split(source, ~r/\r\n|\n|\r/) do
+      ["---" | lines] -> read_frontmatter(lines)
+      _ -> {:ok, %{}, source}
     end
   end
 
-  defp split_frontmatter(markdown), do: {:ok, %{}, markdown}
+  defp read_frontmatter(lines) do
+    case Enum.split_while(lines, &(&1 != "---")) do
+      {yaml, ["---" | body]} -> decode_frontmatter(Enum.join(yaml, "\n"), Enum.join(body, "\n"))
+      _ -> {:error, :unterminated_frontmatter}
+    end
+  end
+
+  defp decode_frontmatter(yaml, markdown) do
+    case YamlElixir.read_from_string(yaml) do
+      {:ok, data} when is_map(data) -> {:ok, data, markdown}
+      {:ok, _} -> {:error, :frontmatter_must_be_a_map}
+      {:error, reason} -> {:error, reason}
+    end
+  end
 end

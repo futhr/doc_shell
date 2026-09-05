@@ -94,4 +94,19 @@ defmodule DocShell.Generate.GuidesTest do
       assert path =~ "broken.md"
     end
   end
+
+  test "frontmatter accepts CRLF and a delimiter at EOF" do
+    root = tmp_dir!()
+
+    for ending <- ["\n", "\r\n", "\r"], body <- [[], ["# Body"]] do
+      path = Path.join(root, "guide.md")
+
+      File.write!(
+        path,
+        Enum.join(["---", "id: explicit", "title: Explicit", "---"] ++ body, ending)
+      )
+
+      assert {:ok, %{"id" => "explicit", "title" => "Explicit"}} = Guides.extract_file(path)
+    end
+  end
 end
