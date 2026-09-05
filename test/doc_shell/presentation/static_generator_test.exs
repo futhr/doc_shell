@@ -260,4 +260,23 @@ defmodule DocShell.Presentation.StaticGeneratorTest do
     assert {:ok, %{search: [search]}} = StaticGenerator.project(entries: [entry])
     assert search.content == "unbreakable\nsecond\nline\nImage"
   end
+
+  test "evaluates each path callback once and reuses its result" do
+    entry = %{"id" => "x", "title" => "X", "kind" => "guide", "ast" => body()}
+
+    callback = fn _ ->
+      send(self(), :path_built)
+      "/#{System.unique_integer([:positive])}"
+    end
+
+    assert {:ok, %{navigation: [nav], search: [search]}} =
+             StaticGenerator.project(entries: [entry], path_builder: callback)
+
+    assert nav.path == search.path
+    assert_received :path_built
+    refute_received :path_built
+
+    assert StaticGenerator.default_path(%{"kind" => "guide", "id" => "a/b?# c"}) ==
+             "/docs/guide/a%2Fb%3F%23%20c"
+  end
 end

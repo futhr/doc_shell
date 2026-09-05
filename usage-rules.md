@@ -185,3 +185,9 @@ examples are ignored. Explicit guide frontmatter titles still take precedence.
 Search content preserves adjacent inline text, including words split by
 formatting. Block elements and line breaks add separators; image alt text is
 searchable. Token generation uses this same text.
+
+## Document paths
+
+Each document path is calculated once and reused by navigation and search.
+Default paths percent-encode kind and ID as individual URL segments. Use a
+custom `path_builder` when IDs intentionally represent a path hierarchy.

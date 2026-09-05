@@ -110,7 +110,11 @@ defmodule DocShell.Presentation.StaticGenerator do
       "/docs/guide/intro"
   """
   @spec default_path(map()) :: String.t()
-  def default_path(entry), do: "/docs/#{entry["kind"]}/#{entry["id"]}"
+  def default_path(entry) do
+    kind = URI.encode(to_string(entry["kind"]), &URI.char_unreserved?/1)
+    id = URI.encode(to_string(entry["id"]), &URI.char_unreserved?/1)
+    "/docs/#{kind}/#{id}"
+  end
 
   defp project_entries(entries, settings) do
     sorted =
@@ -118,11 +122,19 @@ defmodule DocShell.Presentation.StaticGenerator do
       |> reject_empty(settings.skip_empty)
       |> Enum.sort_by(&{&1["kind"], &1["title"]})
 
+    {navigation, search} =
+      sorted
+      |> Enum.map(fn entry ->
+        path = settings.path_builder.(entry)
+        {navigation(entry, path), search(entry, path, settings)}
+      end)
+      |> Enum.unzip()
+
     {:ok,
      %{
        schema_version: DocShell.schema_version(),
-       navigation: Enum.map(sorted, &navigation(&1, settings)),
-       search: Enum.map(sorted, &search(&1, settings)),
+       navigation: navigation,
+       search: search,
        content: Map.new(sorted, &{&1["id"], &1["ast"] || []})
      }}
   end
@@ -130,17 +142,17 @@ defmodule DocShell.Presentation.StaticGenerator do
   defp reject_empty(entries, false), do: entries
   defp reject_empty(entries, true), do: Enum.reject(entries, &(&1["ast"] in [nil, []]))
 
-  defp navigation(entry, settings) do
+  defp navigation(entry, path) do
     %NavigationItem{
       id: entry["id"],
       title: entry["title"],
-      path: settings.path_builder.(entry),
+      path: path,
       kind: entry["kind"],
       meta: entry["meta"] || %{}
     }
   end
 
-  defp search(entry, settings) do
+  defp search(entry, path, settings) do
     content = (entry["ast"] || []) |> ast_text() |> String.trim()
     meta = entry["meta"] || %{}
 
@@ -148,7 +160,7 @@ defmodule DocShell.Presentation.StaticGenerator do
       id: entry["id"],
       title: entry["title"],
       content: content,
-      path: settings.path_builder.(entry),
+      path: path,
       kind: entry["kind"],
       tokens: tokenize(content, settings.search_tokens),
       audience: meta["audience"],
