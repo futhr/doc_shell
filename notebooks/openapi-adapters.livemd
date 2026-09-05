@@ -351,3 +351,9 @@ frameworks. That keeps DocShell renderer-neutral and integration-neutral.
 
 The default OpenAPI 3.1 document includes `info.title` and the configured
 `api_version` as `info.version` (default `"0.1.0"`).
+
+## Optional integration dependencies
+
+Plug is an optional package dependency because web modules compile against it.
+AshOaskit is a development/test fixture; hosts using its runtime adapter install
+AshOaskit themselves. Core consumers do not resolve its dependency tree.

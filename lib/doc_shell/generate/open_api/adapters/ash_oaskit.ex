@@ -62,8 +62,10 @@ defmodule DocShell.Generate.OpenApi.Adapters.AshOaskit do
   end
 
   defp load_ash_oaskit(opts) do
-    case Code.ensure_loaded?(AshOaskit) and function_exported?(AshOaskit, :spec, 1) do
-      true -> {:ok, AshOaskit.spec(opts)}
+    dependency = Module.safe_concat([AshOaskit])
+
+    case Code.ensure_loaded?(dependency) and function_exported?(dependency, :spec, 1) do
+      true -> {:ok, dependency.spec(opts)}
       false -> {:error, :ash_oaskit_not_available}
     end
   rescue

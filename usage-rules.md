@@ -214,3 +214,9 @@ may write them. Use `reload/1` to replace a snapshot.
 `Artifact.read/1` and `read_envelope/1` accept legacy v1 envelopes without
 `generation_id`. A present ID must be a nonempty string. Runtime caches require
 an ID on every artifact and manifest to verify that they form one generation.
+
+## Optional integration dependencies
+
+Plug is an optional package dependency because web modules compile against it.
+AshOaskit is a development/test fixture; hosts using its runtime adapter install
+AshOaskit themselves. Core consumers do not resolve its dependency tree.

@@ -11,7 +11,6 @@ defmodule DocShell.MixProject do
       version: @version,
       elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
-      elixirc_options: [no_warn_undefined: [AshOaskit]],
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
@@ -76,33 +75,24 @@ defmodule DocShell.MixProject do
         {:excoveralls, "~> 0.18", only: :test},
         {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false},
         {:mix_test_watch, "~> 1.2", only: [:dev, :test], runtime: false},
-        {:stream_data, "~> 1.0", only: [:dev, :test], override: true},
+        {:stream_data, "~> 1.0", only: [:dev, :test]},
         {:benchee, "~> 1.3", only: :dev, runtime: false},
         {:benchee_markdown, "~> 0.3", only: :dev, runtime: false},
-        {:ex_doc, "~> 0.34", only: :dev, runtime: false},
+        {:ex_doc, "~> 0.40", only: :dev, runtime: false},
         {:git_ops, "~> 2.6", only: :dev}
       ]
   end
 
-  # Declared in :dev and :test, where this library's own tests exercise the
-  # integrations, and where `mix hex.build` reads them for the published
-  # metadata. Plug remains declared in :prod so hosts that install Plug compile
-  # the optional web modules in dependency order. AshOaskit is dropped in :prod
-  # because its tree needs development-only support libraries in this package's
-  # own build, and the adapter resolves it at runtime instead.
+  # Plug needs dependency ordering for conditional web compilation. AshOaskit
+  # is a development fixture: its adapter resolves the host's library at runtime.
+  # The isolated compile gate removes both integrations.
   defp optional_integrations(:no_optional), do: []
-
-  defp optional_integrations(:prod) do
-    [
-      {:plug, "~> 1.16", optional: true}
-    ]
-  end
 
   defp optional_integrations(_) do
     [
-      # DocShell uses only AshOaskit.spec/1, which is stable across both minor
-      # lines. Keep the optional metadata honest for hosts still on 0.3.
-      {:ash_oaskit, "~> 0.3 or ~> 0.4", optional: true},
+      # Exercise both supported AshOaskit minor lines without imposing its
+      # dependency tree on consumers of the runtime adapter.
+      {:ash_oaskit, "~> 0.3 or ~> 0.4", only: [:dev, :test], runtime: false},
       {:plug, "~> 1.16", optional: true}
     ]
   end
