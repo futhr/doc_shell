@@ -499,3 +499,9 @@ HTTP serving caches encoded JSON and an ETag per generation. GET and HEAD
 share headers; matching `If-None-Match` requests return 304 after authorization.
 Other methods return 405 with `Allow: GET, HEAD`. The host retains control of
 Cache-Control and Vary. Encoding happens during cache publication, not requests.
+
+## OpenAPI version support
+
+Raw and custom adapters accept OpenAPI 3.0, 3.1, and 3.2 documents without
+rewriting their fields. Validation remains a shallow version check; source
+libraries own schema validation. The default document remains OpenAPI 3.1.

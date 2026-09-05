@@ -79,7 +79,7 @@ raw_map_result.openapi["paths"] |> Map.keys()
 ```
 
 The adapter does not transform the map. DocShell only checks that the result
-claims to be OpenAPI 3.0 or 3.1.
+claims to be OpenAPI 3.0, 3.1, or 3.2.
 
 ## Raw JSON from a file
 
@@ -265,7 +265,7 @@ Ignore keys that do not matter to your source.
 ## Validation
 
 `DocShell.Generate.OpenApi.validate/1` is a shallow shape check. It accepts
-OpenAPI 3.0 and 3.1 with either string or atom `openapi` keys.
+OpenAPI 3.0, 3.1, and 3.2 with either string or atom `openapi` keys.
 
 ```elixir
 %{
@@ -305,7 +305,7 @@ Interpret them as follows:
 | `{:error, :nofile}` | The adapter module could not be loaded |
 | `{:error, :invalid_adapter}` | The loaded module does not export `load/1` |
 | `{:error, :invalid_openapi_source}` | The adapter returned neither `{:ok, map}` nor `{:error, reason}` |
-| `{:error, :invalid_openapi_document}` | No usable OpenAPI 3.0 or 3.1 version key |
+| `{:error, :invalid_openapi_document}` | No usable OpenAPI 3.0, 3.1, or 3.2 version key |
 | `{:error, {:openapi_adapter_failed, message}}` | The adapter raised |
 | any other `{:error, reason}` | The adapter returned its own error |
 
@@ -357,3 +357,9 @@ The default OpenAPI 3.1 document includes `info.title` and the configured
 Plug is an optional package dependency because web modules compile against it.
 AshOaskit is a development/test fixture; hosts using its runtime adapter install
 AshOaskit themselves. Core consumers do not resolve its dependency tree.
+
+## OpenAPI version support
+
+Raw and custom adapters accept OpenAPI 3.0, 3.1, and 3.2 documents without
+rewriting their fields. Validation remains a shallow version check; source
+libraries own schema validation. The default document remains OpenAPI 3.1.

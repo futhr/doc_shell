@@ -73,7 +73,7 @@ dependencies — install them only when the host uses those integrations.
 ## Source integrations
 
 - Implement `c:DocShell.Generate.OpenApi.Adapter.load/1` for a new OpenAPI
-  source. Return `{:ok, map}` with an `openapi` key of `"3.0.x"` or `"3.1.x"`,
+  source. Return `{:ok, map}` with an `openapi` key of `"3.0.x"`, `"3.1.x"`, or `"3.2.x"`,
   or `{:error, reason}` with a reason worth reading in a failed build.
 - Implement `c:DocShell.Generate.Changelog.Source.load/1` for a new
   release-note source. Return validated DocShell changelog entries, or fetch
@@ -237,3 +237,9 @@ HTTP serving caches encoded JSON and an ETag per generation. GET and HEAD
 share headers; matching `If-None-Match` requests return 304 after authorization.
 Other methods return 405 with `Allow: GET, HEAD`. The host retains control of
 Cache-Control and Vary. Encoding happens during cache publication, not requests.
+
+## OpenAPI version support
+
+Raw and custom adapters accept OpenAPI 3.0, 3.1, and 3.2 documents without
+rewriting their fields. Validation remains a shallow version check; source
+libraries own schema validation. The default document remains OpenAPI 3.1.

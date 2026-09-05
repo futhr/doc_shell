@@ -23,7 +23,7 @@ defmodule DocShell.Generate.OpenApi do
   export `load/1`, calls the callback inside a rescue so an adapter raising
   cannot take down a build with a
   stacktrace instead of a reason, and validates that whatever came back
-  actually claims to be OpenAPI 3.0 or 3.1.
+  actually claims to be OpenAPI 3.0, 3.1, or 3.2.
 
   That validation is deliberately shallow. Full schema validation is the job of
   the spec library that produced the document, and duplicating it here would
@@ -46,7 +46,7 @@ defmodule DocShell.Generate.OpenApi do
   Loads the OpenAPI document from `adapter`, passing `opts` through to it.
 
   Guards against a missing, non-conforming, or raising adapter, and rejects
-  documents that do not identify as OpenAPI 3.0 or 3.1.
+  documents that do not identify as OpenAPI 3.0, 3.1, or 3.2.
   """
   @spec extract(module(), keyword()) :: {:ok, map()} | {:error, term()}
   def extract(adapter, opts) when is_atom(adapter) and is_list(opts) do
@@ -63,7 +63,7 @@ defmodule DocShell.Generate.OpenApi do
   end
 
   @doc """
-  Checks that a map identifies itself as an OpenAPI 3.0 or 3.1 document.
+  Checks that a map identifies itself as an OpenAPI 3.0, 3.1, or 3.2 document.
 
   Accepts either a string or atom `openapi` key, since adapters build documents
   with whichever their underlying library prefers. This is a shape check, not
@@ -90,7 +90,7 @@ defmodule DocShell.Generate.OpenApi do
 
   defp validate_version(version) do
     case Version.parse(version) do
-      {:ok, %Version{major: 3, minor: minor}} when minor in [0, 1] -> :ok
+      {:ok, %Version{major: 3, minor: minor}} when minor in [0, 1, 2] -> :ok
       _ -> {:error, :invalid_openapi_document}
     end
   end

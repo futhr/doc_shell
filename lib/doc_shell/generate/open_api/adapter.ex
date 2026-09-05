@@ -28,7 +28,7 @@ defmodule DocShell.Generate.OpenApi.Adapter do
   ## Contract
 
   Return `{:ok, document}` where `document` is a map with an `openapi` key of
-  `"3.0.x"` or `"3.1.x"`, or `{:error, reason}` with a reason a human reading a
+  `"3.0.x"`, `"3.1.x"`, or `"3.2.x"`, or `{:error, reason}` with a reason a human reading a
   failed build can act on. Returning an error is always preferable to raising,
   though `DocShell.Generate.OpenApi` rescues either way.
 

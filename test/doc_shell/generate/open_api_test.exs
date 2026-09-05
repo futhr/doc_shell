@@ -60,11 +60,24 @@ defmodule DocShell.Generate.OpenApiTest do
       assert :ok = OpenApi.validate(%{openapi: "3.0.0"})
     end
 
-    test "rejects anything that is not an OpenAPI 3.0 or 3.1 document" do
+    test "rejects anything that is not a supported OpenAPI document" do
       assert {:error, :invalid_openapi_document} = OpenApi.validate(%{"paths" => %{}})
       assert {:error, :invalid_openapi_document} = OpenApi.validate(%{"openapi" => "2.0.0"})
-      assert {:error, :invalid_openapi_document} = OpenApi.validate(%{"openapi" => "3.2.0"})
+      assert {:error, :invalid_openapi_document} = OpenApi.validate(%{"openapi" => "3.3.0"})
       assert {:error, :invalid_openapi_document} = OpenApi.validate(%{"openapi" => "3.1.x"})
     end
+  end
+
+  test "raw adapters preserve OpenAPI 3.2 documents" do
+    spec = %{
+      "openapi" => "3.2.0",
+      "info" => %{"title" => "API", "version" => "1"},
+      "paths" => %{},
+      "query" => %{"description" => "preserve extensions"}
+    }
+
+    assert {:ok, ^spec} = OpenApi.extract(DocShell.Generate.OpenApi.Adapters.RawJson, spec: spec)
+    assert :ok = OpenApi.validate(%{openapi: "3.2.1"})
+    assert {:error, :invalid_openapi_document} = OpenApi.validate(%{"openapi" => "4.0.0"})
   end
 end
