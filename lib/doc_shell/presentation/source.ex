@@ -6,17 +6,13 @@ defmodule DocShell.Presentation.Source do
   from — authored entries, a knowledge graph, or anything else. The renderer
   never learns which.
 
-  ## Why structs
+  Presentation structs provide a common set of fields and defaults for all
+  producers. Their `Jason.Encoder` implementations emit the string-keyed JSON
+  contract, including null facets. `DocShell.Presentation.GraphProjector`
+  validates field types, recursive AST content, and JSON metadata at runtime.
 
-  These were maps with string keys, typed `[map()]`, which described nothing.
-  Two producers drifted apart under that spec without anything noticing: one
-  emitted `kind`, `meta`, and `tokens`, the other omitted all three, so the
-  renderer's TypeScript had to guess — and guessed wrong on all of them.
-
-  Structs make the shape a compile-time fact. The wire form is unchanged —
-  `DocShell.Json.stringify/1` renders them as the same string-keyed JSON — but
-  every producer now emits the same keys, with `nil` where a facet does not
-  apply, so an artifact no longer depends on who wrote it.
+  Optional backlinks are available in the in-memory result. The build writes
+  navigation, search, and content artifacts; it does not serialize backlinks.
   """
 
   alias DocShell.Presentation.Backlink

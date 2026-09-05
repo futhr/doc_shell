@@ -2,12 +2,10 @@ defmodule DocShell.Generate.ExDoc do
   @moduledoc """
   Extracts documentation from compiled modules through the BEAM docs chunk.
 
-  This reads the same `Docs` chunk that `h MyApp.Accounts` and ExDoc read, so
-  what comes out is whatever the compiler actually stored — no source parsing,
-  no separate Markdown pass over `.ex` files, and no chance of the artifact
-  disagreeing with `IEx`. The modules must be compiled and loadable; in
-  practice that means running inside the host application, which is what
-  `mix doc_shell.build` arranges.
+  This reads the same `Docs` chunk used by IEx and ExDoc, then extracts English
+  documentation and normalizes its metadata for JSON. Modules must be compiled
+  and loadable; `mix doc_shell.build` arranges this inside the host application.
+  Source files are not required once their BEAM documentation is available.
 
   Each module becomes one entry:
 
@@ -65,8 +63,9 @@ defmodule DocShell.Generate.ExDoc do
   @doc """
   Extracts documentation for a list of compiled modules.
 
-  Undocumented modules are omitted. The first module that fails to read
-  short-circuits the run and returns `{:error, {module, reason}}`.
+  Modules without a documentation chunk are omitted. Modules with hidden or
+  absent moduledocs are retained with empty ASTs and a metadata status. The
+  first read failure returns `{:error, {module, reason}}`.
   """
   @spec extract([module()]) :: {:ok, [map()]} | {:error, term()}
   def extract(modules) when is_list(modules) do

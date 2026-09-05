@@ -393,3 +393,11 @@ custom `path_builder` when IDs intentionally represent a path hierarchy.
 `Artifact.read/1` and `read_envelope/1` accept legacy v1 envelopes without
 `generation_id`. A present ID must be a nonempty string. Runtime caches require
 an ID on every artifact and manifest to verify that they form one generation.
+
+## Presentation structs and backlinks
+
+Presentation structs serialize through `Jason.Encoder` into the documented
+string-keyed objects. `DocShell.Json.stringify/1` instead converts arbitrary
+structs into text and must not be used to serialize presentation structs.
+Projector backlinks are validated and available in the in-memory build result;
+the build does not write a backlinks artifact.

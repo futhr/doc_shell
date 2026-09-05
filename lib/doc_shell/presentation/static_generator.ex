@@ -11,7 +11,7 @@ defmodule DocShell.Presentation.StaticGenerator do
       sorted by kind then title, so modules, guides, notebooks, and release notes group
       together and each group reads alphabetically.
     * **search** — one `DocShell.Presentation.SearchEntry` per entry, with the
-      document flattened to plain text and pre-tokenized.
+      document flattened to plain text and optional precomputed tokens.
     * **content** — a map from entry id to its AST nodes, so a renderer can
       load one page without parsing the whole set.
 
@@ -55,11 +55,9 @@ defmodule DocShell.Presentation.StaticGenerator do
   which means code blocks, table cells, and link text are all searchable and
   no markup leaks into the index.
 
-  `tokens` is off by default and comes back `[]`. It is the same text downcased
-  and split on non-alphanumeric runs, and it costs roughly three quarters of
-  the size of the text it duplicates — for a field the shipped renderer does
-  not read, because it indexes `title` and `content` itself. Hosts wiring a
-  search backend that wants a pre-split form set `search_tokens: true`.
+  `tokens` defaults to `[]`. With `search_tokens: true`, the same text is
+  downcased and split on non-alphanumeric runs. Enable this when the host's
+  search backend needs precomputed tokens.
 
   ## Options
 

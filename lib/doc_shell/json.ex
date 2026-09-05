@@ -139,10 +139,9 @@ defmodule DocShell.Json do
   @doc """
   Encodes a presentation struct as a plain string-keyed JSON object.
 
-  Deriving `Jason.Encoder` would serialise fields in `defstruct` order, whereas
-  these shapes were string-keyed maps and so encoded lexicographically. Keeping
-  string keys keeps that order, which keeps the artifact byte-stable across the
-  switch to structs — an artifact diff should show a content change or nothing.
+  Presentation structs use this helper in their `Jason.Encoder` implementations
+  to emit all fields with string keys. This is distinct from `stringify/1`,
+  which treats arbitrary structs as textual metadata values.
   """
   @spec encode_struct(struct(), Jason.Encode.opts()) :: iodata()
   def encode_struct(value, opts) do

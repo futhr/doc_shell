@@ -37,21 +37,10 @@ Start with the build-pipeline notebook in a browser:
 
 ## Why
 
-Most documentation tooling couples extraction to rendering. The thing that
-reads your `@moduledoc` also decides what the page looks like, which is fine
-until you want the same content somewhere else — a marketing site, an
-in-product help panel, a search box, a knowledge graph. At that point the
-renderer owns your content, and getting it back out means scraping HTML or
-running the extractor a second way.
-
-DocShell only does the first half. It reads module documentation, Markdown
-guides, Livebook notebooks, release notes, and OpenAPI documents, and writes
-them as versioned JSON. What renders that JSON — Svelte, LiveView, React, a
-static site generator, nothing at all — is entirely up to you.
-
-That boundary is enforced rather than suggested. The package holds no routes,
-no templates, no tenancy model, and no authorization policy, and it is
-deliberately awkward to make it hold any.
+DocShell reads module documentation, Markdown guides, Livebook notebooks,
+release notes, and OpenAPI documents into versioned JSON. Hosts can reuse
+those artifacts in a documentation site, in-product help, search index, or
+knowledge graph. Rendering, routing, and authorization belong to the host.
 
 ---
 
@@ -72,7 +61,7 @@ def deps do
   [
     {:doc_shell, "~> 0.2.0"},
     # Derive the OpenAPI document from Ash domains
-    {:ash_oaskit, "~> 0.3"},
+    {:ash_oaskit, "~> 0.4"},
     # Serve artifacts over HTTP
     {:plug, "~> 1.16"}
   ]
@@ -116,12 +105,12 @@ task or when feeding a database rather than a directory:
 ```
 
 `result` holds `:modules`, `:guides`, `:livebooks`, `:changelog`, `:openapi`, and
-`:presentation` — the same data that was written to disk.
+`:presentation`. Source entries retain their ASTs in memory; the per-source
+files omit those bodies, which are stored in `content.json` for entries included
+in the presentation. Optional projector backlinks remain in memory only.
 
 Extraction stops at the first error and names the module or file at fault. A
-guide with broken frontmatter is not skipped, because documentation that
-quietly loses a page is worse than a build that fails: nobody notices the
-former until a reader does.
+guide with broken frontmatter returns an error naming its source file.
 
 ---
 
@@ -178,6 +167,34 @@ file DocShell writes, and the
 selection and implementation. Use the
 [serving artifacts notebook](notebooks/serving-artifacts.livemd) when wiring the
 runtime cache, Plug, or a host controller.
+
+### Default API identity
+
+The default OpenAPI 3.1 document includes `info.title` and the configured
+`api_version` as `info.version` (default `"0.1.0"`).
+
+### Configuration errors
+
+`Build.run/1` rejects malformed options and unknown per-call keys before
+extraction. Unknown application environment keys remain ignored. Invalid guide
+identities, titles, audience, and locale return errors naming the field and file.
+Guide IDs and titles accept nonempty strings or numeric/boolean scalars.
+
+### Output destinations
+
+Public and private output directories must be disjoint. The optional raw
+OpenAPI destination must lie outside both. Conflicting paths fail before
+extraction or writes; use dedicated directories without symlink aliases.
+
+### Failed builds and recovery
+
+Builds stage all JSON and back up existing files before publishing. Returned
+publication failures restore earlier files; rollback failures report retained
+backup paths. Cooperating builds use `.doc-shell-build.lock` directories. After
+a process or machine crash, recover retained backups and remove stale locks
+before rebuilding. Files still publish individually, so cache reloads validate
+generation IDs and keep the last complete snapshot. Use dedicated output
+directories without external writers or symlink aliases.
 
 ## What comes out
 
@@ -245,13 +262,56 @@ or retyping an existing field, still requires a schema-version change.
 
 ---
 
+### Document identities
+
+Document IDs must be nonempty and unique across all sources, including entries
+filtered from presentation. Duplicate IDs return an error naming both sources.
+Overlapping guide directories extract each normalized path once.
+
+### Recursive content validation
+
+Host projectors and changelog sources must provide complete recursive AST nodes
+and JSON metadata with string keys. Invalid nested content fails validation
+before output is written. `DocShell.Ast.valid?/1` checks node lists.
+
+### Legacy envelope compatibility
+
+`Artifact.read/1` and `read_envelope/1` accept legacy v1 envelopes without
+`generation_id`. A present ID must be a nonempty string. Runtime caches require
+an ID on every artifact and manifest to verify that they form one generation.
+
+### Concurrent artifact writers
+
+Individual artifact writes use exclusively created random temporary files in
+the destination directory, so independent BEAM instances cannot share a
+temporary file. A rename publishes each complete file.
+
+### JSON metadata normalization
+
+Metadata preserves JSON scalars and uses UTF-8 string keys. Unsupported terms
+become inspected text; improper list tails become a final array value.
+`DocShell.Json.normalize/1` rejects converted-key collisions. The legacy
+`stringify/1` keeps string keys when a collision occurs. Guides use `normalize/1`.
+
+### Search text
+
+Search content preserves adjacent inline text, including words split by
+formatting. Block elements and line breaks add separators; image alt text is
+searchable. Token generation uses this same text.
+
+### Document paths
+
+Each document path is calculated once and reused by navigation and search.
+Default paths percent-encode kind and ID as individual URL segments. Use a
+custom `path_builder` when IDs intentionally represent a path hierarchy.
+
 ## Sources
 
 Five extractors, each usable on its own:
 
 - **`DocShell.Generate.ExDoc`** reads compiled modules through the BEAM docs
-  chunk — the same chunk `h MyApp.Accounts` reads, so the artifact can never
-  disagree with IEx.
+  chunk used by IEx and ExDoc. It extracts English documentation and keeps
+  metadata indicating hidden or absent module documentation.
 - **`DocShell.Generate.Guides`** reads Markdown, with optional YAML frontmatter
   for titles, audience, locale, and anything else you want carried through to
   the renderer.
@@ -268,6 +328,29 @@ Five extractors, each usable on its own:
 
 ---
 
+### Guide line endings
+
+YAML frontmatter accepts LF, CRLF, and CR line endings, including a closing
+`---` delimiter at end of file.
+
+### Markdown titles
+
+Guide and notebook titles come from the first top-level parsed H1, including
+Setext headings. Inline formatting is flattened, and headings inside code
+examples are ignored. Explicit guide frontmatter titles still take precedence.
+
+### Changelog source validation
+
+Every changelog source entry must be a valid entry map; `nil` and other invalid
+entries return `{:error, {:invalid_changelog_entry, entry}}`.
+
+### Changelog Markdown context
+
+Changelogs are parsed as complete Markdown documents before splitting on
+top-level release headings. Code examples remain within their release, and
+reference links resolve across the whole document. Parse errors in any part
+of the source return a source-tagged error.
+
 ## OpenAPI
 
 Where the OpenAPI document comes from varies too much to hard-code, so the
@@ -283,6 +366,18 @@ package:
 Both library-backed adapters resolve their dependency at runtime, so neither
 library is a dependency of DocShell. Writing your own means implementing one
 callback — see the [OpenAPI adapters notebook](notebooks/openapi-adapters.livemd).
+
+### OpenAPI version support
+
+Raw and custom adapters accept OpenAPI 3.0, 3.1, and 3.2 documents without
+rewriting their fields. Validation remains a shallow version check; source
+libraries own schema validation. The default document remains OpenAPI 3.1.
+
+### Optional integration dependencies
+
+Plug is an optional package dependency because web modules compile against it.
+AshOaskit is a development/test fixture; hosts using its runtime adapter install
+AshOaskit themselves. Core consumers do not resolve its dependency tree.
 
 ## Serving it
 
@@ -317,6 +412,23 @@ through static serving, runtime caching, reloads, gates, and controller usage.
 
 ---
 
+### Supervising named caches
+
+A cache child specification uses its registered name as its child ID. Multiple
+named caches can be listed directly in one supervision tree.
+
+### Cache ownership
+
+Cache ETS tables permit direct concurrent reads, but only the cache process
+may write them. Use `reload/1` to replace a snapshot.
+
+### HTTP response caching
+
+HTTP serving caches encoded JSON and an ETag per generation. GET and HEAD
+share headers; matching `If-None-Match` requests return 304 after authorization.
+Other methods return 405 with `Allow: GET, HEAD`. The host retains control of
+Cache-Control and Vary. Encoding happens during cache publication, not requests.
+
 ## Graph-backed hosts
 
 Hosts that ingest documentation into a database or knowledge graph do not need
@@ -333,12 +445,9 @@ To serve documentation back out of that store, implement
 config :doc_shell, presentation_source: MyApp.Docs.GraphProjector
 ```
 
-The pipeline validates whatever the projector returns before anything
-downstream sees it — a projector lives in another repository, and a shape
-mistake there would otherwise surface as a rendering bug in a third.
-
-Renderers consume the contract and cannot tell whether files or a graph
-produced it. That is the point.
+The pipeline validates the projector's field types, recursive AST content,
+and metadata before writing files. Hosts use the same presentation contract
+for extracted files and graph-backed content.
 
 ---
 
@@ -358,11 +467,11 @@ mix bench        # run the benchmarks
 `mix check` runs formatting, `--warnings-as-errors` compilation, strict Credo,
 documentation and typespec coverage, tests with coverage, dependency
 advisories, Dialyzer, and a compile with the optional dependencies removed. CI
-runs the same set across Elixir 1.17 through 1.20.
+runs tests and coverage across Elixir 1.17 through 1.20, with the remaining
+quality checks on Elixir 1.18.
 
 `mix docs` emits HTML, Markdown, and EPUB. The Markdown formatter is what
-produces `doc/llms.txt` and a `.md` file per module — the form machine readers
-consume, and the one this package would look silly shipping without.
+produces `doc/llms.txt` and a `.md` file per module for machine readers.
 
 `mix bench` writes Markdown reports to `bench/output/`, which are published as
 the Performance section of the documentation.
@@ -378,130 +487,3 @@ consumers can ingest [usage-rules.md](usage-rules.md) through the Hex
 ## License
 
 MIT. See [LICENSE.md](LICENSE.md).
-
----
-
-**Built for ♥ Elixir, where docs are first-class citizens.**
-
-## Default API identity
-
-The default OpenAPI 3.1 document includes `info.title` and the configured
-`api_version` as `info.version` (default `"0.1.0"`).
-
-## Changelog source validation
-
-Every changelog source entry must be a valid entry map; `nil` and other invalid
-entries return `{:error, {:invalid_changelog_entry, entry}}`.
-
-## Guide line endings
-
-YAML frontmatter accepts LF, CRLF, and CR line endings, including a closing
-`---` delimiter at end of file.
-
-## Document identities
-
-Document IDs must be nonempty and unique across all sources, including entries
-filtered from presentation. Duplicate IDs return an error naming both sources.
-Overlapping guide directories extract each normalized path once.
-
-## JSON metadata normalization
-
-Metadata preserves JSON scalars and uses UTF-8 string keys. Unsupported terms
-become inspected text; improper list tails become a final array value.
-`DocShell.Json.normalize/1` rejects converted-key collisions. The legacy
-`stringify/1` keeps string keys when a collision occurs. Guides use `normalize/1`.
-
-## Recursive content validation
-
-Host projectors and changelog sources must provide complete recursive AST nodes
-and JSON metadata with string keys. Invalid nested content fails validation
-before output is written. `DocShell.Ast.valid?/1` checks node lists.
-
-## Configuration errors
-
-`Build.run/1` rejects malformed options and unknown per-call keys before
-extraction. Unknown application environment keys remain ignored. Invalid guide
-identities, titles, audience, and locale return errors naming the field and file.
-Guide IDs and titles accept nonempty strings or numeric/boolean scalars.
-
-## Output destinations
-
-Public and private output directories must be disjoint. The optional raw
-OpenAPI destination must lie outside both. Conflicting paths fail before
-extraction or writes; use dedicated directories without symlink aliases.
-
-## Concurrent artifact writers
-
-Individual artifact writes use exclusively created random temporary files in
-the destination directory, so independent BEAM instances cannot share a
-temporary file. A rename publishes each complete file.
-
-## Markdown titles
-
-Guide and notebook titles come from the first top-level parsed H1, including
-Setext headings. Inline formatting is flattened, and headings inside code
-examples are ignored. Explicit guide frontmatter titles still take precedence.
-
-## Search text
-
-Search content preserves adjacent inline text, including words split by
-formatting. Block elements and line breaks add separators; image alt text is
-searchable. Token generation uses this same text.
-
-## Document paths
-
-Each document path is calculated once and reused by navigation and search.
-Default paths percent-encode kind and ID as individual URL segments. Use a
-custom `path_builder` when IDs intentionally represent a path hierarchy.
-
-## Changelog Markdown context
-
-Changelogs are parsed as complete Markdown documents before splitting on
-top-level release headings. Code examples remain within their release, and
-reference links resolve across the whole document. Parse errors in any part
-of the source return a source-tagged error.
-
-## Supervising named caches
-
-A cache child specification uses its registered name as its child ID. Multiple
-named caches can be listed directly in one supervision tree.
-
-## Cache ownership
-
-Cache ETS tables permit direct concurrent reads, but only the cache process
-may write them. Use `reload/1` to replace a snapshot.
-
-## Legacy envelope compatibility
-
-`Artifact.read/1` and `read_envelope/1` accept legacy v1 envelopes without
-`generation_id`. A present ID must be a nonempty string. Runtime caches require
-an ID on every artifact and manifest to verify that they form one generation.
-
-## Optional integration dependencies
-
-Plug is an optional package dependency because web modules compile against it.
-AshOaskit is a development/test fixture; hosts using its runtime adapter install
-AshOaskit themselves. Core consumers do not resolve its dependency tree.
-
-## Failed builds and recovery
-
-Builds stage all JSON and back up existing files before publishing. Returned
-publication failures restore earlier files; rollback failures report retained
-backup paths. Cooperating builds use `.doc-shell-build.lock` directories. After
-a process or machine crash, recover retained backups and remove stale locks
-before rebuilding. Files still publish individually, so cache reloads validate
-generation IDs and keep the last complete snapshot. Use dedicated output
-directories without external writers or symlink aliases.
-
-## HTTP response caching
-
-HTTP serving caches encoded JSON and an ETag per generation. GET and HEAD
-share headers; matching `If-None-Match` requests return 304 after authorization.
-Other methods return 405 with `Allow: GET, HEAD`. The host retains control of
-Cache-Control and Vary. Encoding happens during cache publication, not requests.
-
-## OpenAPI version support
-
-Raw and custom adapters accept OpenAPI 3.0, 3.1, and 3.2 documents without
-rewriting their fields. Validation remains a shallow version check; source
-libraries own schema validation. The default document remains OpenAPI 3.1.
