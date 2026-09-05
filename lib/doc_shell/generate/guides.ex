@@ -81,9 +81,9 @@ defmodule DocShell.Generate.Guides do
          {:ok, raw_frontmatter, markdown} <- split_frontmatter(source),
          {:ok, frontmatter} <- DocShell.Json.normalize(raw_frontmatter),
          {:ok, id} <- field_text(frontmatter, "id", Path.rootname(Path.basename(path))),
-         {:ok, title} <- field_text(frontmatter, "title", Collector.title(markdown, id)),
          :ok <- validate_facets(frontmatter),
-         {:ok, ast} <- Ast.from_markdown(markdown) do
+         {:ok, ast} <- Ast.from_markdown(markdown),
+         {:ok, title} <- field_text(frontmatter, "title", Collector.title(markdown, id)) do
       {:ok,
        %{
          "id" => to_string(id),

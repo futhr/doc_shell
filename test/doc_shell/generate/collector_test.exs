@@ -92,4 +92,10 @@ defmodule DocShell.Generate.CollectorTest do
       end
     end
   end
+
+  test "titles follow parsed Markdown headings and fences" do
+    assert Collector.title("Actual **Title**\n============\n", "fallback") == "Actual Title"
+    assert Collector.title("```\n```still-code\n# Fake\n```\n\n# Real", "fallback") == "Real"
+    assert Collector.title("# Title ###", "fallback") == "Title"
+  end
 end

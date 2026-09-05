@@ -435,3 +435,9 @@ extraction or writes; use dedicated directories without symlink aliases.
 Individual artifact writes use exclusively created random temporary files in
 the destination directory, so independent BEAM instances cannot share a
 temporary file. A rename publishes each complete file.
+
+## Markdown titles
+
+Guide and notebook titles come from the first top-level parsed H1, including
+Setext headings. Inline formatting is flattened, and headings inside code
+examples are ignored. Explicit guide frontmatter titles still take precedence.
