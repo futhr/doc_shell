@@ -441,3 +441,9 @@ temporary file. A rename publishes each complete file.
 Guide and notebook titles come from the first top-level parsed H1, including
 Setext headings. Inline formatting is flattened, and headings inside code
 examples are ignored. Explicit guide frontmatter titles still take precedence.
+
+## Search text
+
+Search content preserves adjacent inline text, including words split by
+formatting. Block elements and line breaks add separators; image alt text is
+searchable. Token generation uses this same text.

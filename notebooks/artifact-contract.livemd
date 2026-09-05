@@ -375,3 +375,9 @@ before output is written. `DocShell.Ast.valid?/1` checks node lists.
 Individual artifact writes use exclusively created random temporary files in
 the destination directory, so independent BEAM instances cannot share a
 temporary file. A rename publishes each complete file.
+
+## Search text
+
+Search content preserves adjacent inline text, including words split by
+formatting. Block elements and line breaks add separators; image alt text is
+searchable. Token generation uses this same text.

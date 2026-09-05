@@ -251,4 +251,13 @@ defmodule DocShell.Presentation.StaticGeneratorTest do
 
     assert {:error, {:invalid_document_id, _}} = StaticGenerator.project(entries: [%{"id" => ""}])
   end
+
+  test "search preserves inline words and separates paragraphs and breaks" do
+    {:ok, ast} =
+      DocShell.Ast.from_markdown("un**break**able\n\nsecond  \nline\n\n![Image](image.png)")
+
+    entry = %{"id" => "x", "title" => "X", "kind" => "guide", "ast" => ast}
+    assert {:ok, %{search: [search]}} = StaticGenerator.project(entries: [entry])
+    assert search.content == "unbreakable\nsecond\nline\nImage"
+  end
 end

@@ -51,7 +51,7 @@ defmodule DocShell.Presentation.StaticGenerator do
 
   ## Search text
 
-  Search content is the AST flattened depth-first with a space between nodes,
+  Search content preserves inline text adjacency and separates block elements,
   which means code blocks, table cells, and link text are all searchable and
   no markup leaks into the index.
 
@@ -141,7 +141,7 @@ defmodule DocShell.Presentation.StaticGenerator do
   end
 
   defp search(entry, settings) do
-    content = ast_text(entry["ast"] || [])
+    content = (entry["ast"] || []) |> ast_text() |> String.trim()
     meta = entry["meta"] || %{}
 
     %SearchEntry{
@@ -164,7 +164,16 @@ defmodule DocShell.Presentation.StaticGenerator do
     |> String.split(~r/[^[:alnum:]_]+/u, trim: true)
   end
 
-  defp ast_text(nodes) when is_list(nodes), do: Enum.map_join(nodes, " ", &ast_text/1)
+  @block_tags ~w(address article aside blockquote dd div dl dt figcaption figure footer
+                  form h1 h2 h3 h4 h5 h6 header hr li main nav ol p pre section table td th tr ul)
+
+  defp ast_text(nodes) when is_list(nodes), do: Enum.map_join(nodes, &ast_text/1)
+  defp ast_text(%{"tag" => "br"}), do: "\n"
+  defp ast_text(%{"tag" => "img", "attrs" => attrs}), do: Map.get(attrs, "alt", "")
+
+  defp ast_text(%{"tag" => tag, "content" => content}) when tag in @block_tags,
+    do: ast_text(content) <> "\n"
+
   defp ast_text(%{"content" => content}), do: ast_text(content)
   defp ast_text(text) when is_binary(text), do: text
   defp ast_text(_), do: ""
