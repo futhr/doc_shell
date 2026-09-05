@@ -316,4 +316,25 @@ defmodule DocShell.BuildTest do
 
     refute File.exists?(public)
   end
+
+  test "late encoding and sidecar failures preserve all existing output bytes" do
+    {public, private, root} = dirs("transaction")
+    opts = base_opts(public, private)
+    assert {:ok, _} = Build.run(opts)
+    before = Map.new(Path.wildcard(Path.join(root, "**/*.json")), &{&1, File.read!(&1)})
+
+    bad = [
+      open_api_adapter: RawJson,
+      open_api_options: [spec: %{"openapi" => "3.1.0", "bad" => self()}]
+    ]
+
+    assert {:error, _} = Build.run(Keyword.merge(opts, bad))
+    assert {:error, _} = Build.run(Keyword.put(opts, :openapi_spec_path, root))
+    for {path, bytes} <- before, do: assert(File.read!(path) == bytes)
+
+    refute Enum.any?(
+             Path.wildcard(Path.join(root, "**/*"), match_dot: true),
+             &String.ends_with?(&1, [".stage", ".backup", ".lock"])
+           )
+  end
 end

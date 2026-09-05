@@ -220,3 +220,13 @@ an ID on every artifact and manifest to verify that they form one generation.
 Plug is an optional package dependency because web modules compile against it.
 AshOaskit is a development/test fixture; hosts using its runtime adapter install
 AshOaskit themselves. Core consumers do not resolve its dependency tree.
+
+## Failed builds and recovery
+
+Builds stage all JSON and back up existing files before publishing. Returned
+publication failures restore earlier files; rollback failures report retained
+backup paths. Cooperating builds use `.doc-shell-build.lock` directories. After
+a process or machine crash, recover retained backups and remove stale locks
+before rebuilding. Files still publish individually, so cache reloads validate
+generation IDs and keep the last complete snapshot. Use dedicated output
+directories without external writers or symlink aliases.

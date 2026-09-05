@@ -425,3 +425,13 @@ Changelogs are parsed as complete Markdown documents before splitting on
 top-level release headings. Code examples remain within their release, and
 reference links resolve across the whole document. Parse errors in any part
 of the source return a source-tagged error.
+
+## Failed builds and recovery
+
+Builds stage all JSON and back up existing files before publishing. Returned
+publication failures restore earlier files; rollback failures report retained
+backup paths. Cooperating builds use `.doc-shell-build.lock` directories. After
+a process or machine crash, recover retained backups and remove stale locks
+before rebuilding. Files still publish individually, so cache reloads validate
+generation IDs and keep the last complete snapshot. Use dedicated output
+directories without external writers or symlink aliases.

@@ -169,7 +169,6 @@ defmodule DocShell.Build do
     private = Config.fetch!(config, :private_dir)
     generated_at = DateTime.utc_now()
     generation_id = DocShell.Artifact.new_generation_id()
-    write_opts = [generated_at: generated_at, generation_id: generation_id]
 
     artifacts = [
       {"modules.json", index_only(result.modules)},
@@ -182,38 +181,33 @@ defmodule DocShell.Build do
       {"content.json", result.presentation.content}
     ]
 
-    with :ok <- write_all(public, artifacts, write_opts),
-         :ok <- write_manifest(public, Enum.map(artifacts, &elem(&1, 0)), write_opts),
-         :ok <- write_manifest(private, [], write_opts) do
-      write_openapi_spec(config, result.openapi)
-    end
+    public_files =
+      Enum.map(artifacts, fn {name, payload} ->
+        {Path.join(public, name),
+         DocShell.Artifact.envelope(payload, generated_at, generation_id)}
+      end)
+
+    manifests =
+      [
+        {Path.join(public, "manifest.json"), %{"artifacts" => Enum.map(artifacts, &elem(&1, 0))}},
+        {Path.join(private, "manifest.json"), %{"artifacts" => []}}
+      ]
+
+    manifests =
+      Enum.map(manifests, fn {path, payload} ->
+        {path, DocShell.Artifact.envelope(payload, generated_at, generation_id)}
+      end)
+
+    raw =
+      case config[:openapi_spec_path] do
+        nil -> []
+        path -> [{path, result.openapi}]
+      end
+
+    DocShell.Artifact.Transaction.write(public_files ++ raw ++ manifests)
   end
 
   defp index_only(entries), do: Enum.map(entries, &Map.delete(&1, "ast"))
-
-  defp write_manifest(dir, names, write_opts) do
-    DocShell.Artifact.write(
-      Path.join(dir, "manifest.json"),
-      %{"artifacts" => names},
-      write_opts
-    )
-  end
-
-  defp write_openapi_spec(config, openapi) do
-    case config[:openapi_spec_path] do
-      nil -> :ok
-      path -> DocShell.Artifact.write_raw(path, openapi)
-    end
-  end
-
-  defp write_all(dir, artifacts, write_opts) do
-    Enum.reduce_while(artifacts, :ok, fn {name, data}, :ok ->
-      case DocShell.Artifact.write(Path.join(dir, name), data, write_opts) do
-        :ok -> {:cont, :ok}
-        error -> {:halt, error}
-      end
-    end)
-  end
 
   defp validate_destinations(config) do
     public = Path.expand(config[:public_dir])
