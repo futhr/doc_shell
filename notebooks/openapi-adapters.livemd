@@ -346,3 +346,8 @@ without forcing every host to depend on AshOaskit or OpenApiSpex.
 
 The main design rule is that the build pipeline talks to adapters, not to host
 frameworks. That keeps DocShell renderer-neutral and integration-neutral.
+
+## Default API identity
+
+The default OpenAPI 3.1 document includes `info.title` and the configured
+`api_version` as `info.version` (default `"0.1.0"`).

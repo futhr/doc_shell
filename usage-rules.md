@@ -120,3 +120,8 @@ dependencies — install them only when the host uses those integrations.
 The AST preserves raw HTML and URL schemes. Renderers must allow-list tags and
 attributes, reject unsafe URL schemes, and escape text for their output context.
 Parsing Markdown is not sanitization.
+
+## Default API identity
+
+The default OpenAPI 3.1 document includes `info.title` and the configured
+`api_version` as `info.version` (default `"0.1.0"`).

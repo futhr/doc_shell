@@ -136,7 +136,10 @@ defmodule DocShell.Build do
     {:ok,
      %{
        "openapi" => "3.1.0",
-       "info" => %{"title" => config[:title] || "Documentation"},
+       "info" => %{
+         "title" => config[:title] || "Documentation",
+         "version" => config[:api_version] || "0.1.0"
+       },
        "paths" => %{}
      }}
   end

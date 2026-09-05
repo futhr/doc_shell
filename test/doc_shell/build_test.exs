@@ -258,4 +258,19 @@ defmodule DocShell.BuildTest do
       private_dir: private
     ]
   end
+
+  test "default OpenAPI includes the configured API version and passes schema validation" do
+    assert {:ok, result} =
+             Build.run(
+               write: false,
+               modules: [],
+               guide_bases: [],
+               livebook_base: "missing",
+               changelog_source: nil,
+               api_version: "2.3.4"
+             )
+
+    assert result.openapi["info"]["version"] == "2.3.4"
+    assert Oaskit.SpecValidator.validate!(result.openapi)
+  end
 end

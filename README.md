@@ -382,3 +382,8 @@ MIT. See [LICENSE.md](LICENSE.md).
 ---
 
 **Built for ♥ Elixir, where docs are first-class citizens.**
+
+## Default API identity
+
+The default OpenAPI 3.1 document includes `info.title` and the configured
+`api_version` as `info.version` (default `"0.1.0"`).
