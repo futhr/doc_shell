@@ -159,14 +159,18 @@ defmodule DocShell.Artifact do
   end
 
   defp write_atomically(path, contents) do
-    temporary = "#{path}.#{System.unique_integer([:positive])}.tmp"
+    temporary = "#{path}.#{new_generation_id()}.tmp"
 
-    try do
-      with :ok <- File.write(temporary, contents) do
-        File.rename(temporary, path)
+    with {:ok, file} <- File.open(temporary, [:write, :exclusive, :binary]) do
+      try do
+        with :ok <- :file.write(file, contents),
+             :ok <- File.close(file) do
+          File.rename(temporary, path)
+        end
+      after
+        File.close(file)
+        File.rm(temporary)
       end
-    after
-      File.rm(temporary)
     end
   end
 

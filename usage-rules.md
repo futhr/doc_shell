@@ -167,3 +167,9 @@ Guide IDs and titles accept nonempty strings or numeric/boolean scalars.
 Public and private output directories must be disjoint. The optional raw
 OpenAPI destination must lie outside both. Conflicting paths fail before
 extraction or writes; use dedicated directories without symlink aliases.
+
+## Concurrent artifact writers
+
+Individual artifact writes use exclusively created random temporary files in
+the destination directory, so independent BEAM instances cannot share a
+temporary file. A rename publishes each complete file.

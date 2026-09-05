@@ -243,4 +243,28 @@ defmodule DocShell.ArtifactTest do
       ])
     end)
   end
+
+  test "independent BEAM writers leave a complete artifact" do
+    dir = tmp_dir!()
+    path = Path.join(dir, "shared.json")
+    code = "[path, writer] = System.argv(); :ok = DocShell.Artifact.write(path, writer)"
+
+    paths = for app <- [:doc_shell, :jason], do: Application.app_dir(app, "ebin")
+
+    args = Enum.flat_map(paths, &["-pa", &1]) ++ ["-e", code]
+
+    1..3
+    |> Task.async_stream(fn writer ->
+      System.cmd(System.find_executable("elixir"), args ++ [path, to_string(writer)],
+        env: [{"ERL_FLAGS", "+S 2:2"}],
+        stderr_to_stdout: true
+      )
+    end)
+    |> Enum.each(fn {:ok, {output, status}} -> assert status == 0, output end)
+
+    assert {:ok, writer} = Artifact.read(path)
+    assert writer in ["1", "2", "3"]
+    assert File.ls!(dir) == ["shared.json"]
+  end
+
 end
