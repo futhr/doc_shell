@@ -79,4 +79,22 @@ defmodule DocShell.Ast do
   defp normalize(value) when is_binary(value), do: value
 
   defp normalize_meta(meta), do: DocShell.Json.stringify(meta)
+  @doc "Checks a list of recursive AST nodes without coercing malformed content."
+  @spec valid?(term()) :: boolean()
+  def valid?(nodes) when is_list(nodes), do: valid_nodes?(nodes)
+  def valid?(_), do: false
+
+  defp valid_nodes?([]), do: true
+  defp valid_nodes?([head | tail]), do: valid_node?(head) and valid_nodes?(tail)
+  defp valid_nodes?(_), do: false
+
+  defp valid_node?(text) when is_binary(text), do: String.valid?(text)
+
+  defp valid_node?(%{"tag" => tag, "attrs" => attrs, "content" => content, "meta" => meta}) do
+    is_binary(tag) and String.valid?(tag) and is_map(attrs) and
+      DocShell.Json.valid?(attrs) and is_map(meta) and DocShell.Json.valid?(meta) and
+      valid?(content)
+  end
+
+  defp valid_node?(_), do: false
 end

@@ -209,4 +209,26 @@ defmodule DocShell.Presentation.GraphProjectorTest do
                })
     end
   end
+
+  test "rejects invalid recursive AST and non-JSON metadata" do
+    base = %{schema_version: DocShell.schema_version(), navigation: [], search: [], content: %{}}
+
+    for nodes <- [
+          [42],
+          [%{"wat" => true}],
+          [self()],
+          [<<255>>],
+          ["text" | :bad],
+          [%{"tag" => "p", "attrs" => %{}, "content" => [], "meta" => %{atom: 1}}]
+        ] do
+      assert {:error, _} = GraphProjector.validate(%{base | content: %{"id" => nodes}})
+    end
+
+    for meta <- [%{atom: 1}, %{"pid" => self()}] do
+      nav = %NavigationItem{id: "a", title: "A", path: "/", meta: meta}
+      assert {:error, _} = GraphProjector.validate(%{base | navigation: [nav]})
+    end
+
+    assert {:ok, _} = GraphProjector.validate(%{base | content: %{"a" => ["valid"]}})
+  end
 end

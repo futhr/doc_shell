@@ -148,3 +148,9 @@ Metadata preserves JSON scalars and uses UTF-8 string keys. Unsupported terms
 become inspected text; improper list tails become a final array value.
 `DocShell.Json.normalize/1` rejects converted-key collisions. The legacy
 `stringify/1` keeps string keys when a collision occurs. Guides use `normalize/1`.
+
+## Recursive content validation
+
+Host projectors and changelog sources must provide complete recursive AST nodes
+and JSON metadata with string keys. Invalid nested content fails validation
+before output is written. `DocShell.Ast.valid?/1` checks node lists.

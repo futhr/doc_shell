@@ -73,7 +73,9 @@ defmodule DocShell.Presentation.GraphProjector do
   defp check_list(_, _, key), do: {:error, {:invalid_presentation, {key, :expected_a_list}}}
 
   defp check_content(content) when is_map(content) do
-    case Enum.all?(content, fn {id, nodes} -> is_binary(id) and is_list(nodes) end) do
+    case Enum.all?(content, fn {id, nodes} ->
+           is_binary(id) and String.valid?(id) and DocShell.Ast.valid?(nodes)
+         end) do
       true -> :ok
       false -> {:error, {:invalid_presentation, {:content, :expected_id_to_nodes}}}
     end
@@ -98,24 +100,27 @@ defmodule DocShell.Presentation.GraphProjector do
   defp check_backlinks(_), do: {:error, {:invalid_presentation, {:backlinks, :expected_a_map}}}
 
   defp valid_item?(%NavigationItem{} = item, NavigationItem) do
-    is_binary(item.id) and is_binary(item.title) and is_binary(item.path) and
-      optional_string?(item.kind) and is_map(item.meta) and is_list(item.children) and
+    valid_string?(item.id) and valid_string?(item.title) and valid_string?(item.path) and
+      optional_string?(item.kind) and is_map(item.meta) and DocShell.Json.valid?(item.meta) and
+      is_list(item.children) and
       Enum.all?(item.children, &valid_item?(&1, NavigationItem))
   end
 
   defp valid_item?(%SearchEntry{} = item, SearchEntry) do
-    is_binary(item.id) and is_binary(item.title) and is_binary(item.content) and
-      is_binary(item.path) and optional_string?(item.kind) and
-      is_list(item.tokens) and Enum.all?(item.tokens, &is_binary/1) and
+    valid_string?(item.id) and valid_string?(item.title) and valid_string?(item.content) and
+      valid_string?(item.path) and optional_string?(item.kind) and
+      is_list(item.tokens) and Enum.all?(item.tokens, &valid_string?/1) and
       optional_string?(item.audience) and
       optional_string?(item.locale)
   end
 
   defp valid_item?(%Backlink{} = item, Backlink) do
-    is_binary(item.id) and is_binary(item.title) and is_binary(item.path)
+    valid_string?(item.id) and valid_string?(item.title) and valid_string?(item.path)
   end
 
   defp valid_item?(_, _), do: false
 
-  defp optional_string?(value), do: is_nil(value) or is_binary(value)
+  defp valid_string?(value), do: is_binary(value) and String.valid?(value)
+
+  defp optional_string?(value), do: is_nil(value) or valid_string?(value)
 end

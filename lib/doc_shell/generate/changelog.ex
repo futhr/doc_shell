@@ -163,12 +163,12 @@ defmodule DocShell.Generate.Changelog do
   end
 
   defp valid_entry?(%{"id" => id, "title" => title, "kind" => "changelog", "ast" => ast} = entry) do
-    is_binary(id) and id != "" and is_binary(title) and title != "" and is_list(ast) and
+    is_binary(id) and id != "" and is_binary(title) and title != "" and Ast.valid?(ast) and
       valid_meta?(Map.get(entry, "meta", %{}))
   end
 
   defp valid_entry?(_), do: false
-  defp valid_meta?(meta), do: is_map(meta)
+  defp valid_meta?(meta), do: is_map(meta) and DocShell.Json.valid?(meta)
 
   # Chunks lines into {release_header_match, body_lines} pairs; the preamble
   # before the first release heading is dropped.
