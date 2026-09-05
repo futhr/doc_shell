@@ -31,7 +31,6 @@ defmodule DocShell.Generate.Changelog do
   alias DocShell.Generate.Changelog.Sources.MarkdownFile
 
   @release ~r/^##\s+(?:\[(?<bracketed>v?\d[\w.+-]*)\](?:\((?<inline_url>[^)]+)\))?|(?<plain>v?\d[\w.+-]*))(?:\s*(?:-\s*(?<hyphen_date>\d{4}-\d{2}-\d{2})|\((?<paren_date>[^)]+)\)))?\s*$/
-  @reference ~r/^\[(?<version>v?\d[\w.+-]*)\]:\s*(?<url>\S+)/
 
   @doc """
   Extracts release entries from a configured source or a Markdown file path.
@@ -68,20 +67,17 @@ defmodule DocShell.Generate.Changelog do
   """
   @spec from_markdown(String.t(), String.t()) :: {:ok, [map()]} | {:error, term()}
   def from_markdown(source, source_ref) when is_binary(source) and is_binary(source_ref) do
-    references = reference_links(source)
+    case Ast.from_markdown(source) do
+      {:ok, nodes} ->
+        entries =
+          nodes
+          |> Enum.chunk_while([], &chunk_release/2, &finish_release/1)
+          |> Enum.map(fn {header, body} -> entry(header, body, source_ref) end)
 
-    source
-    |> String.split("\n")
-    |> Enum.chunk_while([], &chunk_release/2, &finish_release/1)
-    |> Enum.reduce_while({:ok, []}, fn {header, body}, {:ok, acc} ->
-      case entry(header, body, source_ref, references) do
-        {:ok, entry} -> {:cont, {:ok, [entry | acc]}}
-        {:error, reason} -> {:halt, {:error, {source_ref, reason}}}
-      end
-    end)
-    |> case do
-      {:ok, entries} -> {:ok, Enum.reverse(entries)}
-      error -> error
+        {:ok, entries}
+
+      {:error, reason} ->
+        {:error, {source_ref, reason}}
     end
   end
 
@@ -170,7 +166,7 @@ defmodule DocShell.Generate.Changelog do
   defp valid_entry?(_), do: false
   defp valid_meta?(meta), do: is_map(meta) and DocShell.Json.valid?(meta)
 
-  # Chunks lines into {release_header_match, body_lines} pairs; the preamble
+  # Chunks top-level nodes into {release_header_match, body_nodes} pairs; the preamble
   # before the first release heading is dropped.
   defp chunk_release(line, acc) do
     case release_header(line) do
@@ -193,50 +189,45 @@ defmodule DocShell.Generate.Changelog do
 
   defp emit([{header, body}]), do: {header, Enum.reverse(body)}
 
-  defp entry(header, body_lines, source_ref, references) do
-    markdown = Enum.join(body_lines, "\n")
-    version = header.version
-    compare_url = header.compare_url || Map.get(references, version)
-
-    with {:ok, ast} <- Ast.from_markdown(markdown) do
-      {:ok,
-       %{
-         "id" => "changelog-#{version}",
-         "title" => "Changelog #{version}",
-         "kind" => "changelog",
-         "ast" => ast,
-         "meta" => %{
-           "version" => version,
-           "compare_url" => compare_url,
-           "date" => header.date,
-           "source_path" => source_ref
-         }
-       }}
-    end
+  defp entry(header, nodes, source_ref) do
+    %{
+      "id" => "changelog-#{header.version}",
+      "title" => "Changelog #{header.version}",
+      "kind" => "changelog",
+      "ast" => nodes,
+      "meta" => %{
+        "version" => header.version,
+        "compare_url" => header.compare_url,
+        "date" => header.date,
+        "source_path" => source_ref
+      }
+    }
   end
 
-  defp release_header(line) do
-    case Regex.named_captures(@release, line) do
+  defp release_header(%{"tag" => "h2", "content" => content}) do
+    case Regex.named_captures(@release, "## " <> heading_text(content)) do
       nil ->
         nil
 
       captures ->
         %{
           version: present(captures["bracketed"]) || present(captures["plain"]),
-          compare_url: present(captures["inline_url"]),
+          compare_url: heading_link(content),
           date: present(captures["hyphen_date"]) || present(captures["paren_date"])
         }
     end
   end
 
-  defp reference_links(source) do
-    source
-    |> String.split("\n")
-    |> Enum.reduce(%{}, fn line, links ->
-      case Regex.named_captures(@reference, line) do
-        %{"url" => url, "version" => version} -> Map.put(links, version, String.trim(url, "<>"))
-        nil -> links
-      end
+  defp release_header(_), do: nil
+
+  defp heading_text(nodes) when is_list(nodes), do: Enum.map_join(nodes, &heading_text/1)
+  defp heading_text(%{"content" => nodes}), do: heading_text(nodes)
+  defp heading_text(text) when is_binary(text), do: text
+
+  defp heading_link(nodes) do
+    Enum.find_value(nodes, fn
+      %{"tag" => "a", "attrs" => %{"href" => href}} -> href
+      _ -> nil
     end)
   end
 

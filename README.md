@@ -453,3 +453,10 @@ searchable. Token generation uses this same text.
 Each document path is calculated once and reused by navigation and search.
 Default paths percent-encode kind and ID as individual URL segments. Use a
 custom `path_builder` when IDs intentionally represent a path hierarchy.
+
+## Changelog Markdown context
+
+Changelogs are parsed as complete Markdown documents before splitting on
+top-level release headings. Code examples remain within their release, and
+reference links resolve across the whole document. Parse errors in any part
+of the source return a source-tagged error.

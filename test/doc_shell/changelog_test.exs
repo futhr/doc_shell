@@ -244,4 +244,24 @@ defmodule DocShell.Generate.ChangelogTest do
     assert {:error, {:invalid_changelog_entry, nil}} = Changelog.validate([nil, %{"bad" => true}])
     assert {:error, {:invalid_changelog_entry, false}} = Changelog.validate([false])
   end
+
+  test "release headings inside code do not split releases" do
+    source = "## v1.0.0\n\n```md\n## v0.0.1\n```\n"
+
+    assert {:ok, [%{"id" => "changelog-v1.0.0", "ast" => [%{"tag" => "pre"}]}]} =
+             Changelog.from_markdown(source, "demo")
+  end
+
+  test "release bodies retain document-wide references" do
+    source =
+      "## [2.0.0]\n\nSee [docs][help].\n\n## v1.0.0\n\nOld.\n\n[help]: https://example.com\n[2.0.0]: https://example.com/compare\n"
+
+    assert {:ok, [latest, _]} = Changelog.from_markdown(source, "demo")
+    assert latest["meta"]["compare_url"] == "https://example.com/compare"
+
+    assert Enum.any?(
+             hd(latest["ast"])["content"],
+             &match?(%{"tag" => "a", "attrs" => %{"href" => "https://example.com"}}, &1)
+           )
+  end
 end

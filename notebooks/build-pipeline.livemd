@@ -418,3 +418,10 @@ extraction or writes; use dedicated directories without symlink aliases.
 Guide and notebook titles come from the first top-level parsed H1, including
 Setext headings. Inline formatting is flattened, and headings inside code
 examples are ignored. Explicit guide frontmatter titles still take precedence.
+
+## Changelog Markdown context
+
+Changelogs are parsed as complete Markdown documents before splitting on
+top-level release headings. Code examples remain within their release, and
+reference links resolve across the whole document. Parse errors in any part
+of the source return a source-tagged error.
