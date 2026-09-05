@@ -220,9 +220,9 @@ writes one walker rather than one per source:
 ```
 
 Text nodes are bare strings; everything else is a map with all four keys always
-present. No HTML is ever produced, which means nothing to sanitize and no class
-names to agree on — an `h2` can be a heading component or an anchor target,
-whichever suits the renderer.
+present. The AST preserves raw HTML tags, attributes, and link destinations.
+Renderers must allow-list tags and attributes, validate URL schemes, and escape
+text for their output context before rendering untrusted documents.
 
 `navigation.json`, `search-index.json`, and `content.json` are the three files a
 renderer actually reads. `modules.json`, `guides.json`, `livebooks.json`, and

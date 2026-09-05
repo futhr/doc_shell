@@ -121,4 +121,14 @@ defmodule DocShell.AstTest do
     assert is_map(node["meta"])
     assert_node_shape(node["content"])
   end
+
+  test "preserves raw HTML and URLs for host rendering policy" do
+    assert {:ok, [script, paragraph]} =
+             DocShell.Ast.from_markdown(
+               "<script>alert(1)</script>\n\n[go](javascript:alert%281%29)"
+             )
+
+    assert script["tag"] == "script"
+    assert hd(paragraph["content"])["attrs"]["href"] == "javascript:alert%281%29"
+  end
 end

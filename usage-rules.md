@@ -114,3 +114,9 @@ dependencies — install them only when the host uses those integrations.
 - [Artifact contract](https://hexdocs.pm/doc_shell/artifact-contract.html)
 - [OpenAPI adapters](https://hexdocs.pm/doc_shell/openapi-adapters.html)
 - [Serving artifacts](https://hexdocs.pm/doc_shell/serving-artifacts.html)
+
+## Rendering untrusted content
+
+The AST preserves raw HTML and URL schemes. Renderers must allow-list tags and
+attributes, reject unsafe URL schemes, and escape text for their output context.
+Parsing Markdown is not sanitization.

@@ -2,9 +2,9 @@ defmodule DocShell.Ast do
   @moduledoc """
   Parses Markdown into the recursive, JSON-safe node shape renderers consume.
 
-  DocShell never ships HTML. Rendering Markdown to a string of HTML would force
-  every consumer to sanitize it, agree on a class naming scheme, and give up on
-  rendering anything as a native component. Instead every Markdown source —
+  DocShell preserves source structure without choosing a renderer. The AST can
+  contain raw HTML tags and unsafe URL schemes; consumers must validate tags,
+  attributes, and URLs and escape text for their rendering context. Every source —
   module documentation, guides, notebooks — is parsed once, here, into a tree
   of plain maps:
 
