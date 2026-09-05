@@ -81,6 +81,7 @@ defmodule DocShell.Build do
   @spec run(keyword()) :: {:ok, map()} | {:error, term()}
   def run(overrides \\ []) do
     with {:ok, config} <- Config.resolve(overrides),
+         :ok <- validate_destinations(config),
          {:ok, extracted} <- extract(config),
          {:ok, presentation} <- project(extracted, config),
          result = Map.put(extracted, :presentation, presentation),
@@ -213,4 +214,24 @@ defmodule DocShell.Build do
       end
     end)
   end
+
+  defp validate_destinations(config) do
+    public = Path.expand(config[:public_dir])
+    private = Path.expand(config[:private_dir])
+    raw = config[:openapi_spec_path]
+
+    cond do
+      inside?(public, private) or inside?(private, public) ->
+        {:error, {:conflicting_output_directories, public, private}}
+
+      raw && (inside?(Path.expand(raw), public) or inside?(Path.expand(raw), private)) ->
+        {:error, {:conflicting_openapi_path, raw}}
+
+      true ->
+        :ok
+    end
+  end
+
+  defp inside?(path, directory),
+    do: path == directory or String.starts_with?(path, directory <> "/")
 end

@@ -161,3 +161,9 @@ before output is written. `DocShell.Ast.valid?/1` checks node lists.
 extraction. Unknown application environment keys remain ignored. Invalid guide
 identities, titles, audience, and locale return errors naming the field and file.
 Guide IDs and titles accept nonempty strings or numeric/boolean scalars.
+
+## Output destinations
+
+Public and private output directories must be disjoint. The optional raw
+OpenAPI destination must lie outside both. Conflicting paths fail before
+extraction or writes; use dedicated directories without symlink aliases.

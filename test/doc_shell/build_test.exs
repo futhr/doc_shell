@@ -295,4 +295,25 @@ defmodule DocShell.BuildTest do
 
     assert {:error, {:unknown_options, [:guid_bases]}} = Build.run(guid_bases: [])
   end
+
+  test "conflicting output destinations fail before writing" do
+    root = tmp_dir!()
+    public = Path.join(root, "public")
+
+    for private <- [public, public <> "/.", Path.join(public, "nested"), root] do
+      assert {:error, {:conflicting_output_directories, _, _}} =
+               Build.run(public_dir: public, private_dir: private)
+    end
+
+    for raw <- [public, Path.join(public, "openapi.json"), Path.join(root, "private/raw.json")] do
+      assert {:error, {:conflicting_openapi_path, ^raw}} =
+               Build.run(
+                 public_dir: public,
+                 private_dir: Path.join(root, "private"),
+                 openapi_spec_path: raw
+               )
+    end
+
+    refute File.exists?(public)
+  end
 end
