@@ -279,4 +279,13 @@ defmodule DocShell.Presentation.StaticGeneratorTest do
     assert StaticGenerator.default_path(%{"kind" => "guide", "id" => "a/b?# c"}) ==
              "/docs/guide/a%2Fb%3F%23%20c"
   end
+
+  property "duplicate identities never silently overwrite content" do
+    check all(id <- string(:alphanumeric, min_length: 1)) do
+      entry = %{"id" => id, "title" => "Title", "kind" => "guide", "ast" => body()}
+
+      assert {:error, {:duplicate_document_id, ^id, _}} =
+               StaticGenerator.project(entries: [entry, %{entry | "kind" => "livebook"}])
+    end
+  end
 end

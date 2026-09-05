@@ -170,4 +170,13 @@ defmodule DocShell.JsonTest do
       assert {:ok, ^normalized} = Json.normalize(normalized)
     end
   end
+
+  property "numeric and textual metadata keys cannot collapse silently" do
+    check all(key <- integer()) do
+      text = Integer.to_string(key)
+
+      assert {:error, {:duplicate_json_key, ^text}} =
+               Json.normalize(%{key => true, text => false})
+    end
+  end
 end

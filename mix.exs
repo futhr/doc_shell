@@ -65,6 +65,7 @@ defmodule DocShell.MixProject do
     optional_integrations(Mix.env()) ++
       [
         {:jason, "~> 1.4"},
+        {:open_api_spex, "~> 3.22.4", only: :test, runtime: false},
         {:earmark_parser, "~> 1.4"},
         {:yaml_elixir, "~> 2.11"},
         {:credo, "~> 1.7", only: [:dev, :test], runtime: false},

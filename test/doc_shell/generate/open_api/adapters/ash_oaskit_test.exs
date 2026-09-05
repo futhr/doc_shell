@@ -45,4 +45,18 @@ defmodule DocShell.Generate.OpenApi.Adapters.AshOaskitTest do
 
     assert {:error, :ash_oaskit_not_available} = AshOaskit.load(domains: [Example.Domain])
   end
+
+  test "generates schemas from a real Ash domain without AshJsonApi" do
+    assert {:ok, spec} =
+             AshOaskit.load(
+               domains: [DocShell.OpenApiFixtures.Domain],
+               resource_scope: :all,
+               title: "Real domain",
+               api_version: "2.0"
+             )
+
+    assert spec["info"] == %{"title" => "Real domain", "version" => "2.0"}
+    assert map_size(spec["components"]["schemas"]) > 0
+    assert Oaskit.SpecValidator.validate!(spec)
+  end
 end

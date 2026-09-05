@@ -46,4 +46,12 @@ defmodule DocShell.Generate.OpenApi.Adapters.OpenApiSpexTest do
     assert {:error, :open_api_spex_source_unavailable} = OpenApiSpex.load(module: Enum)
     assert {:error, :open_api_spex_source_unavailable} = OpenApiSpex.load(module: nil)
   end
+
+  test "uses the real OpenApiSpex encoder for nested fields" do
+    assert {:ok, spec} = OpenApiSpex.load(module: DocShell.OpenApiFixtures.RealSpex)
+    assert spec["info"] == %{"title" => "Integration", "version" => "1.2.3"}
+    schema = spec["components"]["schemas"]["Thing"]
+    assert schema["additionalProperties"] == false
+    assert schema["properties"]["name"]["type"] == "string"
+  end
 end
