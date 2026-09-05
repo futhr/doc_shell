@@ -23,9 +23,14 @@ defmodule DocShell.Json do
   encode. Losing the structure of an exotic value beats failing the build on
   it.
 
-  Everything else — numbers, binaries — is left exactly as it is. Preserving
+  Numbers and valid UTF-8 strings are preserved. Other terms and invalid binaries
+  become inspected text; improper list tails become a final array value. Preserving
   native types matters: a version number that arrives as `1` should not reach a
   renderer as `"1"`.
+
+  `normalize/1` rejects collisions between converted map keys. The legacy
+  `stringify/1` function remains lossy: string keys take precedence over other
+  keys that normalize to the same text. Use `normalize/1` at input boundaries.
 
   ## One implementation
 
@@ -56,14 +61,80 @@ defmodule DocShell.Json do
     |> Enum.map(&stringify/1)
   end
 
-  def stringify(value) when is_list(value), do: Enum.map(value, &stringify/1)
+  def stringify([]), do: []
+  def stringify([head | tail]), do: [stringify(head) | stringify_tail(tail)]
 
   def stringify(%_{} = value), do: stringify_struct(value)
 
-  def stringify(value) when is_map(value),
-    do: Map.new(value, fn {key, item} -> {stringify_key(key), stringify(item)} end)
+  def stringify(value) when is_map(value) do
+    value
+    |> Enum.sort_by(fn {key, _} -> {is_binary(key), key} end)
+    |> Map.new(fn {key, item} -> {stringify_key(key), stringify(item)} end)
+  end
 
-  def stringify(value), do: value
+  def stringify(value) when is_binary(value) do
+    if String.valid?(value), do: value, else: inspect(value)
+  end
+
+  def stringify(value) when is_number(value), do: value
+  def stringify(value), do: inspect(value)
+
+  @doc "Normalizes metadata, returning an error when converted map keys collide."
+  @spec normalize(term()) :: {:ok, term()} | {:error, {:duplicate_json_key, String.t()}}
+  def normalize(value) do
+    with :ok <- check_keys(value), do: {:ok, stringify(value)}
+  end
+
+  @doc "Checks that a value contains only native JSON values and UTF-8 string keys."
+  @spec valid?(term()) :: boolean()
+  def valid?(value) when is_nil(value) or is_boolean(value) or is_number(value), do: true
+  def valid?(value) when is_binary(value), do: String.valid?(value)
+  def valid?([]), do: true
+  def valid?([head | tail]), do: valid?(head) and valid_list?(tail)
+  def valid?(%_{}), do: false
+  def valid?(value) when is_map(value), do: Enum.all?(value, &valid_pair?/1)
+  def valid?(_), do: false
+
+  defp valid_list?(value) when is_list(value), do: valid?(value)
+  defp valid_list?(_), do: false
+  defp valid_pair?({key, value}), do: is_binary(key) and String.valid?(key) and valid?(value)
+
+  defp stringify_tail([]), do: []
+  defp stringify_tail([_ | _] = tail), do: stringify(tail)
+  defp stringify_tail(tail), do: [stringify(tail)]
+
+  defp check_keys(%_{}), do: :ok
+
+  defp check_keys(value) when is_map(value) do
+    with :ok <- unique_keys(Map.keys(value)) do
+      check_keys(Map.values(value))
+    end
+  end
+
+  defp check_keys(value) when is_tuple(value), do: check_keys(Tuple.to_list(value))
+
+  defp check_keys([head | tail]) do
+    with :ok <- check_keys(head), do: check_keys(tail)
+  end
+
+  defp check_keys(_), do: :ok
+
+  defp unique_keys(keys) do
+    case Enum.reduce_while(keys, MapSet.new(), &collect_key/2) do
+      {:error, _} = error -> error
+      _ -> :ok
+    end
+  end
+
+  defp collect_key(key, seen) do
+    key = stringify_key(key)
+
+    if MapSet.member?(seen, key) do
+      {:halt, {:error, {:duplicate_json_key, key}}}
+    else
+      {:cont, MapSet.put(seen, key)}
+    end
+  end
 
   @doc """
   Encodes a presentation struct as a plain string-keyed JSON object.
@@ -84,11 +155,13 @@ defmodule DocShell.Json do
   defp stringify_struct(value) do
     case String.Chars.impl_for(value) do
       nil -> inspect(value)
-      _ -> to_string(value)
+      _ -> value |> to_string() |> stringify()
     end
+  rescue
+    _ -> inspect(value)
   end
 
-  defp stringify_key(key) when is_binary(key), do: key
+  defp stringify_key(key) when is_binary(key), do: stringify(key)
   defp stringify_key(key) when is_atom(key), do: Atom.to_string(key)
   defp stringify_key(key), do: inspect(key)
 end

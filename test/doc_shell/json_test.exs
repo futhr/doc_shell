@@ -145,4 +145,29 @@ defmodule DocShell.JsonTest do
 
     defp assert_string_keys(_), do: :ok
   end
+
+  test "normalizes unsupported terms and rejects ambiguous keys" do
+    for value <- [self(), make_ref(), fn -> :ok end, <<255>>, [:a | :tail], %{<<255>> => true}] do
+      assert {:ok, normalized} = Json.normalize(value)
+      assert {:ok, _} = Jason.encode(normalized)
+      assert Json.valid?(normalized)
+    end
+
+    assert {:error, {:duplicate_json_key, "same"}} =
+             Json.normalize(%{nested: {%{:same => 1, "same" => 2}}})
+
+    assert Json.stringify(%{:same => 1, "same" => 2}) == %{"same" => 2}
+
+    for invalid <- [self(), <<255>>, [1 | 2], %{atom: 1}, ~D[2026-01-01]] do
+      refute Json.valid?(invalid)
+    end
+  end
+
+  property "arbitrary binaries become encodable and normalization stays idempotent" do
+    check all(value <- binary()) do
+      assert {:ok, normalized} = Json.normalize(value)
+      assert Json.valid?(normalized)
+      assert {:ok, ^normalized} = Json.normalize(normalized)
+    end
+  end
 end

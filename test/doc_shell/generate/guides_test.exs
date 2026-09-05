@@ -116,4 +116,12 @@ defmodule DocShell.Generate.GuidesTest do
     File.write!(Path.join(root, "nested/intro.md"), "# Intro")
     assert {:ok, [_]} = Guides.extract([root, Path.join(root, "nested"), root <> "/."])
   end
+
+  test "normalizes nested YAML keys and rejects collisions" do
+    path = Path.join(tmp_dir!(), "metadata.md")
+    File.write!(path, "---\nnested:\n  1: true\n---\n# Title")
+    assert {:ok, %{"meta" => %{"nested" => %{"1" => true}}}} = Guides.extract_file(path)
+    File.write!(path, "---\nnested:\n  1: true\n  '1': false\n---\n# Title")
+    assert {:error, {:duplicate_json_key, "1"}} = Guides.extract_file(path)
+  end
 end

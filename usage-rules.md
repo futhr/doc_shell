@@ -141,3 +141,10 @@ YAML frontmatter accepts LF, CRLF, and CR line endings, including a closing
 Document IDs must be nonempty and unique across all sources, including entries
 filtered from presentation. Duplicate IDs return an error naming both sources.
 Overlapping guide directories extract each normalized path once.
+
+## JSON metadata normalization
+
+Metadata preserves JSON scalars and uses UTF-8 string keys. Unsupported terms
+become inspected text; improper list tails become a final array value.
+`DocShell.Json.normalize/1` rejects converted-key collisions. The legacy
+`stringify/1` keeps string keys when a collision occurs. Guides use `normalize/1`.

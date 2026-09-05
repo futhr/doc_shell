@@ -27,7 +27,7 @@ defmodule DocShell.Generate.Guides do
 
       # Getting started with the platform
 
-  The parsed frontmatter becomes the entry's `meta` verbatim, plus a
+  The normalized frontmatter becomes the entry's `meta`, plus a
   `source_path` key, so hosts can carry arbitrary facets — audience, locale,
   product area, ordering — without DocShell needing to know what they mean.
   `DocShell.Presentation.StaticGenerator` reads `audience` and `locale` from
@@ -78,7 +78,8 @@ defmodule DocShell.Generate.Guides do
   @spec extract_file(Path.t()) :: {:ok, map()} | {:error, term()}
   def extract_file(path) do
     with {:ok, source} <- File.read(path),
-         {:ok, frontmatter, markdown} <- split_frontmatter(source),
+         {:ok, raw_frontmatter, markdown} <- split_frontmatter(source),
+         {:ok, frontmatter} <- DocShell.Json.normalize(raw_frontmatter),
          {:ok, ast} <- Ast.from_markdown(markdown) do
       id = Map.get(frontmatter, "id", Path.rootname(Path.basename(path)))
       title = Map.get(frontmatter, "title", Collector.title(markdown, id))
