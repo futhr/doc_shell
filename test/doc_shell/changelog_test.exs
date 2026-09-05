@@ -239,4 +239,9 @@ defmodule DocShell.Generate.ChangelogTest do
       end
     end
   end
+
+  test "nil entries cannot bypass changelog validation" do
+    assert {:error, {:invalid_changelog_entry, nil}} = Changelog.validate([nil, %{"bad" => true}])
+    assert {:error, {:invalid_changelog_entry, false}} = Changelog.validate([false])
+  end
 end

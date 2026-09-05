@@ -94,10 +94,12 @@ defmodule DocShell.Generate.Changelog do
   """
   @spec validate(term()) :: {:ok, [map()]} | {:error, term()}
   def validate(entries) when is_list(entries) do
-    case Enum.find(entries, &(not valid_entry?(&1))) do
-      nil -> {:ok, entries}
-      invalid -> {:error, {:invalid_changelog_entry, invalid}}
-    end
+    Enum.reduce_while(entries, {:ok, entries}, fn entry, result ->
+      case valid_entry?(entry) do
+        true -> {:cont, result}
+        false -> {:halt, {:error, {:invalid_changelog_entry, entry}}}
+      end
+    end)
   end
 
   def validate(_), do: {:error, :invalid_changelog_source_result}

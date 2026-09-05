@@ -376,3 +376,8 @@ When wiring DocShell into a host application, make these decisions explicitly:
 
 The important boundary is simple: DocShell owns extraction and artifact shapes.
 Routing, visual hierarchy, authorization, and rendering stay in the host.
+
+## Changelog source validation
+
+Every changelog source entry must be a valid entry map; `nil` and other invalid
+entries return `{:error, {:invalid_changelog_entry, entry}}`.

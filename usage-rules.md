@@ -125,3 +125,8 @@ Parsing Markdown is not sanitization.
 
 The default OpenAPI 3.1 document includes `info.title` and the configured
 `api_version` as `info.version` (default `"0.1.0"`).
+
+## Changelog source validation
+
+Every changelog source entry must be a valid entry map; `nil` and other invalid
+entries return `{:error, {:invalid_changelog_entry, entry}}`.
