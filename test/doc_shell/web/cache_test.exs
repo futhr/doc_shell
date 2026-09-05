@@ -169,4 +169,20 @@ defmodule DocShell.Web.CacheTest do
     {:ok, right} = Cache.fetch("right.json")
     {left["generation"], right["generation"]}
   end
+
+  test "named caches can share a supervisor without custom child IDs" do
+    root = tmp_dir!()
+    ArtifactFixture.write_snapshot!(root, [{"a.json", %{}}])
+
+    children = [
+      {Cache, name: :supervised_one, dir: root},
+      {Cache, name: :supervised_two, dir: root}
+    ]
+
+    assert {:ok, supervisor} = Supervisor.start_link(children, strategy: :one_for_one)
+    Process.unlink(supervisor)
+    on_exit(fn -> if Process.alive?(supervisor), do: Supervisor.stop(supervisor) end)
+    assert {:ok, %{}} = Cache.fetch("a.json", :supervised_one)
+    assert {:ok, %{}} = Cache.fetch("a.json", :supervised_two)
+  end
 end

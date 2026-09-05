@@ -308,3 +308,8 @@ cannot walk the filesystem.
 | Sharing one cache name for two directories | Give each cache a distinct `:name` |
 
 Generation stays renderer-neutral. Serving stays host-controlled.
+
+## Supervising named caches
+
+A cache child specification uses its registered name as its child ID. Multiple
+named caches can be listed directly in one supervision tree.

@@ -257,4 +257,10 @@ defmodule DocShell.Web.Cache do
       [] -> :error
     end
   end
+
+  @doc "Builds a supervision child specification identified by the cache name."
+  @spec child_spec(keyword()) :: Supervisor.child_spec()
+  def child_spec(opts) do
+    %{id: Keyword.get(opts, :name, @default_name), start: {__MODULE__, :start_link, [opts]}}
+  end
 end

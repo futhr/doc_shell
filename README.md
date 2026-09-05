@@ -460,3 +460,8 @@ Changelogs are parsed as complete Markdown documents before splitting on
 top-level release headings. Code examples remain within their release, and
 reference links resolve across the whole document. Parse errors in any part
 of the source return a source-tagged error.
+
+## Supervising named caches
+
+A cache child specification uses its registered name as its child ID. Multiple
+named caches can be listed directly in one supervision tree.
