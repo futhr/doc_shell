@@ -99,13 +99,11 @@ defmodule DocShell.Web.Cache do
   @impl GenServer
   def init(opts) do
     name = Keyword.get(opts, :name, @default_name)
-    table = :ets.new(name, [:named_table, :public, :set, read_concurrency: true])
+    table = :ets.new(name, [:named_table, :protected, :set, read_concurrency: true])
 
     state = %{
       table: table,
-      dir: Keyword.fetch!(opts, :dir),
-      # Kept in state so the concurrency regression can pause after staging.
-      before_publish: fn -> :ok end
+      dir: Keyword.fetch!(opts, :dir)
     }
 
     case reload_table(state) do
@@ -118,8 +116,7 @@ defmodule DocShell.Web.Cache do
   def handle_call(:reload, _, state), do: {:reply, reload_table(state), state}
 
   defp reload_table(state) do
-    with {:ok, generation_id, artifacts} <- read_artifacts(state.dir),
-         :ok <- state.before_publish.() do
+    with {:ok, generation_id, artifacts} <- read_artifacts(state.dir) do
       publish_generation(state.table, generation_id, artifacts)
     end
   end

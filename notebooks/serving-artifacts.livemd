@@ -313,3 +313,8 @@ Generation stays renderer-neutral. Serving stays host-controlled.
 
 A cache child specification uses its registered name as its child ID. Multiple
 named caches can be listed directly in one supervision tree.
+
+## Cache ownership
+
+Cache ETS tables permit direct concurrent reads, but only the cache process
+may write them. Use `reload/1` to replace a snapshot.

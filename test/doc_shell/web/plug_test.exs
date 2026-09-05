@@ -79,10 +79,14 @@ defmodule DocShell.Web.PlugTest do
       # Tuples are not JSON-encodable; inject one directly into the cache table.
       generation_id = ArtifactFixture.active_generation(Cache)
 
-      :ets.insert(
-        Cache,
-        {{:artifact, generation_id, "bad.json"}, %{"data" => {:not, :encodable}}}
-      )
+      :sys.replace_state(Cache, fn state ->
+        :ets.insert(
+          Cache,
+          {{:artifact, generation_id, "bad.json"}, %{"data" => {:not, :encodable}}}
+        )
+
+        state
+      end)
 
       assert request("/bad").status == 500
     end

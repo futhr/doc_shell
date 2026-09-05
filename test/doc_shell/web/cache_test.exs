@@ -117,7 +117,7 @@ defmodule DocShell.Web.CacheTest do
     assert {:ok, %{"generation" => "old"}} = Cache.fetch("right.json")
   end
 
-  test "readers see the old snapshot until a staged generation is published" do
+  test "readers see the old snapshot while a reload waits for the cache process" do
     root = tmp_dir!()
 
     ArtifactFixture.write_snapshot!(
@@ -140,26 +140,10 @@ defmodule DocShell.Web.CacheTest do
       "new"
     )
 
-    test_process = self()
-
-    :sys.replace_state(cache, fn state ->
-      %{
-        state
-        | before_publish: fn ->
-            send(test_process, :snapshot_staged)
-
-            receive do
-              :publish_snapshot -> :ok
-            end
-          end
-      }
-    end)
-
+    :sys.suspend(cache)
     reload = Task.async(&Cache.reload/0)
-    assert_receive :snapshot_staged
     assert generation_pair() == {"old", "old"}
-
-    send(cache, :publish_snapshot)
+    :sys.resume(cache)
     assert Task.await(reload) == :ok
     assert generation_pair() == {"new", "new"}
   end
@@ -184,5 +168,14 @@ defmodule DocShell.Web.CacheTest do
     on_exit(fn -> if Process.alive?(supervisor), do: Supervisor.stop(supervisor) end)
     assert {:ok, %{}} = Cache.fetch("a.json", :supervised_one)
     assert {:ok, %{}} = Cache.fetch("a.json", :supervised_two)
+  end
+
+  test "cache tables are readable but only writable by their owner" do
+    root = tmp_dir!()
+    ArtifactFixture.write_snapshot!(root, [{"a.json", %{}}])
+    start_supervised!({Cache, dir: root})
+    assert :ets.info(Cache, :protection) == :protected
+    assert_raise ArgumentError, fn -> :ets.insert(Cache, {:active_generation, "corrupt"}) end
+    assert {:ok, %{}} = Cache.fetch("a.json")
   end
 end

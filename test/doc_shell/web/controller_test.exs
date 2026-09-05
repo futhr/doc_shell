@@ -46,10 +46,14 @@ defmodule DocShell.Web.ControllerTest do
   test "returns 500 for a non-JSON-encodable cache entry" do
     generation_id = ArtifactFixture.active_generation(Cache)
 
-    :ets.insert(
-      Cache,
-      {{:artifact, generation_id, "bad.json"}, %{"data" => {:not, :encodable}}}
-    )
+    :sys.replace_state(Cache, fn state ->
+      :ets.insert(
+        Cache,
+        {{:artifact, generation_id, "bad.json"}, %{"data" => {:not, :encodable}}}
+      )
+
+      state
+    end)
 
     conn = Controller.show(conn(:get, "/docs/bad"), %{"artifact" => "bad"})
     assert conn.status == 500
