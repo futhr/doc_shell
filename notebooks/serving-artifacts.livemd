@@ -292,7 +292,8 @@ responses:
 | `200` | The stored envelope as `application/json` |
 | `403` | The plug gate refused the request |
 | `404` | No such artifact, or an invalid artifact path |
-| `500` | The artifact was cached but could not be encoded |
+| `304` | The authorized request matched the artifact ETag |
+| `405` | The method was not GET or HEAD |
 
 Multi-segment paths are rejected. A request can ask for one artifact name; it
 cannot walk the filesystem.
@@ -318,3 +319,10 @@ named caches can be listed directly in one supervision tree.
 
 Cache ETS tables permit direct concurrent reads, but only the cache process
 may write them. Use `reload/1` to replace a snapshot.
+
+## HTTP response caching
+
+HTTP serving caches encoded JSON and an ETag per generation. GET and HEAD
+share headers; matching `If-None-Match` requests return 304 after authorization.
+Other methods return 405 with `Allow: GET, HEAD`. The host retains control of
+Cache-Control and Vary. Encoding happens during cache publication, not requests.

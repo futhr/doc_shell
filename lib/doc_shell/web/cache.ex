@@ -82,7 +82,16 @@ defmodule DocShell.Web.Cache do
   """
   @spec fetch_envelope(String.t(), atom()) :: {:ok, map()} | :error
   def fetch_envelope(artifact, table \\ @default_name) do
-    fetch_from_generation(table, artifact)
+    fetch_cached(table, artifact, :artifact)
+  end
+
+  @doc "Fetches the pre-encoded response body and strong ETag for an artifact."
+  @spec fetch_response(String.t(), atom()) :: {:ok, {binary(), String.t()}} | :error
+  def fetch_response(artifact, table \\ @default_name),
+    do: fetch_cached(table, artifact, :response)
+
+  defp fetch_cached(table, artifact, kind) do
+    fetch_from_generation(table, artifact, kind)
   rescue
     ArgumentError -> :error
   end
@@ -210,8 +219,14 @@ defmodule DocShell.Web.Cache do
 
       current ->
         entries =
-          Enum.map(artifacts, fn {artifact, envelope} ->
-            {{:artifact, generation_id, artifact}, envelope}
+          Enum.flat_map(artifacts, fn {artifact, envelope} ->
+            body = Jason.encode!(envelope)
+            etag = "\"" <> Base.encode16(:crypto.hash(:sha256, body), case: :lower) <> "\""
+
+            [
+              {{:artifact, generation_id, artifact}, envelope},
+              {{:response, generation_id, artifact}, {body, etag}}
+            ]
           end)
 
         true = :ets.insert(table, entries)
@@ -224,26 +239,26 @@ defmodule DocShell.Web.Cache do
   defp delete_generation(_, :error), do: :ok
 
   defp delete_generation(table, {:ok, generation_id}) do
-    :ets.match_delete(table, {{:artifact, generation_id, :_}, :_})
+    :ets.match_delete(table, {{:_, generation_id, :_}, :_})
     :ok
   end
 
-  defp fetch_from_generation(table, artifact) do
+  defp fetch_from_generation(table, artifact, kind) do
     with {:ok, generation_id} <- active_generation(table) do
-      case :ets.lookup(table, {:artifact, generation_id, artifact}) do
-        [{{:artifact, ^generation_id, ^artifact}, envelope}] ->
+      case :ets.lookup(table, {kind, generation_id, artifact}) do
+        [{{^kind, ^generation_id, ^artifact}, envelope}] ->
           {:ok, envelope}
 
         [] ->
-          retry_if_generation_changed(table, artifact, generation_id)
+          retry_if_generation_changed(table, artifact, generation_id, kind)
       end
     end
   end
 
-  defp retry_if_generation_changed(table, artifact, previous_generation) do
+  defp retry_if_generation_changed(table, artifact, previous_generation, kind) do
     case active_generation(table) do
       {:ok, ^previous_generation} -> :error
-      {:ok, _} -> fetch_from_generation(table, artifact)
+      {:ok, _} -> fetch_from_generation(table, artifact, kind)
       :error -> :error
     end
   end

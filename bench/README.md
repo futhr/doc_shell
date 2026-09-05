@@ -27,3 +27,6 @@ one with a hundred.
 Setting `CI=true` shortens every suite to a smoke run, which verifies the
 benchmarks still execute without spending minutes measuring. Real numbers move
 with machine, OTP version, and what else is running — compare like with like.
+
+`mix bench.serving` compares cached response binaries with envelope lookup and
+encoding. It prints console results without replacing committed reports.

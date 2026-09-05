@@ -113,10 +113,11 @@ defmodule DocShell.MixProject do
 
       # Benchmarks
       bench: ["bench.all"],
-      "bench.all": ["bench.ast", "bench.presentation", "bench.json"],
+      "bench.all": ["bench.ast", "bench.presentation", "bench.json", "bench.serving"],
       "bench.ast": ["run bench/ast.exs"],
       "bench.presentation": ["run bench/presentation.exs"],
       "bench.json": ["run bench/json.exs"],
+      "bench.serving": ["run bench/serving.exs"],
 
       # Release
       release: ["git_ops.release"]
@@ -208,7 +209,8 @@ defmodule DocShell.MixProject do
         "Web Serving": [
           DocShell.Web.Cache,
           DocShell.Web.Plug,
-          DocShell.Web.Controller
+          DocShell.Web.Controller,
+          DocShell.Web.Response
         ],
         Support: [
           DocShell.Json

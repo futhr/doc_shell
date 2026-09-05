@@ -41,7 +41,8 @@ if Code.ensure_loaded?(Plug) do
       * `200` with `application/json` — the enveloped artifact
       * `403` — the gate refused
       * `404` — no such artifact, or a path that is not a single segment
-      * `500` — the artifact is cached but could not be encoded
+      * `304` — the authorized request matches the artifact ETag
+      * `405` — the method is neither GET nor HEAD
 
     Multi-segment paths are rejected rather than joined, so no request can walk
     out of the cache and into the filesystem.
@@ -61,6 +62,7 @@ if Code.ensure_loaded?(Plug) do
     @behaviour Plug
 
     alias DocShell.Web.Cache
+    alias DocShell.Web.Response
 
     @impl Plug
     def init(opts) do
@@ -69,34 +71,16 @@ if Code.ensure_loaded?(Plug) do
 
     @impl Plug
     def call(conn, %{cache: cache, gate: gate}) do
-      with :ok <- authorize(conn, gate),
-           name when is_binary(name) <- artifact_name(conn.path_info),
-           {:ok, envelope} <- Cache.fetch_envelope(name, cache),
-           {:ok, body} <- Jason.encode(envelope) do
-        conn
-        |> Plug.Conn.put_resp_content_type("application/json")
-        |> Plug.Conn.send_resp(200, body)
-        |> Plug.Conn.halt()
-      else
-        {:error, :forbidden} -> respond(conn, 403, "forbidden")
-        {:error, _} -> respond(conn, 500, "internal error")
-        _ -> respond(conn, 404, "not found")
-      end
+      response =
+        case authorize(conn, gate) do
+          :ok -> Response.send(conn, artifact_name(conn.path_info), cache)
+          {:error, :forbidden} -> Response.send_error(conn, 403, "forbidden")
+        end
+
+      Plug.Conn.halt(response)
     end
 
-    defp respond(conn, status, body) do
-      conn
-      |> Plug.Conn.send_resp(status, body)
-      |> Plug.Conn.halt()
-    end
-
-    defp artifact_name([name]) when name != "" do
-      case String.ends_with?(name, ".json") do
-        true -> name
-        false -> name <> ".json"
-      end
-    end
-
+    defp artifact_name([name]), do: name
     defp artifact_name(_), do: nil
 
     defp authorize(_, nil), do: :ok

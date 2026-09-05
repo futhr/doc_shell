@@ -230,3 +230,10 @@ a process or machine crash, recover retained backups and remove stale locks
 before rebuilding. Files still publish individually, so cache reloads validate
 generation IDs and keep the last complete snapshot. Use dedicated output
 directories without external writers or symlink aliases.
+
+## HTTP response caching
+
+HTTP serving caches encoded JSON and an ETag per generation. GET and HEAD
+share headers; matching `If-None-Match` requests return 304 after authorization.
+Other methods return 405 with `Allow: GET, HEAD`. The host retains control of
+Cache-Control and Vary. Encoding happens during cache publication, not requests.
