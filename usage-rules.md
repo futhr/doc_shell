@@ -208,3 +208,9 @@ named caches can be listed directly in one supervision tree.
 
 Cache ETS tables permit direct concurrent reads, but only the cache process
 may write them. Use `reload/1` to replace a snapshot.
+
+## Legacy envelope compatibility
+
+`Artifact.read/1` and `read_envelope/1` accept legacy v1 envelopes without
+`generation_id`. A present ID must be a nonempty string. Runtime caches require
+an ID on every artifact and manifest to verify that they form one generation.

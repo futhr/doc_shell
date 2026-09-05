@@ -145,6 +145,10 @@ defmodule DocShell.Artifact do
   @doc """
   Reads an artifact and returns the whole validated envelope.
 
+  Legacy v1 envelopes without `generation_id` remain readable. When present,
+  the ID must be a nonempty string. `DocShell.Web.Cache` requires the ID on
+  every file because a runtime snapshot needs a verifiable build identity.
+
   Use this over `read/1` when the envelope itself matters — serving an artifact
   has to report the `generated_at` of the build that produced it, and
   re-enveloping a bare payload would stamp it with the time of the request
@@ -192,8 +196,15 @@ defmodule DocShell.Artifact do
 
   defp validate_timestamp(generated_at, envelope) do
     case DateTime.from_iso8601(generated_at) do
-      {:ok, _, _} -> {:ok, envelope}
+      {:ok, _, _} -> validate_generation_id(envelope)
       _ -> {:error, :invalid_artifact_envelope}
     end
   end
+
+  defp validate_generation_id(%{"generation_id" => id} = envelope)
+       when is_binary(id) and byte_size(id) > 0,
+       do: {:ok, envelope}
+
+  defp validate_generation_id(%{"generation_id" => _}), do: {:error, :invalid_artifact_envelope}
+  defp validate_generation_id(envelope), do: {:ok, envelope}
 end

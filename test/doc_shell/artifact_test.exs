@@ -267,4 +267,15 @@ defmodule DocShell.ArtifactTest do
     assert File.ls!(dir) == ["shared.json"]
   end
 
+  test "legacy envelopes remain readable but malformed generation IDs are rejected" do
+    path = Path.join(tmp_dir!(), "legacy.json")
+    legacy = Map.delete(Artifact.envelope(%{}), "generation_id")
+    File.write!(path, Jason.encode!(legacy))
+    assert {:ok, ^legacy} = Artifact.read_envelope(path)
+
+    for id <- [nil, "", 42, []] do
+      File.write!(path, Jason.encode!(Map.put(legacy, "generation_id", id)))
+      assert {:error, :invalid_artifact_envelope} = Artifact.read_envelope(path)
+    end
+  end
 end
