@@ -22,15 +22,15 @@ Documentation extraction for Elixir, without a renderer attached.
 The Livebook notebooks are executable tutorials, not extra API reference pages.
 Start with the build-pipeline notebook in a browser:
 
-[![Run in Livebook](https://livebook.dev/badge/v1/blue.svg)](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fmain%2Fnotebooks%2Fbuild-pipeline.livemd)
+[![Run in Livebook](https://livebook.dev/badge/v1/blue.svg)](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.2.0%2Fnotebooks%2Fbuild-pipeline.livemd)
 
-- **[The Build Pipeline](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fmain%2Fnotebooks%2Fbuild-pipeline.livemd)** -
+- **[The Build Pipeline](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.2.0%2Fnotebooks%2Fbuild-pipeline.livemd)** -
   Follow one build from source files to generated artifacts.
-- **[Artifact Contract](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fmain%2Fnotebooks%2Fartifact-contract.livemd)** -
+- **[Artifact Contract](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.2.0%2Fnotebooks%2Fartifact-contract.livemd)** -
   Inspect the public JSON shapes, envelopes, manifests, and presentation indexes.
-- **[OpenAPI Adapters](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fmain%2Fnotebooks%2Fopenapi-adapters.livemd)** -
+- **[OpenAPI Adapters](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.2.0%2Fnotebooks%2Fopenapi-adapters.livemd)** -
   Work through the default document, shipped adapters, custom adapters, and validation errors.
-- **[Serving Artifacts](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fmain%2Fnotebooks%2Fserving-artifacts.livemd)** -
+- **[Serving Artifacts](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.2.0%2Fnotebooks%2Fserving-artifacts.livemd)** -
   Walk through static serving, runtime caching, reloads, gates, and controller usage.
 
 ---
@@ -462,11 +462,13 @@ mix check        # the full quality gate
 mix ci           # setup + lint + coverage in one pass
 mix docs         # build the documentation
 mix bench        # run the benchmarks
+scripts/notebook_smoke.py # execute tutorial cells against this checkout
+scripts/consumer_smoke.sh # verify the built package in fresh consumers
 ```
 
 `mix check` runs formatting, `--warnings-as-errors` compilation, strict Credo,
 documentation and typespec coverage, tests with coverage, dependency
-advisories, Dialyzer, and a compile with the optional dependencies removed. CI
+advisories, Dialyzer, and a compile with the optional dependencies removed. CI also executes the notebooks and packaged consumer checks. CI
 runs tests and coverage across Elixir 1.17 through 1.20, with the remaining
 quality checks on Elixir 1.18.
 

@@ -138,6 +138,7 @@ defmodule DocShell.MixProject do
         .formatter.exs
         mix.exs
         README.md
+        CHANGELOG.md
         LICENSE.md
         CONTRIBUTING.md
         usage-rules.md
@@ -146,7 +147,8 @@ defmodule DocShell.MixProject do
       licenses: ["MIT"],
       links: %{
         "GitHub" => @source_url,
-        "Issues" => "#{@source_url}/issues"
+        "Issues" => "#{@source_url}/issues",
+        "Changelog" => "#{@source_url}/blob/v#{@version}/CHANGELOG.md"
       }
     ]
   end
@@ -156,6 +158,7 @@ defmodule DocShell.MixProject do
       main: "readme",
       extras: [
         "README.md": [title: "Overview"],
+        "CHANGELOG.md": [title: "Changelog"],
         "notebooks/build-pipeline.livemd": [title: "The Build Pipeline"],
         "notebooks/openapi-adapters.livemd": [title: "OpenAPI Adapters"],
         "notebooks/artifact-contract.livemd": [title: "Artifact Contract"],
@@ -178,7 +181,8 @@ defmodule DocShell.MixProject do
           DocShell,
           DocShell.Build,
           DocShell.Config,
-          DocShell.Artifact
+          DocShell.Artifact,
+          DocShell.Artifact.Transaction
         ],
         Extraction: [
           DocShell.Ast,

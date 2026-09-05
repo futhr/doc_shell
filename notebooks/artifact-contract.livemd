@@ -26,12 +26,12 @@ backward-compatible.
 ## Setup
 
 Run this notebook from Livebook's default standalone runtime. The setup cell
-installs DocShell from this repository's `main` branch so the examples match the
-notebook you opened.
+installs the matching DocShell release from Hex. Release tooling updates this
+version together with the package and the notebook links.
 
 ```elixir
 Mix.install([
-  {:doc_shell, github: "futhr/doc_shell", branch: "main"}
+  {:doc_shell, "== 0.2.0"}
 ])
 
 Application.ensure_all_started(:doc_shell)
