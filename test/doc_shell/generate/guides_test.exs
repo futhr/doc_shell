@@ -124,4 +124,17 @@ defmodule DocShell.Generate.GuidesTest do
     File.write!(path, "---\nnested:\n  1: true\n  '1': false\n---\n# Title")
     assert {:error, {:duplicate_json_key, "1"}} = Guides.extract_file(path)
   end
+
+  test "invalid identity and facet fields return tagged errors" do
+    root = tmp_dir!()
+
+    for field <- ["id", "title", "audience", "locale"], value <- ["{bad: value}", "[a, b]"] do
+      path = Path.join(root, "bad.md")
+      File.write!(path, "---\n#{field}: #{value}\n---\n# Body")
+      assert {:error, {^path, {:invalid_frontmatter_field, ^field, _}}} = Guides.extract([root])
+    end
+
+    File.write!(Path.join(root, "bad.md"), "---\nid: null\n---\n# Body")
+    assert {:error, {_, {:invalid_frontmatter_field, "id", nil}}} = Guides.extract([root])
+  end
 end

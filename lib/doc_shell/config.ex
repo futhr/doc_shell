@@ -124,4 +124,67 @@ defmodule DocShell.Config do
   """
   @spec fetch!(t(), atom()) :: term()
   def fetch!(config, key), do: Keyword.fetch!(config, key)
+  @doc "Resolves and validates build options, returning the offending key on error."
+  @spec resolve(term()) :: {:ok, t()} | {:error, term()}
+  def resolve(overrides) when is_list(overrides) do
+    with true <- Keyword.keyword?(overrides),
+         :ok <- known_overrides(overrides),
+         config = load(overrides),
+         :ok <- validate_values(config) do
+      {:ok, config}
+    else
+      false -> {:error, :config_must_be_a_keyword_list}
+      error -> error
+    end
+  end
+
+  def resolve(_), do: {:error, :config_must_be_a_keyword_list}
+
+  defp known_overrides(overrides) do
+    case Keyword.keys(overrides) -- @keys do
+      [] -> :ok
+      keys -> {:error, {:unknown_options, keys}}
+    end
+  end
+
+  defp validate_values(config) do
+    Enum.reduce_while(config, :ok, fn {key, value}, :ok ->
+      case valid_option?(key, value) do
+        true -> {:cont, :ok}
+        false -> {:halt, {:error, {:invalid_option, key, value}}}
+      end
+    end)
+  end
+
+  defp valid_option?(key, value) when key in [:public_dir, :private_dir],
+    do: is_binary(value) and value != ""
+
+  defp valid_option?(_, nil), do: true
+
+  defp valid_option?(key, value) when key in [:modules, :domains],
+    do: valid_list?(value, &(is_atom(&1) and &1 not in [nil, true, false]))
+
+  defp valid_option?(:guide_bases, value), do: valid_list?(value, &is_binary/1)
+
+  defp valid_option?(key, value) when key in [:changelog_options, :open_api_options],
+    do: is_list(value) and Keyword.keyword?(value)
+
+  defp valid_option?(key, value) when key in [:write, :skip_empty, :search_tokens],
+    do: is_boolean(value)
+
+  defp valid_option?(:path_builder, value), do: is_function(value, 1)
+  defp valid_option?(:security_schemes, value), do: is_map(value)
+  defp valid_option?(:changelog_source, false), do: true
+
+  defp valid_option?(key, value)
+       when key in [:changelog_source, :presentation_source, :open_api_adapter],
+       do: is_atom(value) and value not in [true, false]
+
+  defp valid_option?(_, value), do: is_binary(value) and String.valid?(value)
+  defp valid_list?([], _), do: true
+
+  defp valid_list?([head | tail], predicate),
+    do: predicate.(head) and valid_list?(tail, predicate)
+
+  defp valid_list?(_, _), do: false
 end

@@ -416,3 +416,10 @@ become inspected text; improper list tails become a final array value.
 Host projectors and changelog sources must provide complete recursive AST nodes
 and JSON metadata with string keys. Invalid nested content fails validation
 before output is written. `DocShell.Ast.valid?/1` checks node lists.
+
+## Configuration errors
+
+`Build.run/1` rejects malformed options and unknown per-call keys before
+extraction. Unknown application environment keys remain ignored. Invalid guide
+identities, titles, audience, and locale return errors naming the field and file.
+Guide IDs and titles accept nonempty strings or numeric/boolean scalars.

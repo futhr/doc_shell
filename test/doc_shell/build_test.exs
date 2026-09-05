@@ -273,4 +273,26 @@ defmodule DocShell.BuildTest do
     assert result.openapi["info"]["version"] == "2.3.4"
     assert Oaskit.SpecValidator.validate!(result.openapi)
   end
+
+  test "invalid configuration fails before extraction" do
+    for opts <- [
+          %{},
+          [:bad],
+          [guide_bases: "guides"],
+          [modules: [nil]],
+          [open_api_options: [:bad]],
+          [path_builder: :bad],
+          [write: "false"],
+          [public_dir: nil],
+          [private_dir: ""],
+          [domains: :bad],
+          [security_schemes: []],
+          [open_api_adapter: false],
+          [title: 1]
+        ] do
+      assert {:error, _} = Build.run(opts)
+    end
+
+    assert {:error, {:unknown_options, [:guid_bases]}} = Build.run(guid_bases: [])
+  end
 end

@@ -80,9 +80,8 @@ defmodule DocShell.Build do
   """
   @spec run(keyword()) :: {:ok, map()} | {:error, term()}
   def run(overrides \\ []) do
-    config = Config.load(overrides)
-
-    with {:ok, extracted} <- extract(config),
+    with {:ok, config} <- Config.resolve(overrides),
+         {:ok, extracted} <- extract(config),
          {:ok, presentation} <- project(extracted, config),
          result = Map.put(extracted, :presentation, presentation),
          :ok <- maybe_write(config, result) do

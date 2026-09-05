@@ -51,4 +51,16 @@ defmodule DocShell.ConfigTest do
     assert Config.fetch!([public_dir: "/x"], :public_dir) == "/x"
     assert_raise KeyError, fn -> Config.fetch!([], :public_dir) end
   end
+
+  test "improper configuration lists return tagged errors" do
+    for {key, value} <- [
+          modules: [DocShell | :invalid],
+          domains: [DocShell | :invalid],
+          guide_bases: ["guides" | :invalid]
+        ] do
+      assert Config.resolve([{key, value}]) == {:error, {:invalid_option, key, value}}
+    end
+
+    assert Config.resolve([{:modules, []} | :invalid]) == {:error, :config_must_be_a_keyword_list}
+  end
 end

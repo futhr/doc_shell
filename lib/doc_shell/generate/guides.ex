@@ -80,10 +80,10 @@ defmodule DocShell.Generate.Guides do
     with {:ok, source} <- File.read(path),
          {:ok, raw_frontmatter, markdown} <- split_frontmatter(source),
          {:ok, frontmatter} <- DocShell.Json.normalize(raw_frontmatter),
+         {:ok, id} <- field_text(frontmatter, "id", Path.rootname(Path.basename(path))),
+         {:ok, title} <- field_text(frontmatter, "title", Collector.title(markdown, id)),
+         :ok <- validate_facets(frontmatter),
          {:ok, ast} <- Ast.from_markdown(markdown) do
-      id = Map.get(frontmatter, "id", Path.rootname(Path.basename(path)))
-      title = Map.get(frontmatter, "title", Collector.title(markdown, id))
-
       {:ok,
        %{
          "id" => to_string(id),
@@ -115,5 +115,22 @@ defmodule DocShell.Generate.Guides do
       {:ok, _} -> {:error, :frontmatter_must_be_a_map}
       {:error, reason} -> {:error, reason}
     end
+  end
+
+  defp field_text(frontmatter, key, fallback) do
+    case Map.get(frontmatter, key, fallback) do
+      value when is_binary(value) and value != "" -> {:ok, value}
+      value when is_number(value) or is_boolean(value) -> {:ok, to_string(value)}
+      value -> {:error, {:invalid_frontmatter_field, key, value}}
+    end
+  end
+
+  defp validate_facets(frontmatter) do
+    Enum.reduce_while(["audience", "locale"], :ok, fn key, :ok ->
+      case Map.get(frontmatter, key) do
+        value when is_nil(value) or is_binary(value) -> {:cont, :ok}
+        value -> {:halt, {:error, {:invalid_frontmatter_field, key, value}}}
+      end
+    end)
   end
 end
