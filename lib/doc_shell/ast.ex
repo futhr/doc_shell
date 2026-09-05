@@ -45,7 +45,10 @@ defmodule DocShell.Ast do
   Either a bare string of text, or a map with `tag`, `attrs`, `content`, and
   `meta`, where `content` holds child nodes of the same shape.
   """
-  @type ast_node :: %{required(String.t()) => term()}
+  @type ast_node :: String.t() | element()
+
+  @typedoc "An element with required string keys `tag`, `attrs`, `content`, and `meta`."
+  @type element :: %{required(String.t()) => String.t() | map() | [ast_node()]}
 
   @doc """
   Parses a Markdown string into renderer-neutral nodes.
