@@ -53,7 +53,17 @@ defmodule DocShell.MixProject do
 
   defp dialyzer do
     [
-      plt_add_apps: [:ex_unit, :mix],
+      # Test fixtures implement the optional AshOaskit adapter and are included
+      # in the test analysis even though those dependencies are runtime-false.
+      plt_add_apps: [
+        :ash,
+        :ash_oaskit,
+        :ex_unit,
+        :mix,
+        :open_api_spex,
+        :spark,
+        :splode
+      ],
       plt_local_path: "priv/plts",
       plt_core_path: "priv/plts",
       flags: [:error_handling, :unknown],
@@ -93,7 +103,7 @@ defmodule DocShell.MixProject do
     [
       # Exercise both supported AshOaskit minor lines without imposing its
       # dependency tree on consumers of the runtime adapter.
-      {:ash_oaskit, "~> 0.3 or ~> 0.4", only: [:dev, :test], runtime: false},
+      {:ash_oaskit, "~> 0.3 or ~> 0.4.1", only: [:dev, :test], runtime: false},
       {:plug, "~> 1.16", optional: true}
     ]
   end
