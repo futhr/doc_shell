@@ -5,6 +5,61 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.3.0](https://github.com/futhr/doc_shell/compare/v0.2.0...v0.3.0) (2026-09-07)
+
+
+
+
+### Features:
+
+* openapi: accept OpenAPI 3.2 source documents by Tobias Bohwalli
+
+### Bug Fixes:
+
+* include optional adapters in analysis by Tobias Bohwalli
+
+* build: stage output and restore failed publications by Tobias Bohwalli
+
+* artifact: define legacy generation compatibility by Tobias Bohwalli
+
+* cache: protect snapshots with process ownership by Tobias Bohwalli
+
+* cache: use registered names as supervisor child IDs by Tobias Bohwalli
+
+* changelog: preserve Markdown context across releases by Tobias Bohwalli
+
+* presentation: calculate each document path once by Tobias Bohwalli
+
+* search: preserve words across inline formatting by Tobias Bohwalli
+
+* generate: derive titles from parsed Markdown headings by Tobias Bohwalli
+
+* artifact: isolate temporary files across BEAM instances by Tobias Bohwalli
+
+* build: reject conflicting output destinations by Tobias Bohwalli
+
+* config: validate build options and guide fields by Tobias Bohwalli
+
+* presentation: validate recursive content and metadata by Tobias Bohwalli
+
+* json: normalize metadata without silent key collisions by Tobias Bohwalli
+
+* presentation: reject duplicate document identities by Tobias Bohwalli
+
+* guides: parse frontmatter delimiters by lines by Tobias Bohwalli
+
+* types: include recursive text nodes in the AST contract by Tobias Bohwalli
+
+* changelog: reject nil source entries by Tobias Bohwalli
+
+* openapi: include the default API version by Tobias Bohwalli
+
+* deps: update Mint and Ash past security advisories by Tobias Bohwalli
+
+### Performance Improvements:
+
+* web: cache encoded responses and HTTP validators by Tobias Bohwalli
+
 ## [v0.2.0](https://github.com/futhr/doc_shell/compare/v0.1.0...v0.2.0) (2026-09-01)
 
 

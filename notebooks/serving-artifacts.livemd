@@ -24,7 +24,7 @@ tutorial cells that exercise request handling.
 ```elixir
 Mix.install([
   {:plug, "~> 1.16"},
-  {:doc_shell, "== 0.2.0"}
+  {:doc_shell, "== 0.3.0"}
 ])
 
 Application.ensure_all_started(:doc_shell)
