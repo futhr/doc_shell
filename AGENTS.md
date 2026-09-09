@@ -4,6 +4,10 @@ Read `README.md` and `usage-rules.md` before changing public behavior. This is a
 Elixir library, so preserve compatibility with every Elixir/OTP pair in CI and
 keep optional integrations optional.
 
+For collection, site projection, search adapter, renderer, or static-export
+work, also read `docs/specs/DSH.01-documentation-sites.md` and implement
+`docs/plans/documentation-sites.md` in dependency order.
+
 ## Architecture
 
 - Keep extraction under `DocShell.Generate`, presentation under
