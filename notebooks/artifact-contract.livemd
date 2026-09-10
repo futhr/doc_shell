@@ -8,37 +8,6 @@ real build so each field is tied to something you can inspect.
 The examples write to a disposable temp directory. They do not modify
 `priv/doc_shell/`.
 
-## Site-ready collections
-
-When a host publishes several documentation corpora together, pass a
-`DocShell.Generate.Collection` descriptor to bind this artifact tree to the
-exact source checkout. The caller supplies and verifies the revision and tree
-digest; DocShell records them but performs no Git or network operation.
-
-```elixir
-collection = %{
-  id: "doc_shell",
-  title: "DocShell",
-  version: "0.3.0",
-  revision: String.duplicate("a", 40),
-  tree_digest: "sha256:" <> String.duplicate("b", 64),
-  artifact_dir: public_dir,
-  source_url: "https://example.invalid/doc_shell",
-  edit_base_url: "https://example.invalid/doc_shell/edit/revision"
-}
-
-{:ok, _result} = DocShell.Build.run(Keyword.put(build_opts, :collection, collection))
-{:ok, collection_payload} =
-  DocShell.Artifact.read(Path.join(public_dir, "collection.json"))
-
-Map.take(collection_payload, ["schema_version", "descriptor", "content_digest"])
-```
-
-`collection.json` is an additive public artifact. Its source records and
-artifact digests let an importer validate the complete generation, and
-`DocShell.Generate.Collection.load/1` qualifies document IDs as
-`doc_shell:document_id` without starting the host application.
-
 ## What is public API
 
 The contract includes:
@@ -82,6 +51,8 @@ workspace =
   )
 
 File.rm_rf!(workspace)
+File.mkdir_p!(workspace)
+workspace = File.cd!(workspace, &File.cwd!/0)
 
 guide_dir = Path.join(workspace, "guides")
 livebook_dir = Path.join(workspace, "notebooks")
@@ -130,6 +101,40 @@ build_opts = [
   presentation_keys: Map.keys(result.presentation) |> Enum.sort()
 }
 ````
+
+## Site-ready collections
+
+When a host publishes several documentation corpora together, pass a
+`DocShell.Generate.Collection` descriptor to bind this artifact tree to the
+exact source checkout. The caller supplies and verifies the revision and tree
+digest; DocShell records them but performs no Git or network operation.
+
+```elixir
+collection = %{
+  id: "doc_shell",
+  title: "DocShell",
+  version: "0.3.0",
+  revision: String.duplicate("a", 40),
+  tree_digest: "sha256:" <> String.duplicate("b", 64),
+  artifact_dir: public_dir,
+  source_url: "https://example.invalid/doc_shell",
+  edit_base_url: "https://example.invalid/doc_shell/edit/revision"
+}
+
+{:ok, _result} =
+  File.cd!(workspace, fn ->
+    DocShell.Build.run(Keyword.put(build_opts, :collection, collection))
+  end)
+{:ok, collection_payload} =
+  DocShell.Artifact.read(Path.join(public_dir, "collection.json"))
+
+Map.take(collection_payload, ["schema_version", "descriptor", "content_digest"])
+```
+
+`collection.json` is an additive public artifact. Its source records and
+artifact digests let an importer validate the complete generation, and
+`DocShell.Generate.Collection.load/1` qualifies document IDs as
+`doc_shell:document_id` without starting the host application.
 
 ## The artifact tree
 
