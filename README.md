@@ -128,6 +128,16 @@ config :doc_shell,
   changelog_options: [],
   changelog_path: "CHANGELOG.md",
   livebook_base: "notebooks",
+  collection: %{
+    id: "my_app",
+    title: "My App",
+    version: "1.4.0",
+    revision: String.duplicate("a", 40),
+    tree_digest: "sha256:" <> String.duplicate("b", 64),
+    artifact_dir: "priv/doc_shell/public",
+    source_url: "https://example.invalid/my_app",
+    edit_base_url: "https://example.invalid/my_app/edit/revision"
+  },
 
   # Where it goes
   public_dir: "priv/doc_shell/public",
@@ -158,6 +168,23 @@ Markdown-file shortcut. `DocShell.Config` documents each key and its default.
 DocShell reads `:doc_shell` and nothing else. It will not look under your
 application's key, infer settings from `Mix.Project`, or reach into another
 library's environment.
+
+### Site-ready collections
+
+Set `:collection` when another documentation site will import this build. The
+descriptor binds the generated corpus to a stable lowercase `id`, source
+revision, caller-verified tree digest, and inert source/edit URLs. DocShell
+does not invoke Git, fetch either URL, or infer the revision. Optional metadata
+includes package, license, locale, audience, source root, and status.
+
+With a collection descriptor, the public manifest includes an enveloped
+`collection.json`. Its `doc-shell-collection/v1` payload contains the portable
+descriptor, source provenance records, per-artifact SHA-256 digests, and a
+canonical aggregate `content_digest`. The local `artifact_dir` is omitted from
+the portable descriptor. `DocShell.Generate.Collection.load/1` validates the
+manifest, files, generation IDs, paths, and digests without starting an
+application or making a network request, then qualifies document IDs as
+`collection_id:document_id`.
 
 For a guided walkthrough, start with
 [the build pipeline notebook](notebooks/build-pipeline.livemd). The
@@ -206,6 +233,7 @@ priv/doc_shell/
 │   ├── search-index.json
 │   ├── content.json
 │   ├── openapi.json
+│   ├── collection.json  # present when :collection is configured
 │   ├── modules.json
 │   ├── guides.json
 │   ├── livebooks.json

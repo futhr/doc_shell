@@ -25,6 +25,11 @@ when the host uses the corresponding optional integration.
   sources.
 - Pass explicit `:modules`, `:guide_bases`, and `:livebook_base` values when the
   host layout differs from the defaults (`[]`, `["guides"]`, `"notebooks"`).
+- Set `:collection` to a validated `DocShell.Generate.Collection` descriptor
+  when the output will be imported into a documentation site. It records the
+  caller-supplied source revision and tree digest; DocShell never invokes Git
+  or fetches the descriptor URLs. The public output then includes the
+  enveloped `collection.json` provenance artifact.
 - Treat changelog/release notes as a source adapter. The default
   `DocShell.Generate.Changelog.Sources.MarkdownFile` reads `CHANGELOG.md`, but
   graph/database/CMS hosts should implement
@@ -81,6 +86,14 @@ directories without external writers or symlink aliases.
   unknown files and kinds, while selective consumers may read only their
   allow-listed artifacts. Removing an existing file or changing an existing
   field's name or type requires a schema-version change.
+- A site-ready collection uses the additive `doc-shell-collection/v1` payload
+  in `collection.json`. Its portable descriptor excludes the local artifact
+  directory and includes source identities, source provenance, artifact
+  digests, and a canonical aggregate digest. Load it with
+  `DocShell.Generate.Collection.load/1`; the loader rejects missing or
+  unlisted files, symlinks, path escapes, mixed generations, descriptor
+  differences, and digest mismatches before qualifying IDs as
+  `collection_id:document_id`.
 - Read the version from `DocShell.schema_version/0` rather than writing the
   literal `"doc-shell/v1"`.
 - Read and write artifacts through `DocShell.Artifact`. Do not bypass the

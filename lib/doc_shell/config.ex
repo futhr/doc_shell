@@ -19,6 +19,7 @@ defmodule DocShell.Config do
   | Key | Default | Purpose |
   | --- | --- | --- |
   | `:modules` | `[]` | Modules to document. `mix doc_shell.build` fills this from the application spec. |
+  | `:collection` | unset | Immutable source descriptor used to emit a site-ready `collection.json`. |
   | `:guide_bases` | `["guides"]` | Directories searched recursively for Markdown guides. |
   | `:changelog_source` | `DocShell.Generate.Changelog.Sources.MarkdownFile` | Source adapter for changelog/release-note entries; set `nil` or `false` to disable. |
   | `:changelog_options` | `[]` | Options passed to the configured changelog source. |
@@ -68,6 +69,7 @@ defmodule DocShell.Config do
     :open_api_options,
     :openapi_spec_path,
     :modules,
+    :collection,
     :presentation_source,
     :path_builder,
     :skip_empty,
@@ -173,6 +175,10 @@ defmodule DocShell.Config do
     do: is_boolean(value)
 
   defp valid_option?(:path_builder, value), do: is_function(value, 1)
+
+  defp valid_option?(:collection, value),
+    do: match?({:ok, _}, DocShell.Generate.Collection.new(value))
+
   defp valid_option?(:security_schemes, value), do: is_map(value)
   defp valid_option?(:changelog_source, false), do: true
 

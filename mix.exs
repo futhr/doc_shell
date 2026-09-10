@@ -199,7 +199,8 @@ defmodule DocShell.MixProject do
           DocShell.Generate.ExDoc,
           DocShell.Generate.Guides,
           DocShell.Generate.Livebooks,
-          DocShell.Generate.Collector
+          DocShell.Generate.Collector,
+          DocShell.Generate.Collection
         ],
         Changelog: [
           DocShell.Generate.Changelog,

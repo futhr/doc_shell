@@ -36,6 +36,10 @@ defmodule DocShell.Build do
   entries here keep their parsed `ast` and nothing is filtered out. Pass
   `write: false` to skip the files entirely.
 
+  When `:collection` is configured, the return value also includes the
+  normalized collection descriptor and source provenance used for
+  `collection.json`.
+
   ## Choosing a presentation producer
 
   `:changelog_source` selects the module that loads release notes. The default
@@ -64,6 +68,7 @@ defmodule DocShell.Build do
 
   alias DocShell.Config
   alias DocShell.Generate.Changelog
+  alias DocShell.Generate.Collection
   alias DocShell.Generate.ExDoc
   alias DocShell.Generate.Guides
   alias DocShell.Generate.Livebooks
@@ -83,8 +88,9 @@ defmodule DocShell.Build do
     with {:ok, config} <- Config.resolve(overrides),
          :ok <- validate_destinations(config),
          {:ok, extracted} <- extract(config),
+         {:ok, extracted, collection} <- prepare_collection(extracted, config),
          {:ok, presentation} <- project(extracted, config),
-         result = Map.put(extracted, :presentation, presentation),
+         result = extracted |> Map.put(:presentation, presentation) |> put_collection(collection),
          :ok <- maybe_write(config, result) do
       {:ok, result}
     end
@@ -181,6 +187,8 @@ defmodule DocShell.Build do
       {"content.json", result.presentation.content}
     ]
 
+    artifacts = maybe_add_collection(artifacts, result)
+
     public_files =
       Enum.map(artifacts, fn {name, payload} ->
         {Path.join(public, name),
@@ -204,10 +212,45 @@ defmodule DocShell.Build do
         path -> [{path, result.openapi}]
       end
 
-    DocShell.Artifact.Transaction.write(public_files ++ raw ++ manifests)
+    with :ok <- DocShell.Artifact.Transaction.write(public_files ++ raw ++ manifests) do
+      remove_stale_collection(public, result)
+    end
   end
 
   defp index_only(entries), do: Enum.map(entries, &Map.delete(&1, "ast"))
+
+  defp prepare_collection(extracted, config) do
+    case config[:collection] do
+      nil ->
+        {:ok, extracted, nil}
+
+      value ->
+        with {:ok, descriptor} <- Collection.new(value),
+             {:ok, normalized, sources} <- Collection.prepare(descriptor, extracted) do
+          {:ok, normalized, %{descriptor: descriptor, sources: sources}}
+        end
+    end
+  end
+
+  defp put_collection(result, nil), do: result
+  defp put_collection(result, collection), do: Map.put(result, :collection, collection)
+
+  defp maybe_add_collection(artifacts, %{collection: collection}) do
+    payload = Collection.payload(collection.descriptor, collection.sources, artifacts)
+    artifacts ++ [{"collection.json", payload}]
+  end
+
+  defp maybe_add_collection(artifacts, _), do: artifacts
+
+  defp remove_stale_collection(_, %{collection: _}), do: :ok
+
+  defp remove_stale_collection(public, _) do
+    case File.rm(Path.join(public, "collection.json")) do
+      :ok -> :ok
+      {:error, :enoent} -> :ok
+      {:error, reason} -> {:error, {:stale_collection, reason}}
+    end
+  end
 
   defp validate_destinations(config) do
     public = Path.expand(config[:public_dir])
