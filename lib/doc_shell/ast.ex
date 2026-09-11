@@ -94,10 +94,11 @@ defmodule DocShell.Ast do
 
   defp valid_node?(text) when is_binary(text), do: String.valid?(text)
 
-  defp valid_node?(%{"tag" => tag, "attrs" => attrs, "content" => content, "meta" => meta}) do
-    is_binary(tag) and String.valid?(tag) and is_map(attrs) and
+  defp valid_node?(%{"tag" => tag, "attrs" => attrs, "content" => content, "meta" => meta} = node) do
+    is_binary(tag) and tag != "" and String.valid?(tag) and is_map(attrs) and
       DocShell.Json.valid?(attrs) and is_map(meta) and DocShell.Json.valid?(meta) and
-      valid?(content)
+      valid?(content) and
+      DocShell.Json.valid?(Map.drop(node, ["tag", "attrs", "content", "meta"]))
   end
 
   defp valid_node?(_), do: false

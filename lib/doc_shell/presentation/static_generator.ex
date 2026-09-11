@@ -8,7 +8,7 @@ defmodule DocShell.Presentation.StaticGenerator do
   documentation site needs:
 
     * **navigation** — one `DocShell.Presentation.NavigationItem` per entry,
-      sorted by kind then title, so modules, guides, notebooks, and release notes group
+      sorted by kind, title, then ID, so modules, guides, notebooks, and release notes group
       together and each group reads alphabetically.
     * **search** — one `DocShell.Presentation.SearchEntry` per entry, with the
       document flattened to plain text and optional precomputed tokens.
@@ -118,7 +118,7 @@ defmodule DocShell.Presentation.StaticGenerator do
     sorted =
       entries
       |> reject_empty(settings.skip_empty)
-      |> Enum.sort_by(&{&1["kind"], &1["title"]})
+      |> Enum.sort_by(&{&1["kind"], &1["title"], &1["id"]})
 
     {navigation, search} =
       sorted

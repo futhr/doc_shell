@@ -157,6 +157,14 @@ Overlapping guide directories extract each normalized path once.
 ### Recursive content validation
 
 Host projectors and changelog sources must provide complete recursive AST nodes
+whose extension fields are native JSON. Presentation IDs must be nonempty and
+unique within navigation (including descendants) and search; shared IDs use the
+same path. Local leaves/search results require content. Groups with children and
+absolute HTTP(S) links may omit content; content may be hidden from both indexes.
+Backlink targets require content, while origins may belong to the wider host graph
+provided they do not contradict a known path. Default ordering is kind/title/ID.
+
+Host projectors and changelog sources must provide complete recursive AST nodes
 and JSON metadata with string keys. Invalid nested content fails validation
 before output is written. `DocShell.Ast.valid?/1` checks node lists.
 

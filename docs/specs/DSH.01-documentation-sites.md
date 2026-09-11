@@ -188,6 +188,13 @@ fixtures. Presentation validation rejects empty/duplicate identities and
 inconsistent document references while allowing explicit navigation groups and
 external links. Optional member-document search is explicit configuration.
 
+For the existing presentation contract, groups are navigation items with children
+(their path may be empty), and external links use absolute HTTP(S) URLs. Local
+navigation leaves and search results require a content key. Navigation and search
+each have unique IDs; a shared ID has the same path. Content may be absent from
+both indexes. Backlink targets require content; their origins may be outside this
+corpus, but known origin paths must agree. AST extension fields remain native JSON.
+
 Cache fetches are individually consistent. A caller that needs several artifacts
 from one generation uses an explicit snapshot API; successive independent fetches
 may cross a reload. Reload timeouts are configurable and old snapshots survive

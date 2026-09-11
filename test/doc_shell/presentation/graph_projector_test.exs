@@ -219,7 +219,8 @@ defmodule DocShell.Presentation.GraphProjectorTest do
           [self()],
           [<<255>>],
           ["text" | :bad],
-          [%{"tag" => "p", "attrs" => %{}, "content" => [], "meta" => %{atom: 1}}]
+          [%{"tag" => "p", "attrs" => %{}, "content" => [], "meta" => %{atom: 1}}],
+          [%{"tag" => "p", "attrs" => %{}, "content" => [], "meta" => %{}, "future" => self()}]
         ] do
       assert {:error, _} = GraphProjector.validate(%{base | content: %{"id" => nodes}})
     end
@@ -230,5 +231,85 @@ defmodule DocShell.Presentation.GraphProjectorTest do
     end
 
     assert {:ok, _} = GraphProjector.validate(%{base | content: %{"a" => ["valid"]}})
+  end
+
+  test "checks semantic identity, references and shared paths" do
+    nav = %NavigationItem{id: "a", title: "A", path: "/a"}
+    search = %SearchEntry{id: "a", title: "A", path: "/a", content: ""}
+
+    base = %{
+      schema_version: DocShell.schema_version(),
+      navigation: [nav],
+      search: [search],
+      content: %{"a" => []}
+    }
+
+    for {presentation, reason} <- [
+          {%{base | navigation: [nav, nav]}, {:duplicate_id, :navigation, "a"}},
+          {%{base | navigation: [%{nav | children: [nav]}]}, {:duplicate_id, :navigation, "a"}},
+          {%{base | search: [search, search]}, {:duplicate_id, :search, "a"}},
+          {%{base | content: %{}}, {:missing_content, :navigation, "a"}},
+          {%{base | navigation: [], content: %{}}, {:missing_content, :search, "a"}},
+          {%{base | search: [%{search | path: "/different"}]},
+           {:path_mismatch, "a", "/a", "/different"}}
+        ] do
+      assert {:error, {:invalid_presentation, ^reason}} = GraphProjector.validate(presentation)
+    end
+
+    for presentation <- [
+          %{base | navigation: [%{nav | id: ""}]},
+          %{base | navigation: [%{nav | children: [nav | :tail]}]},
+          %{base | search: [search | :tail]},
+          %{base | search: [%{search | tokens: ["a" | :tail]}]},
+          %{base | content: %{"" => []}}
+        ] do
+      assert {:error, {:invalid_presentation, _}} = GraphProjector.validate(presentation)
+    end
+
+    group = %NavigationItem{id: "group", title: "Group", path: "", children: [nav]}
+
+    external = %NavigationItem{
+      id: "external",
+      title: "External",
+      path: "https://example.invalid/docs"
+    }
+
+    assert {:ok, _} = GraphProjector.validate(%{base | navigation: [group, external]})
+
+    assert {:ok, _} =
+             GraphProjector.validate(%{
+               base
+               | navigation: [],
+                 search: [%{search | id: "external", path: external.path}]
+             })
+  end
+
+  test "backlink targets are local but their origins may belong to a larger host graph" do
+    origin = %Backlink{id: "outside", title: "Outside", path: "/host-page"}
+
+    base = %{
+      schema_version: DocShell.schema_version(),
+      navigation: [],
+      search: [],
+      content: %{"a" => []},
+      backlinks: %{"a" => [origin]}
+    }
+
+    assert {:ok, _} = GraphProjector.validate(base)
+
+    assert {:error, {:invalid_presentation, {:missing_content, :backlinks, "a"}}} =
+             GraphProjector.validate(%{base | content: %{}})
+
+    assert {:error, {:invalid_presentation, {:duplicate_id, :backlinks, "outside"}}} =
+             GraphProjector.validate(%{base | backlinks: %{"a" => [origin, origin]}})
+
+    nav = %NavigationItem{id: "a", title: "A", path: "/a"}
+
+    assert {:error, {:invalid_presentation, {:path_mismatch, "a", "/a", "/host-page"}}} =
+             GraphProjector.validate(%{
+               base
+               | navigation: [nav],
+                 backlinks: %{"a" => [%{origin | id: "a"}]}
+             })
   end
 end

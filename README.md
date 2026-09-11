@@ -513,6 +513,13 @@ To serve documentation back out of that store, implement
 config :doc_shell, presentation_source: MyApp.Docs.GraphProjector
 ```
 
+Presentation IDs are nonempty and unique within navigation (including children)
+and search. Shared IDs must have identical paths. Local leaves/search results
+need content; navigation groups with children and absolute HTTP(S) links may
+omit it. Content can be hidden from both indexes. Backlink targets need content;
+origins may live in a larger host graph but cannot contradict a known path.
+The default generator sorts by kind, title, then ID, including tied titles.
+
 The pipeline validates the projector's field types, recursive AST content,
 and metadata before writing files. Hosts use the same presentation contract
 for extracted files and graph-backed content.

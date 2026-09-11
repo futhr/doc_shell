@@ -160,13 +160,10 @@ defmodule DocShell.Presentation.StaticGeneratorTest do
       end
     end
 
-    # Ids must be unique for the content map to hold every entry, and the sort
-    # key must be unique for the ordering property to be more than a coin flip.
+    # IDs are unique, but equal kind/title pairs remain valid inputs.
     defp entries_generator do
       map(list_of(entry_generator(), max_length: 10), fn entries ->
-        entries
-        |> Enum.uniq_by(& &1["id"])
-        |> Enum.uniq_by(&{&1["kind"], &1["title"]})
+        Enum.uniq_by(entries, & &1["id"])
       end)
     end
 
@@ -250,6 +247,17 @@ defmodule DocShell.Presentation.StaticGeneratorTest do
              StaticGenerator.project(entries: entries)
 
     assert {:error, {:invalid_document_id, _}} = StaticGenerator.project(entries: [%{"id" => ""}])
+  end
+
+  test "equal kind and title use ID as a deterministic tie breaker" do
+    entries =
+      for id <- ["z", "a", "b"],
+          do: %{"id" => id, "title" => "Same", "kind" => "guide", "ast" => body()}
+
+    assert {:ok, first} = StaticGenerator.project(entries: entries)
+    assert {:ok, second} = StaticGenerator.project(entries: Enum.reverse(entries))
+    assert first == second
+    assert Enum.map(first.navigation, & &1.id) == ["a", "b", "z"]
   end
 
   test "search preserves inline words and separates paragraphs and breaks" do

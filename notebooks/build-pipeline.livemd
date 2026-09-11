@@ -435,6 +435,12 @@ of the source return a source-tagged error.
 
 ## Failed builds and recovery
 
+Presentation validation also checks relationships: nonempty IDs are unique in
+navigation (including descendants) and search, shared IDs have the same path,
+and local leaves/search records have content. Groups with children and absolute
+HTTP(S) links may omit content. Backlink targets are local; origins may belong to
+the host's wider graph. Default navigation/search order is kind, title, then ID.
+
 Builds stage all JSON and back up existing files before publishing. Returned
 publication failures restore earlier files, including a stale `collection.json`
 removed by a non-collection build. `Artifact.Transaction.write/2` accepts a
