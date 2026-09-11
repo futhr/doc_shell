@@ -121,6 +121,8 @@ Canonical bytes distinguish integers from floats. Projection compatibility uses
 the same strict distinction; embedded index ASTs must agree with content, and the
 synthetic OpenAPI source has no page AST. Native JSON hashing avoids a redundant
 encode/decode pass while preserving the checked protocol path for other values.
+Artifact writes reject invalid protocol output and host encoder exceptions before
+replacement; source extension fields must be native JSON in ordinary builds too.
 
 The collection integrity section of `docs/specs/DSH.01-documentation-sites.md`
 defines the required behavior; `docs/plans/documentation-sites.md` records the

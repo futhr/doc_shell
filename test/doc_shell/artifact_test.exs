@@ -176,6 +176,29 @@ defmodule DocShell.ArtifactTest do
   end
 
   describe "properties" do
+    test "host encoder failures and invalid fragments never replace a published destination" do
+      root = tmp_dir!()
+      path = Path.join(root, "artifact.json")
+      File.write!(path, "original bytes")
+
+      for payload <- [
+            Jason.Fragment.new(fn _ -> raise "host failure" end),
+            Jason.Fragment.new("{"),
+            Jason.Fragment.new(~s({"x":1,"x":2})),
+            %{:a => 1, "a" => 2},
+            self()
+          ] do
+        assert {:error, _} = Artifact.write(path, payload)
+        assert {:error, _} = Artifact.write_raw(path, payload)
+        assert {:error, _} = Artifact.Transaction.write([{path, payload}])
+        assert File.read!(path) == "original bytes"
+        assert File.ls!(root) == ["artifact.json"]
+      end
+
+      assert :ok = Artifact.write(path, ~D[2026-09-11])
+      assert {:ok, "2026-09-11"} = Artifact.read(path)
+    end
+
     property "a written artifact reads back as the payload that was written" do
       dir = tmp_dir!("artifact-property")
 

@@ -102,6 +102,9 @@ an embedded index AST must agree with content, and OpenAPI owns no page AST.
 collection `source_path` values must be relative filesystem paths.
 Canonical digesting rejects duplicate encoded keys, and malformed boundary input
 returns tagged errors. Keep deletion inside publication locks and rollback.
+Artifact writers validate protocol-generated JSON and return host encoder errors
+without replacing files. Changelog extension fields must remain native JSON in
+both collection and ordinary builds, including `write: false`.
 Import assumes a stable caller-owned directory and uses finite resource limits;
 hashes and path checks are not source authentication or an OS sandbox.
 

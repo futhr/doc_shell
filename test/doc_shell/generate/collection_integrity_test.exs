@@ -57,7 +57,26 @@ defmodule DocShell.Generate.CollectionIntegrityTest do
     assert tree(descriptor.artifact_dir) == before
   end
 
-  test "incompatible projection fails before replacing any generation" do
+  test "source extension fields must be native JSON without collection output" do
+    for extra <- [self(), %{:atom => 1}, <<255>>] do
+      invalid = Map.put(entry("release"), "future", extra)
+
+      assert {:error, {:invalid_changelog_entry, ^invalid}} =
+               DocShell.Generate.Changelog.validate([invalid])
+
+      assert {:error, _} =
+               Build.run(
+                 write: false,
+                 modules: [],
+                 guide_bases: [],
+                 livebook_base: "missing",
+                 changelog_source: ReleaseSource,
+                 changelog_options: [entries: [invalid]]
+               )
+    end
+  end
+
+  test "incompatible projection fails before replacing any generation, preserving the old tree" do
     {descriptor, opts} = build!()
     before = tree(descriptor.artifact_dir)
 

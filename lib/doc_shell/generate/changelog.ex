@@ -160,7 +160,7 @@ defmodule DocShell.Generate.Changelog do
 
   defp valid_entry?(%{"id" => id, "title" => title, "kind" => "changelog", "ast" => ast} = entry) do
     is_binary(id) and id != "" and is_binary(title) and title != "" and Ast.valid?(ast) and
-      valid_meta?(Map.get(entry, "meta", %{}))
+      valid_meta?(Map.get(entry, "meta", %{})) and DocShell.Json.valid?(entry)
   end
 
   defp valid_entry?(_), do: false

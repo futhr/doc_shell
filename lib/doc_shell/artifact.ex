@@ -95,6 +95,10 @@ defmodule DocShell.Artifact do
   with a rename so concurrent readers never observe a partial write. Pass
   `:generated_at` and `:generation_id` when writing a complete tree so every
   file carries the same build identity.
+
+  Invalid JSON values, duplicate encoded keys and exceptions from custom Jason
+  encoders return tagged errors before replacing the destination. Protocol output
+  is checked as JSON; an unsafe fragment cannot publish malformed bytes.
   """
   @spec write(Path.t(), term()) :: :ok | {:error, term()}
   @spec write(Path.t(), term(), keyword()) :: :ok | {:error, term()}
@@ -106,7 +110,7 @@ defmodule DocShell.Artifact do
          {:ok, json} <-
            payload
            |> envelope(generated_at, generation_id)
-           |> Jason.encode_to_iodata(pretty: true, maps: :strict) do
+           |> encode_payload() do
       write_atomically(path, [json, "\n"])
     end
   end
@@ -124,8 +128,25 @@ defmodule DocShell.Artifact do
   @spec write_raw(Path.t(), term()) :: :ok | {:error, term()}
   def write_raw(path, payload) do
     with :ok <- path |> Path.dirname() |> File.mkdir_p(),
-         {:ok, json} <- Jason.encode_to_iodata(payload, pretty: true, maps: :strict) do
+         {:ok, json} <- encode_payload(payload) do
       write_atomically(path, [json, "\n"])
+    end
+  end
+
+  defp encode_payload(payload) do
+    with {:ok, json} <- Jason.encode_to_iodata(payload, pretty: true, maps: :strict),
+         :ok <- validate_encoding(payload, json) do
+      {:ok, json}
+    end
+  rescue
+    error -> {:error, {:json_encoder_failed, Exception.message(error)}}
+  end
+
+  defp validate_encoding(payload, json) do
+    if DocShell.Json.valid?(payload) do
+      :ok
+    else
+      with {:ok, _} <- DocShell.Json.decode(:erlang.iolist_to_binary(json)), do: :ok
     end
   end
 
