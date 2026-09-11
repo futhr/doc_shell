@@ -7,7 +7,7 @@ own fixtures pass.
 
 | Package | Status | Requires | Deliverable | Acceptance |
 | --- | --- | --- | --- | --- |
-| DSH-P01 | implemented; acceptance hardening in progress | Existing `doc-shell/v1` reader | Additive `collection.json`, `DocShell.Generate.Collection` and collection descriptor | DSH-V01/V02 plus collection integrity requirements below; no network or process startup |
+| DSH-P01 | complete | Existing `doc-shell/v1` reader | Additive `collection.json`, `DocShell.Generate.Collection` and collection descriptor | DSH-V01/V02 plus collection integrity requirements below; no network or process startup |
 | DSH-P02 | planned | DSH-P01 | `DocShell.Generate.Cohort`, canonical payload digest, normalized source provenance | DSH-V03; digest excludes time, random IDs, and absolute workspace paths |
 | DSH-P03 | planned | DSH-P01/P02 | `Site`, `Page`, navigation/link types and `SiteSource` validation | DSH-V04–V06; all public structs/functions documented and typed |
 | DSH-P04 | planned | DSH-P03 | Heading/anchor, reading-order, locale/audience/version, canonical/source/edit and redirect projection | DSH-V04–V06 with property tests for route and anchor normalization |
@@ -21,23 +21,62 @@ own fixtures pass.
 
 ### Foundation hardening before site work
 
-The current collection implementation needs the following work before P01 can be
-marked complete. These changes repair the existing extraction library; they do
+The following hardening work qualifies the current P01 implementation.
+These changes repair the existing extraction library; they do
 not advance P02–P09 or claim renderer/export conformance.
 
 | Work | Status | Required evidence |
 | --- | --- | --- |
-| Clarify source/file identities, projection compatibility and canonical JSON | specified | This specification, README, usage rules and notebook guidance agree |
+| Clarify source/file identities, projection compatibility and canonical JSON | complete | Specification, README, usage rules and notebook guidance agree |
 | Check JSON, descriptor and source input boundaries | complete | Canonical JSON fixtures/properties, malformed descriptor/extraction regressions, consistent OpenAPI errors and invalid UTF-8 build tests |
 | Validate complete indexed provenance and preserve source extensions | complete | Collection integrity regressions and generated build/load properties cover the real multi-release corpus, reserved/duplicate IDs, malformed/future artifacts and projector failure before publication |
 | Secure and bound corpus loading | complete | Root spellings and parent-symlink regressions; exact file/total/count/depth limits; JSON escape properties and duplicate-key rejection; prior compatible corpora |
 | Make stale deletion transactional | complete | Transaction tests cover deletion rollback and lock ownership; collection regression verifies unchanged manifest on obstructed deletion |
 | Strengthen presentation and cache contracts | complete | Equal-title regression/properties; semantic reference and JSON-extension checks; opt-in member search; concurrent snapshots and configurable reload timeout tests |
-| Qualify performance and package consumers | pending | Collection scaling, locked/unlocked/minimum consumers, notebooks, complete `mix check` and repeated adversarial review |
+| Qualify performance and package consumers | complete | Collection scaling and full benchmark suite; nine locked/unlocked/compatible-minimum consumers; four notebooks; complete `mix check`; repeated malformed-input and publication review |
 
 Keep the existing public facade when separating descriptor, provenance, digest,
 and filesystem responsibilities. Commit each coherent behavior with its tests.
 Mark a row complete only with executable evidence and update docs in that commit.
+
+### Qualification record — 2026-09-11
+
+Local verification used Elixir 1.18.4 and OTP 27.3.4.15. The existing CI matrix
+remains unchanged; other Elixir/OTP pairs were not locally rerun or remotely
+dispatched as part of this work.
+
+| Check | Result |
+| --- | --- |
+| Full `mix check`, without automatic retry-only behavior | 277 tests, 28 properties, 16 doctests; zero failures; 97.4% coverage |
+| Compilation, strict Credo, Dialyzer, Doctor, ExDoc, formatting and dependency audits | Pass; 100% documentation/typespec coverage; no ignored Dialyzer warnings added |
+| Compile without optional integrations | Pass |
+| Executable notebooks | All four pass, 55 executable cells |
+| Unpacked Hex archive consumers | Core, Plug and Ash pass for locked, unlocked and selected compatible-minimum dependencies |
+| Benchmarks | All suites run; measurements refreshed, including preparation and import at 1,000–16,000 documents |
+
+The minimum consumer set is Jason 1.4.0, EarmarkParser 1.4.8 and YamlElixir
+2.11.0, except the Ash consumer needs Jason 1.4.5 for its Decimal 3 dependency.
+Old EarmarkParser versions emit upstream deprecation warnings on modern Elixir;
+these are not suppressed. This is selected direct-dependency qualification, not
+an exhaustive historical/transitive dependency matrix.
+
+On the original synthetic 16,000-document diagnostic fixture, median-of-three
+preparation time changed from 2,766.9 ms to 48.9 ms and import from 5,454.7 ms to
+876.3 ms. These local observations are not timing assertions or asymptotic proofs.
+The committed collection benchmark records independent elapsed-time and allocated
+memory measurements. Source loops now use indexed lookup and prepend/reverse;
+canonical object ordering still requires key sorting.
+
+Follow-up review also closed integer/float projection mismatches, contradictory
+embedded ASTs, orphan OpenAPI content, protocol-encoder failures, colliding member
+metadata keys and changed bytes under a reused cache generation ID. Descriptor,
+filesystem, provenance and canonical JSON responsibilities have separate modules;
+the compatible collection facade remains.
+
+Import still requires a stable caller-owned directory, checksums are not source
+authentication, and publication is not power-loss atomic. These are documented
+boundaries, not claims of an OS sandbox or a full site renderer. No workflow,
+remote ref, release tag, repository visibility or dependency lock was changed.
 Do not change schemas, dependency ranges, workflow checks, release refs, or
 repository visibility merely to make a check pass.
 

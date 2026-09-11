@@ -53,6 +53,8 @@ mix ci                       # setup + lint + coverage
 mix docs                     # build the documentation
 mix bench                    # run every benchmark
 mix bench.ast                # run one
+scripts/notebook_smoke.py     # execute notebook examples against the checkout
+scripts/consumer_smoke.sh     # round-trip the unpacked package in fresh hosts
 ```
 
 Benchmarks write Markdown reports to `bench/output/`, which are published as
@@ -62,6 +64,16 @@ suites and commit the updated reports.
 
 `mix check` runs everything below in one pass. Run it before opening a pull
 request.
+
+Automatic retry-only mode is disabled so `mix check` remains a full gate after
+a failure. Use `mix check --retry` explicitly for a targeted retry while iterating,
+then run the complete gate before handoff.
+
+The consumer check defaults to the locked dependency set for core, Plug and Ash
+hosts. Set `DOC_SHELL_DEPENDENCIES=unlocked` for fresh resolution or `minimum`
+for selected compatible direct-runtime minima. The Ash host requires Jason 1.4.5
+with Decimal 3; core/Plug also test Jason 1.4.0. These checks operate entirely in
+temporary projects, without changing the repository lock, workflows or refs.
 
 | Tool | What it enforces |
 | --- | --- |
@@ -103,17 +115,17 @@ dependency.
 
 ## Test layout
 
-`test/` mirrors `lib/` exactly: every module has one test module at the
-matching path, so `lib/doc_shell/web/plug.ex` is tested by
-`test/doc_shell/web/plug_test.exs` and nowhere else. Adding a module means
-adding its test file.
+Organize unit tests near the corresponding `lib/` path. Contract and integration
+tests may intentionally span helpers: collection integrity tests, for example,
+exercise descriptor, filesystem, digest and provenance behavior through the
+public facade. Test observable behavior, including failure preservation, rather
+than duplicating an implementation's decomposition solely to mirror filenames.
 
 A module whose documentation contains `iex>` examples must be covered by
 `doctest` in that test module, so the examples are executed rather than merely
 read.
 
-Property tests belong in a `describe "properties"` block inside the module's
-own test file, using [StreamData](https://hexdocs.pm/stream_data). They are the
+Group related property tests clearly, using [StreamData](https://hexdocs.pm/stream_data). They are the
 right tool for the normalization and round-trip code, where the interesting
 inputs are the ones nobody thinks to write by hand.
 

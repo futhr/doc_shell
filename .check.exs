@@ -2,6 +2,9 @@
   ## Run tools one at a time so failures are readable
   parallel: false,
 
+  ## A complete gate must not silently become a retry-only gate after a failure.
+  retry: false,
+
   ## Report tools that were skipped and why
   skipped: true,
   tools: [

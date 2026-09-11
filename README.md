@@ -580,6 +580,26 @@ advisories, Dialyzer, and a compile with the optional dependencies removed. CI a
 runs tests and coverage across Elixir 1.17 through 1.20, with the remaining
 quality checks on Elixir 1.18.
 
+The local gate disables automatic retry-only mode: every `mix check` runs all
+configured checks unless you explicitly request a narrower run. Packaged consumer
+tests unpack a Hex archive into fresh projects and perform canonical-fixture,
+multi-release build/import and cache-snapshot checks for core, Plug and Ash hosts.
+They never change this repository's dependency lock or release refs.
+
+```sh
+scripts/consumer_smoke.sh # locked dependency set (the CI default)
+DOC_SHELL_DEPENDENCIES=unlocked scripts/consumer_smoke.sh
+DOC_SHELL_DEPENDENCIES=minimum scripts/consumer_smoke.sh
+```
+
+The selected minimum set uses EarmarkParser 1.4.8 (its earliest published 1.4
+release), YamlElixir 2.11.0 and Jason 1.4.0. The Ash host uses Jason 1.4.5 because
+its Decimal 3 dependency is incompatible with earlier Jason versions. Optional
+host/transitive dependencies are solver-selected, not forcibly overridden; this
+is not an exhaustive combination of every historical dependency version. The old
+EarmarkParser emits upstream deprecation warnings on modern Elixir; no warnings
+are suppressed and the library itself still compiles with warnings as errors.
+
 `mix docs` emits HTML, Markdown, and EPUB. The Markdown formatter is what
 produces `doc/llms.txt` and a `.md` file per module for machine readers.
 
