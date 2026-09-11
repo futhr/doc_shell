@@ -69,6 +69,21 @@ defmodule DocShell.Web.CacheTest do
     assert {:ok, %{"id" => "one"}} = Cache.fetch("one.json")
   end
 
+  test "reusing a generation ID with changed content fails rather than acknowledging stale bytes" do
+    root = tmp_dir!()
+    ArtifactFixture.write_snapshot!(root, [{"one.json", %{"value" => 1}}], "immutable")
+    cache = start_supervised!({Cache, dir: root})
+    assert :ok = Cache.reload(cache)
+    assert {:ok, old} = Cache.snapshot(cache)
+    path = Path.join(root, "one.json")
+    {:ok, envelope} = DocShell.Artifact.read_envelope(path)
+    :ok = DocShell.Artifact.write_raw(path, put_in(envelope, ["data", "value"], 1.0))
+    assert {:error, {:generation_id_reused, "immutable"}} = Cache.reload(cache)
+    assert {:ok, ^old} = Cache.snapshot(cache)
+    :ok = DocShell.Artifact.write_raw(path, envelope)
+    assert :ok = Cache.reload(cache)
+  end
+
   test "start_link fails cleanly on a corrupt artifact in the directory" do
     root = tmp_dir!()
     File.write!(Path.join(root, "corrupt.json"), "{ not json")

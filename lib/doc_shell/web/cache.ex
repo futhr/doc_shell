@@ -109,6 +109,9 @@ defmodule DocShell.Web.Cache do
   if any file fails to read or validate. The optional timeout defaults to 5,000
   milliseconds and follows `GenServer.call/3` semantics: timeout/process failure
   exits the caller, and a timeout does not cancel a queued or running reload.
+  Reusing the active generation ID with different envelopes returns
+  `{:error, {:generation_id_reused, id}}`; it never silently acknowledges stale
+  cached bytes as a successful reload. Re-reading identical envelopes is a no-op.
   """
   @spec reload(GenServer.server()) :: :ok | {:error, term()}
   @spec reload(GenServer.server(), timeout()) :: :ok | {:error, term()}
@@ -250,7 +253,7 @@ defmodule DocShell.Web.Cache do
   defp publish_generation(table, generation_id, artifacts) do
     case active_generation(table) do
       {:ok, ^generation_id} ->
-        :ok
+        validate_unchanged_generation(table, generation_id, artifacts)
 
       current ->
         entries =
@@ -269,6 +272,16 @@ defmodule DocShell.Web.Cache do
         delete_generation(table, current)
         :ok
     end
+  end
+
+  defp validate_unchanged_generation(table, generation_id, artifacts) do
+    unchanged? =
+      Enum.all?(artifacts, fn {name, envelope} ->
+        :ets.lookup(table, {:artifact, generation_id, name}) ===
+          [{{:artifact, generation_id, name}, envelope}]
+      end)
+
+    if unchanged?, do: :ok, else: {:error, {:generation_id_reused, generation_id}}
   end
 
   defp delete_generation(_, :error), do: :ok

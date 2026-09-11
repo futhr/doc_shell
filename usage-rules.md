@@ -306,6 +306,8 @@ that copy in caller memory. Snapshot calls queue behind reloads.
 `Cache.reload(server, timeout)` and `snapshot(server, timeout)` default to 5,000
 milliseconds. They follow `GenServer.call/3`: timeouts/unavailable processes exit
 the caller, and timing out does not cancel a queued or running reload.
+Reusing an active generation ID with changed envelopes returns
+`{:error, {:generation_id_reused, id}}` and preserves the prior snapshot.
 
 ### HTTP response caching
 
