@@ -57,6 +57,28 @@ defmodule DocShell.Generate.ExDocTest do
     assert {:ok, []} = ExDoc.extract([mod])
   end
 
+  test "ambiguous member metadata fails instead of silently discarding an encoded key", %{
+    dir: dir
+  } do
+    mod =
+      compile_beam(
+        dir,
+        """
+        defmodule ExDocFixtureMetadataKeys do
+          @moduledoc "A documented module."
+          @doc custom: %{:enabled => true, "enabled" => false}
+          def sample, do: :ok
+        end
+        """,
+        true
+      )
+
+    assert {:error, {:member_metadata, "sample", 0, {:duplicate_json_key, "enabled"}}} =
+             ExDoc.extract_module(mod)
+
+    assert {:error, {^mod, {:member_metadata, "sample", 0, _}}} = ExDoc.extract([mod])
+  end
+
   test "returns a tagged error for an unloadable module" do
     assert {:error, {DocShell.Nonexistent.Module, _}} =
              ExDoc.extract([DocShell.Nonexistent.Module])

@@ -102,7 +102,8 @@ defmodule DocShell.Generate.ExDoc do
   defp build_entry(module, moduledoc, metadata, docs) do
     markdown = doc_text(moduledoc)
 
-    with {:ok, ast} <- Ast.from_markdown(markdown) do
+    with {:ok, ast} <- Ast.from_markdown(markdown),
+         {:ok, members} <- Collector.map_ok(docs, &member/1) do
       {:ok,
        %{
          "id" => inspect(module),
@@ -113,7 +114,7 @@ defmodule DocShell.Generate.ExDoc do
            "module" => inspect(module),
            "language" => to_string(Map.get(metadata, :language, :elixir)),
            "moduledoc" => moduledoc_state(moduledoc),
-           "members" => Enum.map(docs, &member/1)
+           "members" => members
          }
        }}
     end
@@ -124,14 +125,21 @@ defmodule DocShell.Generate.ExDoc do
   defp moduledoc_state(_), do: "none"
 
   defp member({{kind, name, arity}, _, signatures, doc, metadata}) do
-    %{
-      "kind" => to_string(kind),
-      "name" => to_string(name),
-      "arity" => arity,
-      "signatures" => signatures,
-      "doc" => doc_text(doc),
-      "metadata" => DocShell.Json.stringify(metadata)
-    }
+    case DocShell.Json.normalize(metadata) do
+      {:ok, normalized} ->
+        {:ok,
+         %{
+           "kind" => to_string(kind),
+           "name" => to_string(name),
+           "arity" => arity,
+           "signatures" => signatures,
+           "doc" => doc_text(doc),
+           "metadata" => normalized
+         }}
+
+      {:error, reason} ->
+        {:error, {:member_metadata, to_string(name), arity, reason}}
+    end
   end
 
   defp doc_text(%{"en" => text}) when is_binary(text), do: text

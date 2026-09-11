@@ -436,6 +436,9 @@ of the source return a source-tagged error.
 
 ## Failed builds and recovery
 
+Custom ExDoc member metadata is checked during normalization: atom/string keys
+that become the same JSON key fail with the member name, rather than losing data.
+
 Guide title extraction avoids a second parse for explicit frontmatter titles or
 unfenced bodies. Fenced bodies retain a defensive title-only parse, so malformed
 closing fences cannot turn code comments into page headings.

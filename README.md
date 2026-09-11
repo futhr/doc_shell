@@ -365,6 +365,8 @@ invalid input raises `ArgumentError`. Portable fixtures ship in
 Artifact writes also contain host encoder exceptions and reject malformed or
 duplicate-key JSON fragments before replacing existing files. Source extension
 fields must remain native JSON even when no collection is requested.
+ExDoc member metadata uses checked normalization too: colliding converted keys
+return a member-tagged error instead of silently dropping a value.
 
 Metadata preserves JSON scalars and uses UTF-8 string keys. Unsupported terms
 become inspected text; improper list tails become a final array value.

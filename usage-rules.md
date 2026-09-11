@@ -105,6 +105,8 @@ returns tagged errors. Keep deletion inside publication locks and rollback.
 Artifact writers validate protocol-generated JSON and return host encoder errors
 without replacing files. Changelog extension fields must remain native JSON in
 both collection and ordinary builds, including `write: false`.
+ExDoc member metadata is normalized with duplicate-key checking. Keep custom
+`@doc` metadata keys distinct after conversion to strings.
 Import assumes a stable caller-owned directory and uses finite resource limits;
 hashes and path checks are not source authentication or an OS sandbox.
 
