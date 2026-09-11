@@ -34,9 +34,9 @@ defmodule DocShell.Generate.Collection do
   """
 
   alias DocShell.Artifact
+  alias DocShell.Generate.Collection.Provenance
 
   @collection_schema "doc-shell-collection/v1"
-  @source_artifacts ~w(modules.json guides.json livebooks.json changelog.json)
   @required ~w(id title version revision tree_digest artifact_dir source_url edit_base_url)a
   @optional ~w(package license default_locale audience source_root status)a
   @fields @required ++ @optional
@@ -137,13 +137,32 @@ defmodule DocShell.Generate.Collection do
   defp validate_extracted(_), do: {:error, :invalid_collection_extraction}
 
   defp prepare_sources(descriptor, extracted) do
+    entries = Enum.flat_map(source_groups(extracted), &elem(&1, 2))
+    reserved = %{"id" => "openapi", "meta" => %{"source_path" => "openapi.json"}}
+
+    with :ok <- validate_entries(entries),
+         :ok <- DocShell.Presentation.Source.validate_ids([reserved | entries]) do
+      prepare_groups(descriptor, extracted)
+    end
+  end
+
+  defp validate_entries(entries) do
+    Enum.reduce_while(entries, :ok, fn entry, :ok ->
+      if Provenance.valid_entry?(entry),
+        do: {:cont, :ok},
+        else: {:halt, {:error, {:invalid_source_entry, entry}}}
+    end)
+  end
+
+  defp prepare_groups(descriptor, extracted) do
     prepared =
-      Enum.reduce_while(source_groups(extracted), {:ok, extracted, [], MapSet.new()}, fn
+      Enum.reduce_while(source_groups(extracted), {:ok, extracted, [], %{}}, fn
         {key, artifact, entries}, {:ok, current, sources, paths} ->
           case prepare_entries(descriptor, artifact, entries, paths) do
             {:ok, normalized, added_sources, next_paths} ->
               {:cont,
-               {:ok, Map.put(current, key, normalized), sources ++ added_sources, next_paths}}
+               {:ok, Map.put(current, key, normalized), Enum.reverse(added_sources, sources),
+                next_paths}}
 
             {:error, _} = error ->
               {:halt, error}
@@ -155,7 +174,7 @@ defmodule DocShell.Generate.Collection do
 
   defp finish_preparation({:ok, normalized, sources, _}, extracted) do
     openapi_source = source_record("openapi", "openapi", "openapi.json", extracted.openapi)
-    {:ok, normalized, sources ++ [openapi_source]}
+    {:ok, normalized, Enum.reverse([openapi_source | sources])}
   end
 
   defp finish_preparation(error, _), do: error
@@ -192,7 +211,7 @@ defmodule DocShell.Generate.Collection do
          {:ok, envelopes} <- read_artifacts(expected.artifact_dir, names, generation_id),
          {:ok, payload} <- fetch_collection(envelopes),
          :ok <- validate_payload(payload, expected, envelopes),
-         {:ok, documents} <- qualify_documents(payload, envelopes, expected.id) do
+         {:ok, documents} <- Provenance.documents(payload["sources"], envelopes, expected.id) do
       {:ok,
        %{
          descriptor: expected,
@@ -225,13 +244,13 @@ defmodule DocShell.Generate.Collection do
 
   def load_many(value), do: {:error, {:invalid_collection_descriptors, value}}
 
-  defp finish_collections({:ok, collections, _}), do: {:ok, collections}
+  defp finish_collections({:ok, collections, _}), do: {:ok, Enum.reverse(collections)}
   defp finish_collections(error), do: error
 
   defp add_collection(collection, id, collections, ids) do
     case MapSet.member?(ids, id) do
       true -> {:halt, {:error, {:duplicate_collection_id, id}}}
-      false -> {:cont, {:ok, collections ++ [collection], MapSet.put(ids, id)}}
+      false -> {:cont, {:ok, [collection | collections], MapSet.put(ids, id)}}
     end
   end
 
@@ -245,18 +264,23 @@ defmodule DocShell.Generate.Collection do
   end
 
   defp prepare_entries(descriptor, artifact, entries, paths) when is_list(entries) do
-    Enum.reduce_while(entries, {:ok, [], [], paths}, fn entry, state ->
-      prepare_entry(descriptor, artifact, entry, state)
-    end)
+    result =
+      Enum.reduce_while(entries, {:ok, [], [], paths}, fn entry, state ->
+        prepare_entry(descriptor, artifact, entry, state)
+      end)
+
+    case result do
+      {:ok, entries, sources, paths} -> {:ok, Enum.reverse(entries), Enum.reverse(sources), paths}
+      error -> error
+    end
   end
 
   defp prepare_entry(descriptor, artifact, entry, {:ok, normalized, sources, seen}) do
     with {:ok, next_entry, path} <- normalize_entry_path(descriptor, entry),
-         :ok <- unique_path(path, seen) do
+         {:ok, next_seen} <- Provenance.add_path(seen, path, artifact) do
       record = source_record(next_entry["kind"], next_entry["id"], artifact, next_entry)
       record = maybe_put_source_path(record, path)
-      next_seen = maybe_add_source_path(seen, path)
-      {:cont, {:ok, normalized ++ [next_entry], sources ++ [record], next_seen}}
+      {:cont, {:ok, [next_entry | normalized], [record | sources], next_seen}}
     else
       {:error, _} = error -> {:halt, error}
     end
@@ -265,14 +289,11 @@ defmodule DocShell.Generate.Collection do
   defp maybe_put_source_path(record, nil), do: record
   defp maybe_put_source_path(record, path), do: Map.put(record, "source_path", path)
 
-  defp maybe_add_source_path(seen, nil), do: seen
-  defp maybe_add_source_path(seen, path), do: MapSet.put(seen, path)
-
   defp normalize_entry_path(descriptor, %{"id" => id, "kind" => kind} = entry)
        when is_binary(id) and id != "" and is_binary(kind) and kind != "" do
     meta = Map.get(entry, "meta", %{})
 
-    if is_map(meta),
+    if Provenance.valid_entry?(entry) and is_map(meta),
       do: normalize_entry_meta(descriptor, entry, meta),
       else: {:error, {:invalid_source_entry, entry}}
   end
@@ -303,11 +324,6 @@ defmodule DocShell.Generate.Collection do
       {:error, {:source_path_escape, path}}
     end
   end
-
-  defp unique_path(nil, _), do: :ok
-
-  defp unique_path(path, seen),
-    do: if(MapSet.member?(seen, path), do: {:error, {:duplicate_source_path, path}}, else: :ok)
 
   defp source_record(kind, document_id, artifact, entry) do
     %{
@@ -429,9 +445,7 @@ defmodule DocShell.Generate.Collection do
   defp validate_payload(payload, expected, envelopes) do
     with :ok <- validate_collection_shape(payload),
          :ok <- compare_descriptor(payload["descriptor"], expected),
-         :ok <- validate_source_paths(payload["sources"]),
-         :ok <- compare_artifact_digests(payload["artifacts"], envelopes),
-         :ok <- compare_source_digests(payload["sources"], envelopes) do
+         :ok <- compare_artifact_digests(payload["artifacts"], envelopes) do
       compare_content_digest(payload)
     end
   end
@@ -458,43 +472,6 @@ defmodule DocShell.Generate.Collection do
       else: {:error, {:collection_descriptor_mismatch, portable_descriptor(expected), actual}}
   end
 
-  defp validate_source_paths(sources) do
-    paths = Enum.reduce_while(sources, {:ok, MapSet.new()}, &validate_source_path/2)
-    finish_source_paths(paths)
-  end
-
-  defp validate_source_path(source, {:ok, paths}) do
-    case source do
-      %{"source_path" => path} when is_binary(path) ->
-        validate_source_path_value(path, paths)
-
-      %{"source_path" => path} ->
-        {:halt, {:error, {:invalid_source_path, path}}}
-
-      %{} ->
-        {:cont, {:ok, paths}}
-
-      other ->
-        {:halt, {:error, {:invalid_source_record, other}}}
-    end
-  end
-
-  defp validate_source_path_value(path, paths) do
-    cond do
-      not contained_relative_path?(path) ->
-        {:halt, {:error, {:invalid_source_path, path}}}
-
-      MapSet.member?(paths, path) ->
-        {:halt, {:error, {:duplicate_source_path, path}}}
-
-      true ->
-        {:cont, {:ok, MapSet.put(paths, path)}}
-    end
-  end
-
-  defp finish_source_paths({:ok, _}), do: :ok
-  defp finish_source_paths(error), do: error
-
   defp compare_artifact_digests(digests, envelopes) do
     expected_names = MapSet.new(Map.keys(envelopes) -- ["collection.json"])
     digest_names = MapSet.new(Map.keys(digests))
@@ -517,56 +494,6 @@ defmodule DocShell.Generate.Collection do
     end)
   end
 
-  defp compare_source_digests(sources, envelopes) do
-    Enum.reduce_while(sources, :ok, &compare_source_digest(&1, &2, envelopes))
-  end
-
-  defp compare_source_digest(
-         %{"artifact" => artifact, "document_id" => id, "record_digest" => expected},
-         :ok,
-         envelopes
-       )
-       when is_binary(artifact) and is_binary(id) and is_binary(expected) do
-    case source_entry(envelopes, artifact, id) do
-      {:ok, entry} ->
-        actual = digest(entry)
-
-        if actual == expected,
-          do: {:cont, :ok},
-          else: {:halt, {:error, {:source_digest_mismatch, id, expected, actual}}}
-
-      {:error, _} = error ->
-        {:halt, error}
-    end
-  end
-
-  defp compare_source_digest(source, :ok, _),
-    do: {:halt, {:error, {:invalid_source_record, source}}}
-
-  defp source_entry(envelopes, "openapi.json", "openapi"),
-    do: fetch_artifact_data(envelopes, "openapi.json")
-
-  defp source_entry(envelopes, artifact, id) when artifact in @source_artifacts do
-    with {:ok, entries} when is_list(entries) <- fetch_artifact_data(envelopes, artifact),
-         %{} = entry <- Enum.find(entries, &(&1["id"] == id)),
-         {:ok, content} when is_map(content) <- fetch_artifact_data(envelopes, "content.json") do
-      {:ok, Map.put(entry, "ast", Map.get(content, id, []))}
-    else
-      nil -> {:error, {:missing_source_record, artifact, id}}
-      _ -> {:error, {:invalid_source_artifact, artifact}}
-    end
-  end
-
-  defp source_entry(_, artifact, _),
-    do: {:error, {:unlisted_source_artifact, artifact}}
-
-  defp fetch_artifact_data(envelopes, name) do
-    case envelopes do
-      %{^name => %{"data" => data}} -> {:ok, data}
-      _ -> {:error, {:missing_source_artifact, name}}
-    end
-  end
-
   defp compare_content_digest(payload) do
     core = Map.delete(payload, "content_digest")
     actual = digest(core)
@@ -574,28 +501,10 @@ defmodule DocShell.Generate.Collection do
     if actual == expected, do: :ok, else: {:error, {:content_digest_mismatch, expected, actual}}
   end
 
-  defp qualify_documents(payload, envelopes, collection_id) do
-    Enum.reduce_while(payload["sources"], {:ok, []}, fn source, {:ok, documents} ->
-      id = source["document_id"]
-
-      case source_entry(envelopes, source["artifact"], id) do
-        {:ok, entry} ->
-          document =
-            entry
-            |> Map.put("document_id", id)
-            |> Map.put("id", collection_id <> ":" <> id)
-            |> Map.put("collection_id", collection_id)
-
-          {:cont, {:ok, documents ++ [document]}}
-
-        {:error, _} = error ->
-          {:halt, error}
-      end
-    end)
-  end
-
   defp contained_relative_path?(path) do
-    path != "" and Path.type(path) == :relative and ".." not in Path.split(path)
+    path != "" and Path.type(path) == :relative and
+      Enum.all?(Path.split(path), &(&1 not in [".", ".."])) and
+      not String.contains?(path, ["\\", ":", <<0>>])
   end
 
   defp inside?(path, root), do: path == root or String.starts_with?(path, root <> "/")

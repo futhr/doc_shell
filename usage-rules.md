@@ -89,6 +89,11 @@ Include synthetic OpenAPI identity in duplicate checks. Require complete
 provenance and a build/load round trip. Reject incompatible custom collection
 projections before publication; never reintroduce filtered public bodies implicitly.
 Unknown source indexes referenced by provenance use the generic v1 entry shape.
+Loading rejects missing or repeated provenance, duplicate document IDs and
+malformed source indexes. The ID `openapi` is reserved in collection mode.
+Custom projectors must preserve extracted ASTs (omitted empty ASTs reconstruct
+as `[]`). Dynamic source locators belong in metadata such as `source_ref`;
+collection `source_path` values must be relative filesystem paths.
 Canonical digesting rejects duplicate encoded keys, and malformed boundary input
 returns tagged errors. Keep deletion inside publication locks and rollback.
 Import assumes a stable caller-owned directory and uses finite resource limits;

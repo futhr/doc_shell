@@ -72,21 +72,25 @@ defmodule DocShell.Generate.CollectionTest do
       assert Enum.any?(loaded.sources, &(&1["kind"] == "module"))
     end
 
-    test "preserves unknown source kinds and JSON metadata" do
+    test "preserves arbitrary provenance metadata and rejects a kind that contradicts its source" do
       descriptor = build_collection!("unknown_kind")
 
       rewrite_collection!(descriptor.artifact_dir, fn payload ->
         update_in(payload, ["sources", Access.at(0)], fn source ->
-          source
-          |> Map.put("kind", "future-manual")
-          |> Map.put("metadata", %{"producer" => "independent", "rank" => 7})
+          Map.put(source, "metadata", %{"producer" => "independent", "rank" => 7})
         end)
       end)
 
       assert {:ok, loaded} = Collection.load(descriptor)
 
-      assert %{"kind" => "future-manual", "metadata" => %{"rank" => 7}} =
+      assert %{"kind" => "module", "metadata" => %{"rank" => 7}} =
                Enum.at(loaded.sources, 0)
+
+      rewrite_collection!(descriptor.artifact_dir, fn payload ->
+        update_in(payload, ["sources", Access.at(0)], &Map.put(&1, "kind", "future-manual"))
+      end)
+
+      assert {:error, {:source_identity_mismatch, "DocShell.Ast"}} = Collection.load(descriptor)
     end
 
     test "rejects missing, unlisted, and legacy corpora" do
@@ -285,6 +289,7 @@ defmodule DocShell.Generate.CollectionTest do
       modules: [
         %{
           "id" => "Example",
+          "title" => "Example",
           "kind" => "module",
           "meta" => %{"source_path" => "docs/example.md"},
           "ast" => []

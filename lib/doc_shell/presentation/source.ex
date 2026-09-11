@@ -44,7 +44,7 @@ defmodule DocShell.Presentation.Source do
   end
 
   defp collect_id(%{"id" => id} = entry, {:ok, seen}) when is_binary(id) and id != "" do
-    source = get_in(entry, ["meta", "source_path"]) || id
+    source = source_location(entry, id)
 
     case Map.fetch(seen, id) do
       {:ok, previous} -> {:halt, {:error, {:duplicate_document_id, id, [previous, source]}}}
@@ -53,4 +53,9 @@ defmodule DocShell.Presentation.Source do
   end
 
   defp collect_id(entry, _), do: {:halt, {:error, {:invalid_document_id, entry}}}
+
+  defp source_location(%{"meta" => meta}, id) when is_map(meta),
+    do: Map.get(meta, "source_path") || id
+
+  defp source_location(_, id), do: id
 end

@@ -109,6 +109,10 @@ changelog has several document IDs pointing to one path. Every admitted record,
 including the synthetic `openapi` document, needs unique identity and matching
 provenance. Unknown source kinds retain the generic source-index contract.
 Canonical digesting must reject duplicate encoded object keys.
+Loading validates source-index entry shapes and exact provenance coverage before
+qualifying documents. The `openapi` ID is reserved in collection mode. Unknown
+referenced indexes retain their source kind and metadata; other extension
+artifacts remain available as opaque decoded payloads.
 
 `DocShell.Json.Canonical.encode/1` and `digest/1` provide checked operations;
 `Collection.digest/1` is a convenience for encodable input and raises on invalid

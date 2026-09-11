@@ -126,9 +126,17 @@ defmodule DocShell.Build do
       |> put_option(config, :search_tokens)
 
     with :ok <- DocShell.Presentation.Source.validate_ids(entries) do
-      GraphProjector.project(source, opts)
+      with {:ok, presentation} <- GraphProjector.project(source, opts),
+           :ok <- validate_collection_projection(config[:collection], entries, presentation) do
+        {:ok, presentation}
+      end
     end
   end
+
+  defp validate_collection_projection(nil, _, _), do: :ok
+
+  defp validate_collection_projection(_, entries, presentation),
+    do: DocShell.Generate.Collection.Provenance.validate_projection(entries, presentation.content)
 
   defp put_option(opts, config, key) do
     case Keyword.fetch(config, key) do
