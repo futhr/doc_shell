@@ -327,6 +327,13 @@ temporary file. A rename publishes each complete file.
 
 ### JSON metadata normalization
 
+For checked serialization and hashing, use `DocShell.Json.Canonical.encode/1`
+and `digest/1`. They reject duplicate encoded keys and return tagged errors.
+`Collection.digest/1` remains a string-returning convenience for encodable input;
+invalid input raises `ArgumentError`. Portable fixtures ship in
+`priv/contracts/canonical-json-v1.json`. Invalid UTF-8 source files return
+`:invalid_utf8` errors tagged with the file by the extractors/build.
+
 Metadata preserves JSON scalars and uses UTF-8 string keys. Unsupported terms
 become inspected text; improper list tails become a final array value.
 `DocShell.Json.normalize/1` rejects converted-key collisions. The legacy
@@ -409,7 +416,7 @@ callback — see the [OpenAPI adapters notebook](notebooks/openapi-adapters.live
 ### OpenAPI version support
 
 Raw and custom adapters accept OpenAPI 3.0, 3.1, and 3.2 documents without
-rewriting their fields. Validation remains a shallow version check; source
+rewriting their fields. Validation checks the version and unambiguous JSON encoding; source
 libraries own schema validation. The default document remains OpenAPI 3.1.
 
 ### Optional integration dependencies

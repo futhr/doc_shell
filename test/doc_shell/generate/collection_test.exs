@@ -11,6 +11,38 @@ defmodule DocShell.Generate.CollectionTest do
 
   doctest Collection
 
+  test "malformed public inputs return errors and descriptor aliases cannot overwrite identity" do
+    descriptor = descriptor("inputs", "/tmp/unused")
+
+    extracted = %{
+      modules: [],
+      guides: [],
+      livebooks: [],
+      changelog: [],
+      openapi: %{"openapi" => "3.1.0"}
+    }
+
+    for invalid <- [
+          %{},
+          nil,
+          %{extracted | modules: [1 | 2]},
+          %{extracted | modules: [self()]},
+          %{extracted | modules: [%{"id" => "x", "kind" => "guide", "meta" => 42}]}
+        ] do
+      assert {:error, _} = Collection.prepare(descriptor, invalid)
+    end
+
+    assert {:error, _} = Collection.new(~D[2026-09-11])
+    assert {:error, _} = Collection.new(%{descriptor | id: "valid\n"})
+    assert {:error, _} = Collection.new(%{descriptor | source_root: "a\\b"})
+
+    assert {:error, {:duplicate_collection_field, :id}} =
+             Collection.new(Map.put(Map.from_struct(descriptor), "id", "other"))
+
+    assert {:error, {:duplicate_collection_field, :id}} =
+             Collection.new([{:id, "other"} | Map.to_list(Map.from_struct(descriptor))])
+  end
+
   describe "DSH-V01 qualified collection identity" do
     test "colliding document ids remain distinct and duplicate collection ids fail" do
       first = build_collection!("alpha")

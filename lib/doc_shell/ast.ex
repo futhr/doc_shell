@@ -58,6 +58,10 @@ defmodule DocShell.Ast do
   """
   @spec from_markdown(String.t()) :: {:ok, [ast_node()]} | {:error, term()}
   def from_markdown(markdown) when is_binary(markdown) do
+    if String.valid?(markdown), do: parse(markdown), else: {:error, :invalid_utf8}
+  end
+
+  defp parse(markdown) do
     case EarmarkParser.as_ast(markdown) do
       {:ok, ast, _} ->
         {:ok, Enum.map(ast, &normalize/1)}

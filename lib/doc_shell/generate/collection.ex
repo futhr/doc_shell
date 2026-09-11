@@ -36,7 +36,6 @@ defmodule DocShell.Generate.Collection do
   alias DocShell.Artifact
 
   @collection_schema "doc-shell-collection/v1"
-  @digest_prefix "sha256:"
   @source_artifacts ~w(modules.json guides.json livebooks.json changelog.json)
   @required ~w(id title version revision tree_digest artifact_dir source_url edit_base_url)a
   @optional ~w(package license default_locale audience source_root status)a
@@ -79,38 +78,65 @@ defmodule DocShell.Generate.Collection do
 
   @doc "Normalizes and validates a collection descriptor."
   @spec new(t() | map() | keyword()) :: {:ok, t()} | {:error, term()}
-  def new(%__MODULE__{} = descriptor), do: validate_descriptor(descriptor)
-
-  def new(value) when is_map(value) or is_list(value) do
-    with {:ok, map} <- descriptor_map(value),
-         {:ok, descriptor} <- build_descriptor(map) do
-      validate_descriptor(descriptor)
-    end
-  end
-
-  def new(value), do: {:error, {:invalid_collection_descriptor, :descriptor, value}}
+  defdelegate new(value), to: DocShell.Generate.Collection.Descriptor
 
   @doc "Returns the portable descriptor stored in `collection.json`."
   @spec portable_descriptor(t()) :: map()
   def portable_descriptor(%__MODULE__{} = descriptor) do
-    descriptor
-    |> Map.from_struct()
-    |> Map.drop([:artifact_dir])
-    |> Enum.reject(fn {_, value} -> is_nil(value) end)
-    |> Map.new(fn {key, value} -> {Atom.to_string(key), value} end)
+    DocShell.Generate.Collection.Descriptor.portable(descriptor)
   end
 
-  @doc "Computes a lowercase SHA-256 digest over canonical JSON bytes."
-  @spec digest(term()) :: String.t()
+  @doc """
+  Computes a lowercase SHA-256 digest over canonical JSON bytes.
+
+  This compatibility convenience function requires a JSON-encodable value and
+  raises `ArgumentError` for invalid values or duplicate encoded keys. Use
+  `DocShell.Json.Canonical.digest/1` for a checked input boundary.
+  """
+  @spec digest(DocShell.Json.Canonical.encodable()) :: String.t()
   def digest(value) do
-    canonical = canonical_json(Jason.decode!(Jason.encode!(value)))
-    digest = Base.encode16(:crypto.hash(:sha256, canonical), case: :lower)
-    @digest_prefix <> digest
+    case DocShell.Json.Canonical.digest(value) do
+      {:ok, digest} -> digest
+      {:error, reason} -> raise ArgumentError, "invalid canonical JSON: #{inspect(reason)}"
+    end
   end
 
   @doc "Normalizes extracted source paths and builds their provenance records."
-  @spec prepare(t(), map()) :: {:ok, map(), [map()]} | {:error, term()}
-  def prepare(%__MODULE__{} = descriptor, extracted) when is_map(extracted) do
+  @typedoc "Complete extraction consumed by collection preparation."
+  @type extracted :: %{
+          modules: [map()],
+          guides: [map()],
+          livebooks: [map()],
+          changelog: [map()],
+          openapi: map()
+        }
+
+  @spec prepare(t(), extracted()) :: {:ok, extracted(), [map()]} | {:error, term()}
+  def prepare(descriptor, extracted) do
+    with {:ok, descriptor} <- new(descriptor),
+         :ok <- validate_extracted(extracted) do
+      prepare_sources(descriptor, extracted)
+    end
+  end
+
+  defp validate_extracted(%{
+         modules: modules,
+         guides: guides,
+         livebooks: books,
+         changelog: changelog,
+         openapi: openapi
+       }) do
+    if Enum.all?(
+         [modules, guides, books, changelog],
+         &(is_list(&1) and DocShell.Json.valid?(&1))
+       ),
+       do: DocShell.Generate.OpenApi.validate(openapi),
+       else: {:error, :invalid_collection_extraction}
+  end
+
+  defp validate_extracted(_), do: {:error, :invalid_collection_extraction}
+
+  defp prepare_sources(descriptor, extracted) do
     prepared =
       Enum.reduce_while(source_groups(extracted), {:ok, extracted, [], MapSet.new()}, fn
         {key, artifact, entries}, {:ok, current, sources, paths} ->
@@ -209,86 +235,6 @@ defmodule DocShell.Generate.Collection do
     end
   end
 
-  defp descriptor_map(value) when is_list(value) do
-    if Keyword.keyword?(value), do: descriptor_map(Map.new(value)), else: descriptor_error(value)
-  end
-
-  defp descriptor_map(value) do
-    Enum.reduce_while(value, {:ok, %{}}, fn {key, item}, {:ok, acc} ->
-      case normalize_key(key) do
-        {:ok, normalized} -> {:cont, {:ok, Map.put(acc, normalized, item)}}
-        :error -> {:halt, {:error, {:invalid_collection_descriptor, :field, key}}}
-      end
-    end)
-  end
-
-  defp descriptor_error(value), do: {:error, {:invalid_collection_descriptor, :descriptor, value}}
-  defp normalize_key(key) when key in @fields, do: {:ok, key}
-
-  defp normalize_key(key) when is_binary(key) do
-    case Enum.find(@fields, &(Atom.to_string(&1) == key)) do
-      nil -> :error
-      field -> {:ok, field}
-    end
-  end
-
-  defp normalize_key(_), do: :error
-
-  defp build_descriptor(map) do
-    case Enum.find(@required, &(not Map.has_key?(map, &1))) do
-      nil -> {:ok, struct!(__MODULE__, map)}
-      field -> {:error, {:invalid_collection_descriptor, field, :missing}}
-    end
-  end
-
-  defp validate_descriptor(descriptor) do
-    checks = [
-      {:id, descriptor.id, &valid_id?/1},
-      {:title, descriptor.title, &nonempty_string?/1},
-      {:version, descriptor.version, &nonempty_string?/1},
-      {:revision, descriptor.revision, &nonempty_string?/1},
-      {:tree_digest, descriptor.tree_digest, &valid_digest?/1},
-      {:artifact_dir, descriptor.artifact_dir, &nonempty_string?/1},
-      {:source_url, descriptor.source_url, &nonempty_string?/1},
-      {:edit_base_url, descriptor.edit_base_url, &nonempty_string?/1},
-      {:package, descriptor.package, &optional_string?/1},
-      {:license, descriptor.license, &optional_string?/1},
-      {:default_locale, descriptor.default_locale, &optional_string?/1},
-      {:audience, descriptor.audience, &valid_audience?/1},
-      {:source_root, descriptor.source_root, &valid_source_root?/1},
-      {:status, descriptor.status, &optional_string?/1}
-    ]
-
-    case Enum.find(checks, fn {_, value, predicate} -> not predicate.(value) end) do
-      nil -> {:ok, %{descriptor | source_root: descriptor.source_root || "."}}
-      {field, value, _} -> {:error, {:invalid_collection_descriptor, field, value}}
-    end
-  end
-
-  defp valid_id?(id), do: is_binary(id) and Regex.match?(~r/^[a-z][a-z0-9_]*$/, id)
-  defp nonempty_string?(value), do: is_binary(value) and value != "" and String.valid?(value)
-  defp optional_string?(nil), do: true
-  defp optional_string?(value), do: nonempty_string?(value)
-
-  defp valid_audience?(nil), do: true
-  defp valid_audience?(value) when is_binary(value), do: nonempty_string?(value)
-
-  defp valid_audience?(value) when is_list(value),
-    do: value != [] and Enum.all?(value, &nonempty_string?/1)
-
-  defp valid_audience?(_), do: false
-
-  defp valid_source_root?(nil), do: true
-
-  defp valid_source_root?(path) do
-    nonempty_string?(path) and Path.type(path) != :absolute and contained_relative_path?(path)
-  end
-
-  defp valid_digest?(@digest_prefix <> hex),
-    do: byte_size(hex) == 64 and Regex.match?(~r/^[0-9a-f]{64}$/, hex)
-
-  defp valid_digest?(_), do: false
-
   defp source_groups(extracted) do
     [
       {:modules, "modules.json", Map.fetch!(extracted, :modules)},
@@ -324,14 +270,22 @@ defmodule DocShell.Generate.Collection do
 
   defp normalize_entry_path(descriptor, %{"id" => id, "kind" => kind} = entry)
        when is_binary(id) and id != "" and is_binary(kind) and kind != "" do
-    case get_in(entry, ["meta", "source_path"]) do
-      nil -> {:ok, entry, nil}
-      path when is_binary(path) -> normalize_source_path(descriptor, entry, path)
-      path -> {:error, {:invalid_source_path, id, path}}
-    end
+    meta = Map.get(entry, "meta", %{})
+
+    if is_map(meta),
+      do: normalize_entry_meta(descriptor, entry, meta),
+      else: {:error, {:invalid_source_entry, entry}}
   end
 
   defp normalize_entry_path(_, entry), do: {:error, {:invalid_source_entry, entry}}
+
+  defp normalize_entry_meta(descriptor, entry, meta) do
+    case Map.get(meta, "source_path") do
+      nil -> {:ok, entry, nil}
+      path when is_binary(path) -> normalize_source_path(descriptor, entry, path)
+      path -> {:error, {:invalid_source_path, entry["id"], path}}
+    end
+  end
 
   defp normalize_source_path(descriptor, entry, path) do
     root = Path.expand(descriptor.source_root)
@@ -639,23 +593,6 @@ defmodule DocShell.Generate.Collection do
       end
     end)
   end
-
-  defp canonical_json(value) when is_map(value) do
-    body =
-      value
-      |> Enum.sort_by(&elem(&1, 0))
-      |> Enum.map(fn {key, item} -> [Jason.encode!(key), ?:, canonical_json(item)] end)
-      |> Enum.intersperse(?,)
-
-    :erlang.iolist_to_binary([?{, body, ?}])
-  end
-
-  defp canonical_json(value) when is_list(value) do
-    body = value |> Enum.map(&canonical_json/1) |> Enum.intersperse(?,)
-    :erlang.iolist_to_binary([?[, body, ?]])
-  end
-
-  defp canonical_json(value), do: Jason.encode!(value)
 
   defp contained_relative_path?(path) do
     path != "" and Path.type(path) == :relative and ".." not in Path.split(path)

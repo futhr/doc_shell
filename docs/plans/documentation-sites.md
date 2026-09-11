@@ -28,7 +28,7 @@ not advance P02–P09 or claim renderer/export conformance.
 | Work | Status | Required evidence |
 | --- | --- | --- |
 | Clarify source/file identities, projection compatibility and canonical JSON | specified | This specification, README, usage rules and notebook guidance agree |
-| Check JSON, descriptor and source input boundaries | pending | Tagged malformed-input errors, duplicate encoded-key rejection, UTF-8 regressions and canonical fixtures |
+| Check JSON, descriptor and source input boundaries | complete | Canonical JSON fixtures/properties, malformed descriptor/extraction regressions, consistent OpenAPI errors and invalid UTF-8 build tests |
 | Validate complete indexed provenance and preserve source extensions | pending | Build/load properties, multi-release changelog, reserved/duplicate IDs, malformed and future artifacts, projector failure before publication |
 | Secure and bound corpus loading | pending | Root spellings, nested symlinks, file/total/count/depth limits and prior compatible corpora |
 | Make stale deletion transactional | pending | Deletion rollback, lock ownership, unchanged previous generation on error |

@@ -9,6 +9,54 @@ defmodule DocShell.BuildTest do
   alias DocShell.Build
   alias DocShell.Generate.OpenApi.Adapters.RawJson
 
+  test "invalid UTF-8 files return source-tagged errors" do
+    root = tmp_dir!()
+    guide = Path.join(root, "invalid.md")
+    book = Path.join(root, "invalid.livemd")
+    File.write!(guide, <<255>>)
+    File.write!(book, <<255>>)
+    opts = [write: false, modules: [], changelog_source: nil]
+
+    assert {:error, {^guide, :invalid_utf8}} =
+             Build.run(opts ++ [guide_bases: [root], livebook_base: "missing"])
+
+    assert {:error, {^book, :invalid_utf8}} =
+             Build.run(opts ++ [guide_bases: [], livebook_base: root])
+  end
+
+  test "invalid OpenAPI JSON returns the same boundary error with or without collection mode" do
+    root = tmp_dir!()
+
+    collection = %{
+      id: "api",
+      title: "API",
+      version: "1",
+      revision: "a",
+      tree_digest: "sha256:" <> String.duplicate("b", 64),
+      artifact_dir: root,
+      source_url: "https://example.invalid",
+      edit_base_url: "https://example.invalid/edit"
+    }
+
+    for spec <- [
+          %{"openapi" => "3.1.0", "bad" => self()},
+          %{:openapi => "3.1.0", "openapi" => "3.1.0"}
+        ],
+        mode <- [nil, collection] do
+      assert {:error, {:invalid_openapi_json, _}} =
+               Build.run(
+                 write: false,
+                 modules: [],
+                 guide_bases: [],
+                 livebook_base: "missing",
+                 changelog_source: nil,
+                 collection: mode,
+                 open_api_adapter: RawJson,
+                 open_api_options: [spec: spec]
+               )
+    end
+  end
+
   test "default configuration builds without host application settings" do
     root = tmp_dir!()
 

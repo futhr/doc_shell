@@ -50,6 +50,10 @@ defmodule DocShell.Json do
       %{"released" => "2026-08-05"}
   """
 
+  @typedoc "A native JSON value with UTF-8 string object keys."
+  @type value ::
+          nil | boolean() | number() | String.t() | [value()] | %{optional(String.t()) => value()}
+
   @doc "Recursively coerces a term into a JSON-encodable value with string keys."
   @spec stringify(term()) :: term()
   def stringify(value) when is_nil(value) or is_boolean(value), do: value

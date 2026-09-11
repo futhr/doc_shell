@@ -216,6 +216,11 @@ of the source return a source-tagged error.
 
 ### JSON metadata normalization
 
+Use `DocShell.Json.Canonical.encode/1` or `digest/1` at serialization boundaries;
+both return tagged errors and reject duplicate encoded keys. `Collection.digest/1`
+requires encodable input and raises `ArgumentError` otherwise. Invalid UTF-8
+source files fail with `:invalid_utf8`, tagged with the file by extraction/build.
+
 Metadata preserves JSON scalars and uses UTF-8 string keys. Unsupported terms
 become inspected text; improper list tails become a final array value.
 `DocShell.Json.normalize/1` rejects converted-key collisions. The legacy
@@ -224,7 +229,7 @@ become inspected text; improper list tails become a final array value.
 ### OpenAPI version support
 
 Raw and custom adapters accept OpenAPI 3.0, 3.1, and 3.2 documents without
-rewriting their fields. Validation remains a shallow version check; source
+rewriting their fields. Validation checks the version and unambiguous JSON encoding; source
 libraries own schema validation. The default document remains OpenAPI 3.1.
 
 ### Optional integration dependencies

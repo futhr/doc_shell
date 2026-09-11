@@ -25,7 +25,8 @@ defmodule DocShell.Generate.OpenApi do
   stacktrace instead of a reason, and validates that whatever came back
   actually claims to be OpenAPI 3.0, 3.1, or 3.2.
 
-  That validation is deliberately shallow. Full schema validation is the job of
+  Validation also rejects unencodable values and duplicate encoded object keys.
+  Full schema validation is the job of
   the spec library that produced the document, and duplicating it here would
   mean DocShell rejecting documents its own adapters consider fine. What
   `validate/1` catches is the common integration mistake: an adapter returning
@@ -80,11 +81,23 @@ defmodule DocShell.Generate.OpenApi do
       iex> DocShell.Generate.OpenApi.validate(%{"swagger" => "2.0"})
       {:error, :invalid_openapi_document}
   """
-  @spec validate(map()) :: :ok | {:error, :invalid_openapi_document}
-  def validate(spec) do
-    case spec["openapi"] || spec[:openapi] do
-      version when is_binary(version) -> validate_version(version)
-      _ -> {:error, :invalid_openapi_document}
+  @spec validate(term()) :: :ok | {:error, term()}
+  def validate(spec) when is_map(spec) do
+    case Map.get(spec, "openapi") || Map.get(spec, :openapi) do
+      version when is_binary(version) ->
+        with :ok <- validate_version(version), do: validate_json(spec)
+
+      _ ->
+        {:error, :invalid_openapi_document}
+    end
+  end
+
+  def validate(_), do: {:error, :invalid_openapi_document}
+
+  defp validate_json(spec) do
+    case DocShell.Json.Canonical.encode(spec) do
+      {:ok, _} -> :ok
+      {:error, reason} -> {:error, {:invalid_openapi_json, reason}}
     end
   end
 

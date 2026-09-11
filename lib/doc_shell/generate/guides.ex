@@ -96,6 +96,10 @@ defmodule DocShell.Generate.Guides do
   end
 
   defp split_frontmatter(source) do
+    if String.valid?(source), do: split_lines(source), else: {:error, :invalid_utf8}
+  end
+
+  defp split_lines(source) do
     case String.split(source, ~r/\r\n|\n|\r/) do
       ["---" | lines] -> read_frontmatter(lines)
       _ -> {:ok, %{}, source}

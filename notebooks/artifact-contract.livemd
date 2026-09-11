@@ -110,6 +110,10 @@ including the synthetic `openapi` document, needs unique identity and matching
 provenance. Unknown source kinds retain the generic source-index contract.
 Canonical digesting must reject duplicate encoded object keys.
 
+`DocShell.Json.Canonical.encode/1` and `digest/1` provide checked operations;
+`Collection.digest/1` is a convenience for encodable input and raises on invalid
+values. Portable canonical byte/digest fixtures ship in `priv/contracts/`.
+
 The collection integrity section of `docs/specs/DSH.01-documentation-sites.md`
 defines the required behavior; `docs/plans/documentation-sites.md` records the
 implementation's acceptance status. A custom projector may not discard or change

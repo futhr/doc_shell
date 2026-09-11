@@ -143,6 +143,7 @@ defmodule DocShell.MixProject do
     [
       files: ~w(
         lib
+        priv/contracts
         docs/specs
         docs/plans
         notebooks

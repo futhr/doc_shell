@@ -106,7 +106,7 @@ defmodule DocShell.Artifact do
          {:ok, json} <-
            payload
            |> envelope(generated_at, generation_id)
-           |> Jason.encode_to_iodata(pretty: true) do
+           |> Jason.encode_to_iodata(pretty: true, maps: :strict) do
       write_atomically(path, [json, "\n"])
     end
   end
@@ -124,7 +124,7 @@ defmodule DocShell.Artifact do
   @spec write_raw(Path.t(), term()) :: :ok | {:error, term()}
   def write_raw(path, payload) do
     with :ok <- path |> Path.dirname() |> File.mkdir_p(),
-         {:ok, json} <- Jason.encode_to_iodata(payload, pretty: true) do
+         {:ok, json} <- Jason.encode_to_iodata(payload, pretty: true, maps: :strict) do
       write_atomically(path, [json, "\n"])
     end
   end
