@@ -569,6 +569,7 @@ mix check        # the full quality gate
 mix ci           # setup + lint + coverage in one pass
 mix docs         # build the documentation
 mix bench        # run the benchmarks
+mix bench.collection # measure collection preparation and complete import
 scripts/notebook_smoke.py # execute tutorial cells against this checkout
 scripts/consumer_smoke.sh # verify the built package in fresh consumers
 ```
@@ -584,6 +585,9 @@ produces `doc/llms.txt` and a `.md` file per module for machine readers.
 
 `mix bench` writes Markdown reports to `bench/output/`, which are published as
 the Performance section of the documentation.
+The collection suite measures 1,000–16,000 documents with preparation outside
+timed work and reports elapsed time and BEAM allocation (not peak RSS). Its CI
+smoke mode is console-only. Measurements are diagnostics, not timing assertions.
 
 Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 

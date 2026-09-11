@@ -124,11 +124,18 @@ defmodule DocShell.MixProject do
 
       # Benchmarks
       bench: ["bench.all"],
-      "bench.all": ["bench.ast", "bench.presentation", "bench.json", "bench.serving"],
+      "bench.all": [
+        "bench.ast",
+        "bench.presentation",
+        "bench.json",
+        "bench.serving",
+        "bench.collection"
+      ],
       "bench.ast": ["run bench/ast.exs"],
       "bench.presentation": ["run bench/presentation.exs"],
       "bench.json": ["run bench/json.exs"],
       "bench.serving": ["run bench/serving.exs"],
+      "bench.collection": ["run bench/collection.exs"],
 
       # Release
       release: ["git_ops.release"]
@@ -182,6 +189,7 @@ defmodule DocShell.MixProject do
         "bench/output/presentation.md": [title: "Presentation Projection"],
         "bench/output/json.md": [title: "Term Coercion"],
         "bench/output/artifact.md": [title: "Artifact Round Trip"],
+        "bench/output/collection.md": [title: "Collection Preparation and Import"],
         "CONTRIBUTING.md": [title: "Contributing"],
         "LICENSE.md": [title: "License"],
         "usage-rules.md": [title: "Usage Rules (LLM)"]

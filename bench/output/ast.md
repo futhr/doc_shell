@@ -15,13 +15,13 @@ Benchmark suite executing on the following system:
     <td>macOS</td>
   </tr><tr>
     <th style="white-space: nowrap">CPU Information</th>
-    <td style="white-space: nowrap">Apple M4 Max</td>
+    <td style="white-space: nowrap">Apple M5 Pro</td>
   </tr><tr>
     <th style="white-space: nowrap">Number of Available Cores</th>
-    <td style="white-space: nowrap">16</td>
+    <td style="white-space: nowrap">18</td>
   </tr><tr>
     <th style="white-space: nowrap">Available Memory</th>
-    <td style="white-space: nowrap">128 GB</td>
+    <td style="white-space: nowrap">48 GB</td>
   </tr><tr>
     <th style="white-space: nowrap">Elixir Version</th>
     <td style="white-space: nowrap">1.18.4</td>
@@ -68,11 +68,11 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">Ast.from_markdown/1</td>
-    <td style="white-space: nowrap; text-align: right">66.86</td>
-    <td style="white-space: nowrap; text-align: right">14.96 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;1.36%</td>
-    <td style="white-space: nowrap; text-align: right">14.95 ms</td>
-    <td style="white-space: nowrap; text-align: right">15.61 ms</td>
+    <td style="white-space: nowrap; text-align: right">74.51</td>
+    <td style="white-space: nowrap; text-align: right">13.42 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;1.54%</td>
+    <td style="white-space: nowrap; text-align: right">13.40 ms</td>
+    <td style="white-space: nowrap; text-align: right">14.42 ms</td>
   </tr>
 
 </table>
@@ -87,7 +87,7 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">Ast.from_markdown/1</td>
-    <td style="white-space: nowrap;text-align: right">66.86</td>
+    <td style="white-space: nowrap;text-align: right">74.51</td>
     <td>&nbsp;</td>
   </tr>
 
@@ -105,7 +105,7 @@ Memory Usage
   </tr>
   <tr>
     <td style="white-space: nowrap">Ast.from_markdown/1</td>
-    <td style="white-space: nowrap">16.26 MB</td>
+    <td style="white-space: nowrap">16.32 MB</td>
     <td>&nbsp;</td>
   </tr>
 </table>
@@ -128,11 +128,11 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">Ast.from_markdown/1</td>
-    <td style="white-space: nowrap; text-align: right">333.78</td>
-    <td style="white-space: nowrap; text-align: right">3.00 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;2.13%</td>
-    <td style="white-space: nowrap; text-align: right">2.98 ms</td>
-    <td style="white-space: nowrap; text-align: right">3.21 ms</td>
+    <td style="white-space: nowrap; text-align: right">372.47</td>
+    <td style="white-space: nowrap; text-align: right">2.68 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;2.28%</td>
+    <td style="white-space: nowrap; text-align: right">2.68 ms</td>
+    <td style="white-space: nowrap; text-align: right">2.88 ms</td>
   </tr>
 
 </table>
@@ -147,7 +147,7 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">Ast.from_markdown/1</td>
-    <td style="white-space: nowrap;text-align: right">333.78</td>
+    <td style="white-space: nowrap;text-align: right">372.47</td>
     <td>&nbsp;</td>
   </tr>
 
@@ -165,7 +165,7 @@ Memory Usage
   </tr>
   <tr>
     <td style="white-space: nowrap">Ast.from_markdown/1</td>
-    <td style="white-space: nowrap">3.11 MB</td>
+    <td style="white-space: nowrap">3.12 MB</td>
     <td>&nbsp;</td>
   </tr>
 </table>
@@ -188,11 +188,11 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">Ast.from_markdown/1</td>
-    <td style="white-space: nowrap; text-align: right">3.28 K</td>
-    <td style="white-space: nowrap; text-align: right">305.16 &micro;s</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;4.67%</td>
-    <td style="white-space: nowrap; text-align: right">302.50 &micro;s</td>
-    <td style="white-space: nowrap; text-align: right">360.60 &micro;s</td>
+    <td style="white-space: nowrap; text-align: right">3.60 K</td>
+    <td style="white-space: nowrap; text-align: right">277.81 &micro;s</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;5.22%</td>
+    <td style="white-space: nowrap; text-align: right">274.21 &micro;s</td>
+    <td style="white-space: nowrap; text-align: right">328.41 &micro;s</td>
   </tr>
 
 </table>
@@ -207,7 +207,7 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">Ast.from_markdown/1</td>
-    <td style="white-space: nowrap;text-align: right">3.28 K</td>
+    <td style="white-space: nowrap;text-align: right">3.60 K</td>
     <td>&nbsp;</td>
   </tr>
 
@@ -225,7 +225,7 @@ Memory Usage
   </tr>
   <tr>
     <td style="white-space: nowrap">Ast.from_markdown/1</td>
-    <td style="white-space: nowrap">324.18 KB</td>
+    <td style="white-space: nowrap">331.26 KB</td>
     <td>&nbsp;</td>
   </tr>
 </table>

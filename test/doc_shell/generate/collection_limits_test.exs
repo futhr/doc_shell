@@ -34,4 +34,30 @@ defmodule DocShell.Generate.Collection.LimitsTest do
                Limits.check_depth(Jason.encode!([text <> <<123, 91, 34, 92, 93, 125>>]), limits)
     end
   end
+
+  property "pre-decode depth agrees with the nesting of generated native JSON trees" do
+    scalar = one_of([integer(), string(:printable), constant(nil)])
+
+    nested =
+      tree(scalar, fn child ->
+        one_of([list_of(child, max_length: 3), map_of(string(:printable), child, max_length: 3)])
+      end)
+
+    check all(value <- nested, maximum <- integer(1..5)) do
+      {:ok, limits} = Limits.new(max_json_depth: maximum)
+      result = Limits.check_depth(Jason.encode!(value), limits)
+
+      if depth(value) <= maximum do
+        assert result == :ok
+      else
+        assert {:error, {:collection_limit, :max_json_depth, _, ^maximum}} = result
+      end
+    end
+  end
+
+  defp depth(value) when is_map(value),
+    do: 1 + Enum.max(Enum.map(Map.values(value), &depth/1), fn -> 0 end)
+
+  defp depth(value) when is_list(value), do: 1 + Enum.max(Enum.map(value, &depth/1), fn -> 0 end)
+  defp depth(_), do: 0
 end

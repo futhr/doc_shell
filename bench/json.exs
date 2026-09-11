@@ -36,8 +36,8 @@ Benchee.run(
 
 entries = Documents.entries(100)
 payload = entries |> Json.stringify() |> Jason.encode!() |> Jason.decode!()
-dir = Path.join(System.tmp_dir!(), "doc-shell-bench-#{System.unique_integer([:positive])}")
-File.mkdir_p!(dir)
+dir = Path.join(System.tmp_dir!(), "doc-shell-bench-#{Artifact.new_generation_id()}")
+File.mkdir!(dir)
 path = Path.join(dir, "benchmark.json")
 :ok = Artifact.write(path, payload)
 

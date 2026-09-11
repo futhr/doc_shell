@@ -43,7 +43,19 @@ defmodule DocShell.Generate.Collection.Limits do
 
   @doc "Checks JSON container nesting without allocating the decoded tree."
   @spec check_depth(binary(), t()) :: :ok | {:error, term()}
-  def check_depth(json, limits), do: scan(json, false, false, 0, limits.max_json_depth)
+  def check_depth(json, limits) do
+    # Search only syntax bytes in the original binary. Walking every byte with
+    # recursive sub-binaries needlessly allocates for long documentation strings.
+    context = %{
+      json: json,
+      size: byte_size(json),
+      maximum: limits.max_json_depth,
+      containers: :binary.compile_pattern(["{", "}", "[", "]", <<34>>]),
+      quotes: :binary.compile_pattern([<<34>>, <<92>>])
+    }
+
+    scan(context, 0, 0)
+  end
 
   defp validate_options(opts) do
     case Enum.find(opts, fn {key, value} ->
@@ -55,22 +67,32 @@ defmodule DocShell.Generate.Collection.Limits do
     end
   end
 
-  defp scan(_, _, _, depth, maximum) when depth > maximum,
-    do: {:error, {:collection_limit, :max_json_depth, depth, maximum}}
+  defp scan(context, _, depth) when depth > context.maximum,
+    do: {:error, {:collection_limit, :max_json_depth, depth, context.maximum}}
 
-  defp scan(<<>>, _, _, _, _), do: :ok
-  defp scan(<<_, rest::binary>>, true, true, depth, max), do: scan(rest, true, false, depth, max)
-  defp scan(<<92, rest::binary>>, true, false, depth, max), do: scan(rest, true, true, depth, max)
+  defp scan(context, offset, depth) do
+    case next(context, context.containers, offset) do
+      :nomatch -> :ok
+      {34, position} -> scan_string(context, position + 1, depth)
+      {byte, position} when byte in [123, 91] -> scan(context, position + 1, depth + 1)
+      {_, position} -> scan(context, position + 1, depth - 1)
+    end
+  end
 
-  defp scan(<<34, rest::binary>>, quoted, false, depth, max),
-    do: scan(rest, not quoted, false, depth, max)
+  defp scan_string(context, offset, depth) do
+    case next(context, context.quotes, offset) do
+      :nomatch -> :ok
+      {92, position} -> scan_string(context, position + 2, depth)
+      {34, position} -> scan(context, position + 1, depth)
+    end
+  end
 
-  defp scan(<<byte, rest::binary>>, false, false, depth, max) when byte in [123, 91],
-    do: scan(rest, false, false, depth + 1, max)
+  defp next(context, _, offset) when offset >= context.size, do: :nomatch
 
-  defp scan(<<byte, rest::binary>>, false, false, depth, max) when byte in [125, 93],
-    do: scan(rest, false, false, depth - 1, max)
-
-  defp scan(<<_, rest::binary>>, quoted, escaped, depth, max),
-    do: scan(rest, quoted, escaped, depth, max)
+  defp next(context, pattern, offset) do
+    case :binary.match(context.json, pattern, scope: {offset, context.size - offset}) do
+      :nomatch -> :nomatch
+      {position, 1} -> {:binary.at(context.json, position), position}
+    end
+  end
 end
