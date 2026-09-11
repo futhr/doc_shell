@@ -2,7 +2,9 @@ defmodule DocShell.Json.Canonical do
   @moduledoc """
   Computes reproducible JSON bytes and content digests at serialization boundaries.
 
-  Values first pass through Jason with strict object keys, so protocol encoders
+  Native JSON values are validated and encoded directly, avoiding a redundant
+  encode/decode allocation cycle when hashing an already decoded corpus.
+  Other values pass through Jason with strict object keys, so protocol encoders
   retain their wire representation and atom/string key collisions fail before
   any information is discarded. Objects are then sorted by UTF-8 key bytes;
   array order and native scalar types remain unchanged. The resulting compact
@@ -26,6 +28,12 @@ defmodule DocShell.Json.Canonical do
   @doc "Encodes a value to compact canonical JSON, rejecting ambiguous object keys."
   @spec encode(term()) :: {:ok, binary()} | {:error, term()}
   def encode(value) do
+    if DocShell.Json.valid?(value),
+      do: {:ok, value |> canonical() |> :erlang.iolist_to_binary()},
+      else: encode_protocol(value)
+  end
+
+  defp encode_protocol(value) do
     with {:ok, json} <- Jason.encode(value, maps: :strict),
          {:ok, decoded} <- DocShell.Json.decode(json) do
       {:ok, decoded |> canonical() |> :erlang.iolist_to_binary()}

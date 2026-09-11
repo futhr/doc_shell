@@ -21,6 +21,14 @@ defmodule DocShell.Json.CanonicalTest do
     end
   end
 
+  test "native fast path and protocol wire path produce identical canonical bytes" do
+    for value <- [nil, true, 1, 1.0, -0.0, %{"nested" => [1, 1.0, "é"]}] do
+      assert Canonical.encode(value) == Canonical.encode(Jason.Fragment.new(Jason.encode!(value)))
+    end
+
+    refute Canonical.digest(1) == Canonical.digest(1.0)
+  end
+
   test "uses protocol wire representations and contains encoder failures" do
     assert {:ok, ~s("2026-09-11")} = Canonical.encode(~D[2026-09-11])
     assert {:error, %Jason.DecodeError{}} = Canonical.encode(Jason.Fragment.new("{"))

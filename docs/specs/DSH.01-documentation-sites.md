@@ -159,6 +159,10 @@ import boundaries must use checked operations rather than leaking exceptions.
 
 ### Filesystem and publication boundary
 
+Projection/body equality is type-strict, including JSON integer versus float
+values. An embedded index AST, when supplied, must exactly match reconstructed
+content. The synthetic OpenAPI source never owns a document AST in `content.json`.
+
 Collection import rejects symlinked roots, including trailing-slash and `/.`
 spellings, symlinked components below a trusted existing parent, and symlinked
 artifact files. Existing ancestors of the current working directory and system

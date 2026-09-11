@@ -96,8 +96,9 @@ projections before publication; never reintroduce filtered public bodies implici
 Unknown source indexes referenced by provenance use the generic v1 entry shape.
 Loading rejects missing or repeated provenance, duplicate document IDs and
 malformed source indexes. The ID `openapi` is reserved in collection mode.
-Custom projectors must preserve extracted ASTs (omitted empty ASTs reconstruct
+Custom projectors must preserve extracted ASTs and exact JSON numeric types (omitted empty ASTs reconstruct
 as `[]`). Dynamic source locators belong in metadata such as `source_ref`;
+an embedded index AST must agree with content, and OpenAPI owns no page AST.
 collection `source_path` values must be relative filesystem paths.
 Canonical digesting rejects duplicate encoded keys, and malformed boundary input
 returns tagged errors. Keep deletion inside publication locks and rollback.

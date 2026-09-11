@@ -66,7 +66,7 @@ defmodule DocShell.Generate.Collection.Provenance do
          {:ok, content} <- artifact(envelopes, "content.json"),
          :ok <- validate_content(content),
          {:ok, index} <- index_sources(sources, envelopes, content),
-         :ok <- content_coverage(content, index) do
+         :ok <- content_coverage(content, Map.delete(index, "openapi")) do
       qualify(sources, index, collection_id)
     end
   end
@@ -74,7 +74,7 @@ defmodule DocShell.Generate.Collection.Provenance do
   @doc "Rejects presentations from which the original source ASTs cannot be reconstructed."
   @spec validate_projection([map()], map()) :: :ok | {:error, term()}
   def validate_projection(entries, content) do
-    case Enum.find(entries, &(Map.get(content, &1["id"], []) != &1["ast"])) do
+    case Enum.find(entries, &(Map.get(content, &1["id"], []) !== &1["ast"])) do
       nil -> content_coverage(content, Map.new(entries, &{&1["id"], true}))
       entry -> {:error, {:collection_projection_mismatch, entry["id"]}}
     end
@@ -155,14 +155,20 @@ defmodule DocShell.Generate.Collection.Provenance do
   end
 
   defp index_entry(entry, state, name, content) when is_map(entry) do
-    entry = Map.put(entry, "ast", Map.get(content, entry["id"], []))
+    ast = Map.get(content, entry["id"], [])
 
+    if Map.has_key?(entry, "ast") and entry["ast"] !== ast,
+      do: {:halt, {:error, {:source_ast_mismatch, entry["id"]}}},
+      else: index_reconstructed_entry(Map.put(entry, "ast", ast), state, name)
+  end
+
+  defp index_entry(entry, _, _, _), do: {:halt, {:error, {:invalid_source_entry, entry}}}
+
+  defp index_reconstructed_entry(entry, state, name) do
     if valid_entry?(entry),
       do: put_entry(entry, state, name),
       else: {:halt, {:error, {:invalid_source_entry, entry}}}
   end
-
-  defp index_entry(entry, _, _, _), do: {:halt, {:error, {:invalid_source_entry, entry}}}
 
   defp put_entry(entry, {:ok, index, paths}, name) do
     id = entry["id"]

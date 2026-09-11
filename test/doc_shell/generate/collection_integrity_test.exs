@@ -228,6 +228,38 @@ defmodule DocShell.Generate.CollectionIntegrityTest do
     assert {:error, {:duplicate_json_key, "data"}} = Collection.load(descriptor)
   end
 
+  test "projection compatibility preserves numeric JSON types exactly" do
+    original = %{
+      "id" => "page",
+      "ast" => [%{"tag" => "p", "attrs" => %{"size" => 1}, "content" => [], "meta" => %{}}]
+    }
+
+    modified = put_in(original, ["ast", Access.at(0), "attrs", "size"], 1.0)
+    assert original == modified
+
+    assert {:error, {:collection_projection_mismatch, "page"}} =
+             Collection.Provenance.validate_projection([original], %{"page" => modified["ast"]})
+
+    assert :ok =
+             Collection.Provenance.validate_projection([original], %{"page" => original["ast"]})
+  end
+
+  test "embedded index ASTs cannot contradict content and OpenAPI cannot own a page AST" do
+    {descriptor, _} = build!()
+    {:ok, [module]} = Artifact.read(Path.join(descriptor.artifact_dir, "modules.json"))
+    {:ok, content} = Artifact.read(Path.join(descriptor.artifact_dir, "content.json"))
+    rewrite!(descriptor, %{"modules.json" => [Map.put(module, "ast", content["DocShell.Ast"])]})
+    assert {:ok, _} = Collection.load(descriptor)
+    rewrite!(descriptor, %{"modules.json" => [Map.put(module, "ast", ["different"])]})
+
+    assert {:error, {:source_ast_mismatch, "DocShell.Ast"}} = Collection.load(descriptor)
+
+    {descriptor, _} = build!()
+    {:ok, content} = Artifact.read(Path.join(descriptor.artifact_dir, "content.json"))
+    rewrite!(descriptor, %{"content.json" => Map.put(content, "openapi", ["orphan"])})
+    assert {:error, {:unprovenanced_content, "openapi"}} = Collection.load(descriptor)
+  end
+
   property "generated releases preserve identity, order and ASTs through build and load" do
     check all(
             ids <- uniq_list_of(string(:alphanumeric, min_length: 1), max_length: 20),

@@ -208,13 +208,15 @@ is tracked in the [implementation plan](docs/plans/documentation-sites.md).
 The contract distinguishes source files from document records (several releases
 can share one changelog), includes the synthetic `openapi` identity in uniqueness
 checks, and requires a collection build to round-trip through its loader.
-Custom collection projectors must preserve extracted bodies in `content.json`;
+Custom collection projectors must preserve extracted bodies in `content.json`
+with exact JSON types (including integer versus float);
 filtered nonempty bodies must cause a build error before publication rather than
 being silently restored to public output. Checksums establish internal consistency;
 the caller still verifies source authenticity and owns the import directory.
 Loading validates complete provenance, unique identities, source-index shapes
 and recursive content. Unknown manifested source indexes referenced by provenance
 use the same generic entry contract; other extension artifacts remain opaque.
+Embedded index ASTs must agree with content; OpenAPI has no page AST.
 Several releases may share `CHANGELOG.md`, while independent guides or notebooks
 cannot claim the same source path. Dynamic sources should keep opaque locators
 in metadata such as `source_ref`; `source_path` in a collection is a relative
