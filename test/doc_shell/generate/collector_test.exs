@@ -98,4 +98,23 @@ defmodule DocShell.Generate.CollectorTest do
     assert Collector.title("```\n```still-code\n# Fake\n```\n\n# Real", "fallback") == "Real"
     assert Collector.title("# Title ###", "fallback") == "Title"
   end
+
+  test "already parsed bodies preserve the title grammar, including malformed closing fences" do
+    for markdown <- [
+          "# A **Title**",
+          "A Title\n=======\n",
+          "No heading",
+          "```\n```still-code\n# Fake\n```\n\n# Real"
+        ] do
+      ast =
+        case DocShell.Ast.from_markdown(markdown) do
+          {:ok, nodes} -> nodes
+          {:error, %{partial_ast: nodes}} -> nodes
+        end
+
+      assert Collector.title(markdown, "fallback", ast) == Collector.title(markdown, "fallback")
+    end
+
+    assert Collector.title(<<255>>, "fallback") == "fallback"
+  end
 end

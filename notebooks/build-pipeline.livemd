@@ -436,6 +436,10 @@ of the source return a source-tagged error.
 
 ## Failed builds and recovery
 
+Guide title extraction avoids a second parse for explicit frontmatter titles or
+unfenced bodies. Fenced bodies retain a defensive title-only parse, so malformed
+closing fences cannot turn code comments into page headings.
+
 Presentation validation also checks relationships: nonempty IDs are unique in
 navigation (including descendants) and search, shared IDs have the same path,
 and local leaves/search records have content. Groups with children and absolute

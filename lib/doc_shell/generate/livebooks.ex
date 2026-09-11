@@ -67,7 +67,7 @@ defmodule DocShell.Generate.Livebooks do
       {:ok,
        %{
          "id" => id,
-         "title" => Collector.title(markdown, id),
+         "title" => Collector.title(markdown, id, ast),
          "kind" => "livebook",
          "ast" => ast,
          "meta" => %{"source_path" => path}

@@ -78,6 +78,24 @@ defmodule DocShell.Generate.Collector do
   """
   @spec title(String.t(), term()) :: String.t()
   def title(markdown, fallback) do
+    if String.valid?(markdown), do: parsed_title(markdown, fallback), else: to_string(fallback)
+  end
+
+  @doc """
+  Reuses an already parsed body for title extraction when it contains no fences.
+
+  Fenced input retains the defensive title-only parse used by `title/2`, because
+  permissive closing-fence parsing must not expose code comments as headings.
+  The supplied AST must be the parse of the supplied Markdown, not another page.
+  """
+  @spec title(String.t(), term(), [DocShell.Ast.ast_node()]) :: String.t()
+  def title(markdown, fallback, nodes) do
+    if String.contains?(markdown, ["```", "~~~"]),
+      do: title(markdown, fallback),
+      else: title_from_ast(nodes, fallback)
+  end
+
+  defp parsed_title(markdown, fallback) do
     case DocShell.Ast.from_markdown(strip_code_fences(markdown)) do
       {:ok, nodes} -> title_from_ast(nodes, fallback)
       {:error, %{partial_ast: nodes}} -> title_from_ast(nodes, fallback)

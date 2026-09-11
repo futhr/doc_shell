@@ -83,7 +83,7 @@ defmodule DocShell.Generate.Guides do
          {:ok, id} <- field_text(frontmatter, "id", Path.rootname(Path.basename(path))),
          :ok <- validate_facets(frontmatter),
          {:ok, ast} <- Ast.from_markdown(markdown),
-         {:ok, title} <- field_text(frontmatter, "title", Collector.title(markdown, id)) do
+         {:ok, title} <- guide_title(frontmatter, markdown, ast, id) do
       {:ok,
        %{
          "id" => to_string(id),
@@ -94,6 +94,11 @@ defmodule DocShell.Generate.Guides do
        }}
     end
   end
+
+  defp guide_title(%{"title" => _} = frontmatter, _, _, _),
+    do: field_text(frontmatter, "title", nil)
+
+  defp guide_title(_, markdown, ast, id), do: {:ok, Collector.title(markdown, id, ast)}
 
   defp split_frontmatter(source) do
     if String.valid?(source), do: split_lines(source), else: {:error, :invalid_utf8}

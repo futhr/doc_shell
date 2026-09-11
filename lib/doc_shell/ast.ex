@@ -5,7 +5,7 @@ defmodule DocShell.Ast do
   DocShell preserves source structure without choosing a renderer. The AST can
   contain raw HTML tags and unsafe URL schemes; consumers must validate tags,
   attributes, and URLs and escape text for their rendering context. Every source —
-  module documentation, guides, notebooks — is parsed once, here, into a tree
+  module documentation, guides, notebooks — is parsed here into a tree
   of plain maps:
 
       %{

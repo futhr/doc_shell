@@ -228,6 +228,9 @@ YAML frontmatter accepts LF, CRLF, and CR line endings, including a closing
 Guide and notebook titles come from the first top-level parsed H1, including
 Setext headings. Inline formatting is flattened, and headings inside code
 examples are ignored. Explicit guide frontmatter titles still take precedence.
+Explicit titles avoid a title-only parse. Unfenced bodies reuse their AST;
+fenced input retains defensive title parsing so malformed closings cannot expose
+code comments as titles.
 
 ### Changelog source validation
 
