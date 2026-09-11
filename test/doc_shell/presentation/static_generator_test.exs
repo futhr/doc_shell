@@ -137,6 +137,75 @@ defmodule DocShell.Presentation.StaticGeneratorTest do
     end
   end
 
+  test "member search is opt-in and preserves page identity, content and visibility" do
+    member = %{
+      "name" => "synchronize",
+      "arity" => 1,
+      "signatures" => ["synchronize(resource)"],
+      "doc" => "Adds **uniqueterm** to the table."
+    }
+
+    entry = %{
+      "id" => "Example",
+      "title" => "Example",
+      "kind" => "module",
+      "ast" => body(),
+      "meta" => %{"members" => [member]}
+    }
+
+    assert {:ok, default} = StaticGenerator.project(entries: [entry])
+    assert hd(default.search).content == "Body"
+
+    assert {:ok, enabled} =
+             StaticGenerator.project(entries: [entry], search_members: true, search_tokens: true)
+
+    assert enabled.navigation == default.navigation
+    assert enabled.content == default.content
+
+    assert hd(enabled.search).content ==
+             "Body\n\nsynchronize/1\nsynchronize(resource)\nAdds uniqueterm to the table."
+
+    assert "uniqueterm" in hd(enabled.search).tokens
+
+    assert {:ok, %{search: []}} =
+             StaticGenerator.project(entries: [%{entry | "ast" => []}], search_members: true)
+
+    assert {:ok, %{search: [_]}} =
+             StaticGenerator.project(
+               entries: [%{entry | "ast" => []}],
+               search_members: true,
+               skip_empty: false
+             )
+
+    assert {:ok, _} =
+             StaticGenerator.project(entries: [Map.delete(entry, "meta")], search_members: true)
+  end
+
+  test "invalid member documentation is tagged with the containing module" do
+    entry = %{"id" => "Example", "title" => "Example", "kind" => "module", "ast" => body()}
+    member = %{"name" => "f", "arity" => 0, "signatures" => ["f()"], "doc" => "docs"}
+
+    for members <- [
+          42,
+          [42],
+          [member | :tail],
+          [%{member | "signatures" => [42]}],
+          [%{member | "doc" => "<table>\n"}]
+        ] do
+      assert {:error, {:invalid_search_member, "Example", _}} =
+               StaticGenerator.project(
+                 entries: [Map.put(entry, "meta", %{"members" => members})],
+                 search_members: true
+               )
+    end
+
+    assert {:error, {:invalid_search_member, "Example", _}} =
+             StaticGenerator.project(
+               entries: [Map.put(entry, "meta", :bad)],
+               search_members: true
+             )
+  end
+
   describe "properties" do
     defp entry_generator do
       gen all(

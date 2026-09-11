@@ -59,6 +59,12 @@ defmodule DocShell.Presentation.StaticGenerator do
   downcased and split on non-alphanumeric runs. Enable this when the host's
   search backend needs precomputed tokens.
 
+  `search_members: true` adds module member names/arities, signatures and parsed
+  documentation to the containing page's search text. It does not create member
+  routes or change content ASTs, and does not override `skip_empty`. Malformed
+  member records/Markdown return an error tagged with the module ID. The default
+  stays `false` so existing search payloads and extraction cost are unchanged.
+
   ## Options
 
     * `:entries` — the extracted entries to project; defaults to `[]`
@@ -66,6 +72,7 @@ defmodule DocShell.Presentation.StaticGenerator do
       `default_path/1`
     * `:skip_empty` — drop entries with no content; defaults to `true`
     * `:search_tokens` — populate `SearchEntry.tokens`; defaults to `false`
+    * `:search_members` — include module member text; defaults to `false`
   """
 
   @behaviour DocShell.Presentation.Source
@@ -82,7 +89,8 @@ defmodule DocShell.Presentation.StaticGenerator do
     settings = %{
       path_builder: Keyword.get(opts, :path_builder) || @default_path_builder,
       skip_empty: Keyword.get(opts, :skip_empty, true),
-      search_tokens: Keyword.get(opts, :search_tokens, false)
+      search_tokens: Keyword.get(opts, :search_tokens, false),
+      search_members: Keyword.get(opts, :search_members, false)
     }
 
     case is_list(entries) do
@@ -120,21 +128,27 @@ defmodule DocShell.Presentation.StaticGenerator do
       |> reject_empty(settings.skip_empty)
       |> Enum.sort_by(&{&1["kind"], &1["title"], &1["id"]})
 
-    {navigation, search} =
-      sorted
-      |> Enum.map(fn entry ->
-        path = settings.path_builder.(entry)
-        {navigation(entry, path), search(entry, path, settings)}
-      end)
-      |> Enum.unzip()
+    with {:ok, pairs} <- project_indexes(sorted, settings, []) do
+      {navigation, search} = Enum.unzip(pairs)
 
-    {:ok,
-     %{
-       schema_version: DocShell.schema_version(),
-       navigation: navigation,
-       search: search,
-       content: Map.new(sorted, &{&1["id"], &1["ast"] || []})
-     }}
+      {:ok,
+       %{
+         schema_version: DocShell.schema_version(),
+         navigation: navigation,
+         search: search,
+         content: Map.new(sorted, &{&1["id"], &1["ast"] || []})
+       }}
+    end
+  end
+
+  defp project_indexes([], _, pairs), do: {:ok, Enum.reverse(pairs)}
+
+  defp project_indexes([entry | rest], settings, pairs) do
+    with {:ok, content} <- search_text(entry, settings.search_members) do
+      path = settings.path_builder.(entry)
+      pair = {navigation(entry, path), search(entry, path, content, settings)}
+      project_indexes(rest, settings, [pair | pairs])
+    end
   end
 
   defp reject_empty(entries, false), do: entries
@@ -150,8 +164,7 @@ defmodule DocShell.Presentation.StaticGenerator do
     }
   end
 
-  defp search(entry, path, settings) do
-    content = (entry["ast"] || []) |> ast_text() |> String.trim()
+  defp search(entry, path, content, settings) do
     meta = entry["meta"] || %{}
 
     %SearchEntry{
@@ -165,6 +178,49 @@ defmodule DocShell.Presentation.StaticGenerator do
       locale: meta["locale"]
     }
   end
+
+  defp search_text(%{"kind" => "module"} = entry, true) do
+    members =
+      case entry["meta"] do
+        nil -> []
+        meta when is_map(meta) -> Map.get(meta, "members", [])
+        _ -> :invalid_metadata
+      end
+
+    case member_texts(members) do
+      {:ok, text} -> {:ok, String.trim(ast_text(entry["ast"] || []) <> "\n" <> text)}
+      {:error, reason} -> {:error, {:invalid_search_member, entry["id"], reason}}
+    end
+  end
+
+  defp search_text(entry, _), do: {:ok, String.trim(ast_text(entry["ast"] || []))}
+
+  defp member_texts(members) when is_list(members) do
+    if DocShell.Json.valid?(members),
+      do: collect_members(members, []),
+      else: {:error, :invalid_members}
+  end
+
+  defp member_texts(_), do: {:error, :invalid_members}
+  defp collect_members([], acc), do: {:ok, acc |> Enum.reverse() |> Enum.join("\n")}
+
+  defp collect_members([member | rest], acc) do
+    with {:ok, text} <- member_text(member), do: collect_members(rest, [text | acc])
+  end
+
+  defp member_text(%{"name" => name, "arity" => arity, "signatures" => signatures, "doc" => doc})
+       when is_binary(name) and name != "" and is_integer(arity) and arity >= 0 and
+              is_list(signatures) and is_binary(doc) do
+    with true <- Enum.all?(signatures, &is_binary/1),
+         {:ok, ast} <- DocShell.Ast.from_markdown(doc) do
+      {:ok, Enum.join(["#{name}/#{arity}" | signatures] ++ [ast_text(ast)], "\n")}
+    else
+      false -> {:error, :invalid_signatures}
+      {:error, reason} -> {:error, {name, reason}}
+    end
+  end
+
+  defp member_text(_), do: {:error, :invalid_member}
 
   defp tokenize(_, false), do: []
 

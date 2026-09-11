@@ -32,7 +32,7 @@ not advance P02–P09 or claim renderer/export conformance.
 | Validate complete indexed provenance and preserve source extensions | complete | Collection integrity regressions and generated build/load properties cover the real multi-release corpus, reserved/duplicate IDs, malformed/future artifacts and projector failure before publication |
 | Secure and bound corpus loading | complete | Root spellings and parent-symlink regressions; exact file/total/count/depth limits; JSON escape properties and duplicate-key rejection; prior compatible corpora |
 | Make stale deletion transactional | complete | Transaction tests cover deletion rollback and lock ownership; collection regression verifies unchanged manifest on obstructed deletion |
-| Strengthen presentation and cache contracts | pending | Equal sort keys, semantic references, opt-in member search, concurrent snapshot reads and configurable reload timeout |
+| Strengthen presentation and cache contracts | complete | Equal-title regression/properties; semantic reference and JSON-extension checks; opt-in member search; concurrent snapshots and configurable reload timeout tests |
 | Qualify performance and package consumers | pending | Collection scaling, locked/unlocked/minimum consumers, notebooks, complete `mix check` and repeated adversarial review |
 
 Keep the existing public facade when separating descriptor, provenance, digest,

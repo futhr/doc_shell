@@ -50,7 +50,7 @@ defmodule DocShell.Build do
   content, defaulting to `DocShell.Presentation.StaticGenerator`. A
   graph-backed host points it at their own
   `DocShell.Presentation.GraphProjector` and the pipeline validates whatever
-  comes back. `:path_builder`, `:skip_empty`, and `:search_tokens` are passed
+  comes back. `:path_builder`, `:skip_empty`, `:search_tokens`, and `:search_members` are passed
   through to the producer.
 
   ## Written files
@@ -124,6 +124,7 @@ defmodule DocShell.Build do
       |> put_option(config, :path_builder)
       |> put_option(config, :skip_empty)
       |> put_option(config, :search_tokens)
+      |> put_option(config, :search_members)
 
     with :ok <- DocShell.Presentation.Source.validate_ids(entries) do
       with {:ok, presentation} <- GraphProjector.project(source, opts),

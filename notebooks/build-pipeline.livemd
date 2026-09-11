@@ -380,6 +380,7 @@ When wiring DocShell into a host application, make these decisions explicitly:
 | Does presentation come from files or a graph? | `presentation_source:` |
 | Should empty pages appear? | `skip_empty: false` if coverage views need them |
 | Should search tokens be precomputed? | `search_tokens: true` if your search backend wants them |
+| Should module members be searchable? | `search_members: true` appends member names, signatures and parsed docs to page search text; default false, without overriding `skip_empty` |
 
 The important boundary is simple: DocShell owns extraction and artifact shapes.
 Routing, visual hierarchy, authorization, and rendering stay in the host.

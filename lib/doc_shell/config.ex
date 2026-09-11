@@ -38,6 +38,7 @@ defmodule DocShell.Config do
   | `:path_builder` | unset | Function from entry to path; overrides `/docs/{kind}/{id}`. |
   | `:skip_empty` | `true` | Drop entries with no content from the presentation. |
   | `:search_tokens` | `false` | Populate `SearchEntry.tokens`. |
+  | `:search_members` | `false` | Include module member names, signatures and docs in page search text. |
   | `:write` | `true` | Write the artifact tree. `false` returns the data only. |
 
   Every key is optional, including `:open_api_adapter` — with no adapter the
@@ -74,6 +75,7 @@ defmodule DocShell.Config do
     :path_builder,
     :skip_empty,
     :search_tokens,
+    :search_members,
     :write
   ]
 
@@ -93,6 +95,7 @@ defmodule DocShell.Config do
     modules: [],
     skip_empty: true,
     search_tokens: false,
+    search_members: false,
     write: true
   ]
 
@@ -171,8 +174,9 @@ defmodule DocShell.Config do
   defp valid_option?(key, value) when key in [:changelog_options, :open_api_options],
     do: is_list(value) and Keyword.keyword?(value)
 
-  defp valid_option?(key, value) when key in [:write, :skip_empty, :search_tokens],
-    do: is_boolean(value)
+  defp valid_option?(key, value)
+       when key in [:write, :skip_empty, :search_tokens, :search_members],
+       do: is_boolean(value)
 
   defp valid_option?(:path_builder, value), do: is_function(value, 1)
 

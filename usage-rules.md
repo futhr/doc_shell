@@ -44,7 +44,10 @@ when the host uses the corresponding optional integration.
   filtered out. Projector backlinks remain in memory and have no disk artifact.
 - Set `:presentation_source` to a `DocShell.Presentation.GraphProjector`
   implementation to have the build use a host projector. `:path_builder`,
-  `:skip_empty`, and `:search_tokens` pass through to the producer.
+  `:skip_empty`, `:search_tokens`, and `:search_members` pass through to the producer.
+  Member search defaults off. Enable it to append module member names/arities,
+  signatures and parsed docs to page search text, without changing content or
+  overriding `skip_empty`; malformed member Markdown fails with the module ID.
 - Set `:openapi_spec_path` when external tooling needs a bare OpenAPI file.
   Put it outside the artifact directories — `DocShell.Web.Cache` rejects a
   directory holding an unenveloped `.json`.

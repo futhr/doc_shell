@@ -41,6 +41,25 @@ defmodule DocShell.ConfigTest do
     assert Config.load()[:title] == "Host Title"
   end
 
+  test "member search defaults off and requires an explicit boolean" do
+    assert Config.load()[:search_members] == false
+    assert {:ok, config} = Config.resolve(search_members: true)
+    assert config[:search_members]
+    assert {:error, {:invalid_option, :search_members, 1}} = Config.resolve(search_members: 1)
+
+    assert {:ok, result} =
+             DocShell.Build.run(
+               write: false,
+               modules: [DocShell.Artifact],
+               guide_bases: [],
+               livebook_base: "missing",
+               changelog_source: nil,
+               search_members: true
+             )
+
+    assert hd(result.presentation.search).content =~ "new_generation_id/0"
+  end
+
   test "per-call overrides win over host config and defaults" do
     Application.put_env(:doc_shell, :title, "Host Title")
     assert Config.load(title: "Override")[:title] == "Override"

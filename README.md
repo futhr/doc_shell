@@ -158,6 +158,11 @@ config :doc_shell,
   search_tokens: false
 ```
 
+Set `search_members: true` to include module member names/arities, signatures and
+parsed documentation in the containing page's search text. It defaults to false,
+does not add member routes or change content ASTs, and does not override
+`skip_empty`. Malformed member Markdown returns a module-tagged error.
+
 Every key is optional, including the OpenAPI adapter — without one the build
 emits a valid empty OpenAPI 3.1 document, so `openapi.json` is always there and
 always parseable. `changelog_source` defaults to Markdown-file extraction, but a
