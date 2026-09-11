@@ -1,5 +1,11 @@
 # OpenAPI Adapters
 
+Adapter output must be JSON-encodable without duplicate encoded object keys.
+For collection builds, the synthetic API document uses the reserved ID `openapi`.
+Malformed adapter values must return a tagged build error in both ordinary and
+collection modes. The foundation hardening plan tracks these acceptance checks;
+full OpenAPI schema validation remains the source library's responsibility.
+
 DocShell includes `openapi.json` in every build, but it does not assume where
 the API description comes from. Some hosts derive OpenAPI from Ash domains, some
 already expose an OpenApiSpex module, and some receive a JSON file from another

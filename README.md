@@ -186,6 +186,17 @@ manifest, files, generation IDs, paths, and digests without starting an
 application or making a network request, then qualifies document IDs as
 `collection_id:document_id`.
 
+Collection admission is being hardened against the requirements in the
+[site specification](docs/specs/DSH.01-documentation-sites.md); acceptance status
+is tracked in the [implementation plan](docs/plans/documentation-sites.md).
+The contract distinguishes source files from document records (several releases
+can share one changelog), includes the synthetic `openapi` identity in uniqueness
+checks, and requires a collection build to round-trip through its loader.
+Custom collection projectors must preserve extracted bodies in `content.json`;
+filtered nonempty bodies must cause a build error before publication rather than
+being silently restored to public output. Checksums establish internal consistency;
+the caller still verifies source authenticity and owns the import directory.
+
 For a guided walkthrough, start with
 [the build pipeline notebook](notebooks/build-pipeline.livemd). The
 [artifact contract notebook](notebooks/artifact-contract.livemd) documents every
@@ -480,6 +491,12 @@ for extracted files and graph-backed content.
 ---
 
 ## Development
+
+The [foundation hardening plan](docs/plans/documentation-sites.md) separates
+implemented behavior from outstanding acceptance work. It covers malformed-input
+errors, canonical digest fixtures, bounded collection loading, transactional
+deletion, deterministic presentation, cache snapshots and dependency qualification.
+The future site renderer and static exporter remain separate planned features.
 
 ```sh
 mix setup        # fetch and compile

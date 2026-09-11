@@ -143,6 +143,8 @@ defmodule DocShell.MixProject do
     [
       files: ~w(
         lib
+        docs/specs
+        docs/plans
         notebooks
         bench/output
         .formatter.exs
@@ -168,6 +170,8 @@ defmodule DocShell.MixProject do
       main: "readme",
       extras: [
         "README.md": [title: "Overview"],
+        "docs/specs/DSH.01-documentation-sites.md": [title: "Collection and site specification"],
+        "docs/plans/documentation-sites.md": [title: "Implementation status"],
         "CHANGELOG.md": [title: "Changelog"],
         "notebooks/build-pipeline.livemd": [title: "The Build Pipeline"],
         "notebooks/openapi-adapters.livemd": [title: "OpenAPI Adapters"],

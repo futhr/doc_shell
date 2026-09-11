@@ -104,6 +104,18 @@ build_opts = [
 
 ## Site-ready collections
 
+Collection identity is per document, not per source file: a multi-release
+changelog has several document IDs pointing to one path. Every admitted record,
+including the synthetic `openapi` document, needs unique identity and matching
+provenance. Unknown source kinds retain the generic source-index contract.
+Canonical digesting must reject duplicate encoded object keys.
+
+The collection integrity section of `docs/specs/DSH.01-documentation-sites.md`
+defines the required behavior; `docs/plans/documentation-sites.md` records the
+implementation's acceptance status. A custom projector may not discard or change
+nonempty source ASTs in collection mode. Such a build must fail before publishing;
+the library must not restore excluded public content implicitly.
+
 When a host publishes several documentation corpora together, pass a
 `DocShell.Generate.Collection` descriptor to bind this artifact tree to the
 exact source checkout. The caller supplies and verifies the revision and tree

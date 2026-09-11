@@ -1,7 +1,9 @@
 # DSH.01: Portable documentation sites
 
-Specification version: 0.1.0. Contract: accepted. Implementation status:
-planned.
+Specification version: 0.2.0. Contract: accepted. Collection implementation:
+present, acceptance hardening in progress. Site projection and export: planned.
+The implementation plan records executable evidence; this specification states
+the required behavior and does not claim that every requirement is implemented.
 
 ## Purpose
 
@@ -93,9 +95,11 @@ digest of the extracted BEAM documentation record. DocShell records a supplied
 revision and tree digest but never invokes Git to discover or verify them; the
 caller that checks out source owns that verification.
 
-Site-ready collections reject absolute source paths, paths outside the supplied
-source root, missing source identities, duplicate normalized paths, and a
-collection descriptor that differs from `collection.json`. A legacy v1 corpus
+Site-ready collections store normalized relative source paths and reject paths
+outside the supplied source root, missing source identities, ambiguous source
+ownership, and a collection descriptor that differs from `collection.json`.
+Absolute input filenames inside the source root may be normalized during build;
+absolute paths in a portable artifact are rejected. A legacy v1 corpus
 without `collection.json` remains readable through the existing artifact APIs
 but cannot satisfy DSH-S01 provenance.
 
@@ -108,6 +112,93 @@ Collection loading must:
 4. qualify every document identity as `{collection_id}:{document_id}`;
 5. retain the unqualified identity for source and edit links; and
 6. perform no network request and start no application process.
+
+### Collection integrity and compatibility
+
+Document identity and file identity are different. Every source document ID is
+nonempty UTF-8 and unique across the entire corpus, including filtered entries
+and the synthetic OpenAPI document whose ID is `openapi`. A Markdown changelog
+produces several release records from one file: those distinct changelog IDs may
+share a normalized source path. Two independently extracted guide/notebook files
+must not claim the same normalized path. Provenance records correspond exactly
+to admitted source records; missing, repeated, or orphaned records are errors.
+
+The existing source indexes omit ASTs. A collection build may therefore use a
+custom presentation only when each extracted AST can be reconstructed from
+`content.json` (an omitted empty AST reconstructs as `[]`). A projector that
+changes or drops nonempty source content fails before publication. Do not restore
+filtered content to public output implicitly. A future alternative source-body
+artifact requires an explicit additive design and exposure policy.
+
+Unknown manifested artifacts remain available unchanged under `artifacts`.
+An artifact referenced by source provenance must use the generic v1 source-index
+entry shape and is validated and qualified like known source indexes. Unknown
+`kind` values are preserved. Presentation and manifest artifacts cannot be
+misrepresented as source indexes. Known source indexes and OpenAPI require
+complete provenance even when their records have no filesystem paths.
+
+Imported data is validated structurally before lookup or qualification: source
+indexes contain entry maps, OpenAPI contains a map with a supported version,
+content contains recursive AST lists, and every source reference resolves.
+Checksums prove internal consistency, not source authenticity. Verification of
+the checkout revision and tree digest remains the caller's responsibility.
+
+### Canonical digest contract
+
+Canonical JSON sorts object keys by UTF-8 byte order, preserves array order and
+JSON scalar types, and emits compact Jason-compatible JSON strings and numbers.
+No Unicode normalization, timestamp, or generation ID is introduced. This is the
+DocShell canonical format, not a claim of RFC 8785 conformance. Shared fixtures
+record input values, canonical bytes, and lowercase SHA-256 digests.
+
+JSON encoding must reject collisions such as atom `:id` and string `"id"` keys.
+Public checked encoding/digest operations return tagged errors. The existing
+`Collection.digest/1` convenience function returns a string for encodable values
+and explicitly documents its raising behavior for invalid inputs. Build and
+import boundaries must use checked operations rather than leaking exceptions.
+
+### Filesystem and publication boundary
+
+Collection import rejects symlinked roots, including trailing-slash and `/.`
+spellings, symlinked components below a trusted existing parent, and symlinked
+artifact files. System directory aliases (for example the system temporary
+directory on macOS) may be resolved before choosing that trusted parent. Reads
+must be bounded before decoding. Import requires a stable directory owned by the
+caller: portable path-based filesystem APIs do not provide a sandbox against a
+hostile process that replaces directories concurrently.
+
+Stale optional artifact removal is a transaction operation. It uses the same
+directory locks, backup, publication, and rollback lifetime as writes. A returned
+publication failure restores previous bytes or reports retained recovery paths.
+Post-commit cleanup must never delete an artifact from another build. Individual
+file renames provide generation consistency for validating readers, not a
+power-loss-safe transaction or an atomic multi-file filesystem snapshot.
+
+### Foundation quality requirements
+
+Preparation and import must not repeatedly append to growing lists or scan a
+whole source index for each record. Validate and index identities once, use
+linear collection passes, and keep map-key sorting confined to canonicalization.
+Benchmarks exercise increasing corpus sizes and record elapsed time and memory.
+
+All file extractors reject invalid UTF-8 with source-tagged errors before Markdown
+parsing. Presentation ordering uses kind, title, then ID, including equal-title
+fixtures. Presentation validation rejects empty/duplicate identities and
+inconsistent document references while allowing explicit navigation groups and
+external links. Optional member-document search is explicit configuration.
+
+Cache fetches are individually consistent. A caller that needs several artifacts
+from one generation uses an explicit snapshot API; successive independent fetches
+may cross a reload. Reload timeouts are configurable and old snapshots survive
+failed reloads. No host authorization or renderer policy moves into the library.
+
+Qualification includes multi-release changelogs, custom projectors, reserved IDs,
+unknown source artifacts, malformed JSON values, equal sort keys, path spellings,
+transactional deletion, and concurrent cache readers. Property generators must
+retain valid edge cases rather than exclude them to make invariants pass. Package
+consumer checks run meaningful artifact round trips and separately exercise
+locked, unlocked, and selected minimum dependency sets without modifying the
+repository lockfile, release refs, or GitHub workflow topology.
 
 An absent private corpus is valid. A supplied private corpus requires a
 separate explicit input and cannot enter a public site by inheritance from the

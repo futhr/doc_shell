@@ -79,6 +79,21 @@ directories without external writers or symlink aliases.
 
 ## Artifact contract
 
+### Collection implementation guidance
+
+Follow the collection integrity requirements in
+`docs/specs/DSH.01-documentation-sites.md` and the acceptance status in
+`docs/plans/documentation-sites.md`. Source paths identify files; document IDs
+identify records, so separate changelog releases may share one source file.
+Include synthetic OpenAPI identity in duplicate checks. Require complete
+provenance and a build/load round trip. Reject incompatible custom collection
+projections before publication; never reintroduce filtered public bodies implicitly.
+Unknown source indexes referenced by provenance use the generic v1 entry shape.
+Canonical digesting rejects duplicate encoded keys, and malformed boundary input
+returns tagged errors. Keep deletion inside publication locks and rollback.
+Import assumes a stable caller-owned directory and uses finite resource limits;
+hashes and path checks are not source authentication or an OS sandbox.
+
 - Treat `DocShell.schema_version/0` and the `doc-shell/v1` shapes as public API.
   Never invent fields or change a field's type in place.
 - Treat the v1 source catalogue as additive. A manifest may list a new

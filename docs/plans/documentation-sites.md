@@ -7,7 +7,7 @@ own fixtures pass.
 
 | Package | Status | Requires | Deliverable | Acceptance |
 | --- | --- | --- | --- | --- |
-| DSH-P01 | planned | Existing `doc-shell/v1` reader | Additive `collection.json`, `DocShell.Generate.Collection` and collection descriptor | DSH-V01/V02; exact source/content digests; no network, process startup, absolute source path, path escape or mixed generation |
+| DSH-P01 | implemented; acceptance hardening in progress | Existing `doc-shell/v1` reader | Additive `collection.json`, `DocShell.Generate.Collection` and collection descriptor | DSH-V01/V02 plus collection integrity requirements below; no network or process startup |
 | DSH-P02 | planned | DSH-P01 | `DocShell.Generate.Cohort`, canonical payload digest, normalized source provenance | DSH-V03; digest excludes time, random IDs, and absolute workspace paths |
 | DSH-P03 | planned | DSH-P01/P02 | `Site`, `Page`, navigation/link types and `SiteSource` validation | DSH-V04–V06; all public structs/functions documented and typed |
 | DSH-P04 | planned | DSH-P03 | Heading/anchor, reading-order, locale/audience/version, canonical/source/edit and redirect projection | DSH-V04–V06 with property tests for route and anchor normalization |
@@ -18,6 +18,30 @@ own fixtures pass.
 | DSH-P09 | planned | DSH-P01–P08 | Documentation, Livebooks, benchmarks, compatibility and packaged-consumer qualification | DSH-V12; `mix check`, minimum/current Elixir and OTP, clean Hex archive consumer |
 
 ## Public API shape
+
+### Foundation hardening before site work
+
+The current collection implementation needs the following work before P01 can be
+marked complete. These changes repair the existing extraction library; they do
+not advance P02–P09 or claim renderer/export conformance.
+
+| Work | Status | Required evidence |
+| --- | --- | --- |
+| Clarify source/file identities, projection compatibility and canonical JSON | specified | This specification, README, usage rules and notebook guidance agree |
+| Check JSON, descriptor and source input boundaries | pending | Tagged malformed-input errors, duplicate encoded-key rejection, UTF-8 regressions and canonical fixtures |
+| Validate complete indexed provenance and preserve source extensions | pending | Build/load properties, multi-release changelog, reserved/duplicate IDs, malformed and future artifacts, projector failure before publication |
+| Secure and bound corpus loading | pending | Root spellings, nested symlinks, file/total/count/depth limits and prior compatible corpora |
+| Make stale deletion transactional | pending | Deletion rollback, lock ownership, unchanged previous generation on error |
+| Strengthen presentation and cache contracts | pending | Equal sort keys, semantic references, opt-in member search, concurrent snapshot reads and configurable reload timeout |
+| Qualify performance and package consumers | pending | Collection scaling, locked/unlocked/minimum consumers, notebooks, complete `mix check` and repeated adversarial review |
+
+Keep the existing public facade when separating descriptor, provenance, digest,
+and filesystem responsibilities. Commit each coherent behavior with its tests.
+Mark a row complete only with executable evidence and update docs in that commit.
+Do not change schemas, dependency ranges, workflow checks, release refs, or
+repository visibility merely to make a check pass.
+
+### Planned site modules
 
 The implementation should converge on these modules unless tests demonstrate a
 smaller boundary with the same ownership:

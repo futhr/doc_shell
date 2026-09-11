@@ -1,5 +1,12 @@
 # The Build Pipeline
 
+The collection integrity requirements in `docs/specs/DSH.01-documentation-sites.md`
+cover multi-release changelogs, reserved identities, malformed input and exact
+build/load round trips. Foundation acceptance is tracked in the implementation
+plan. Publication includes stale-file deletion under the same locks and rollback
+as replacement; a failed build must preserve the previous generation or report
+retained recovery paths. Invalid source encoding must identify the source file.
+
 `DocShell.Build.run/1` is the top of DocShell's generation pipeline. It reads
 modules, Markdown guides, Livebook notebooks, release notes, and an OpenAPI
 document, then projects them into the JSON artifacts a renderer can consume.

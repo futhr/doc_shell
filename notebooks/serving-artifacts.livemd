@@ -1,5 +1,10 @@
 # Serving Artifacts
 
+Each cache lookup is consistent on its own; separate lookups may cross a reload.
+Multi-artifact consumers need an explicit generation snapshot. The foundation
+hardening plan tracks snapshot support and configurable reload timeouts. A host
+continues to own authorization, caching policy, and the artifact directory.
+
 DocShell's primary job is generation: turn documentation sources into versioned
 JSON. Serving those JSON files is optional and belongs to the host application.
 
