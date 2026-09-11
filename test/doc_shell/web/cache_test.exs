@@ -178,4 +178,82 @@ defmodule DocShell.Web.CacheTest do
     assert_raise ArgumentError, fn -> :ets.insert(Cache, {:active_generation, "corrupt"}) end
     assert {:ok, %{}} = Cache.fetch("a.json")
   end
+
+  test "snapshots remain immutable across reload and configurable timeouts do not cancel calls" do
+    root = tmp_dir!()
+    ArtifactFixture.write_snapshot!(root, [{"one.json", "old"}], "old")
+    cache = start_supervised!({Cache, dir: root})
+    assert {:ok, old} = Cache.snapshot()
+    assert old.generation_id == "old"
+
+    ArtifactFixture.write_snapshot!(root, [{"one.json", "new"}], "new")
+    :sys.suspend(cache)
+
+    try do
+      assert {:timeout, _} = catch_exit(Cache.reload(cache, 1))
+      assert {:timeout, _} = catch_exit(Cache.snapshot(cache, 1))
+      assert {:ok, "old"} = Cache.fetch("one.json")
+    after
+      :sys.resume(cache)
+    end
+
+    assert {:ok, current} = Cache.snapshot(cache)
+    assert current.generation_id == "new"
+    assert current.artifacts["one.json"]["data"] == "new"
+    assert old.artifacts["one.json"]["data"] == "old"
+    File.write!(Path.join(root, "one.json"), "invalid")
+    assert {:error, _} = Cache.reload(cache, 10_000)
+    assert {:ok, ^current} = Cache.snapshot(cache, 10_000)
+  end
+
+  test "concurrent readers get complete snapshots while generations are repeatedly replaced" do
+    root = tmp_dir!()
+    write_pair!(root, "0")
+    cache = start_supervised!({Cache, dir: root})
+    parent = self()
+
+    readers =
+      for _ <- 1..4 do
+        Task.async(fn ->
+          send(parent, {:reader_ready, self()})
+          receive do: (:go -> :ok)
+
+          for _ <- 1..100 do
+            {:ok, snapshot} = Cache.snapshot(cache)
+            assert snapshot.artifacts["left.json"]["data"] == snapshot.generation_id
+            assert snapshot.artifacts["right.json"]["data"] == snapshot.generation_id
+
+            assert Enum.all?(snapshot.artifacts, fn {_, envelope} ->
+                     envelope["generation_id"] == snapshot.generation_id
+                   end)
+
+            assert {:ok, _} = Cache.fetch("left.json")
+            assert {:ok, {body, _}} = Cache.fetch_response("right.json")
+            envelope = Jason.decode!(body)
+            assert envelope["data"] == envelope["generation_id"]
+          end
+        end)
+      end
+
+    for _ <- readers do
+      assert_receive {:reader_ready, pid}
+      send(pid, :go)
+    end
+
+    for generation <- 1..20 do
+      write_pair!(root, to_string(generation))
+      assert :ok = Cache.reload(cache, 10_000)
+    end
+
+    Enum.each(readers, &Task.await(&1, 10_000))
+    assert {:ok, %{generation_id: "20"}} = Cache.snapshot()
+  end
+
+  defp write_pair!(root, generation) do
+    ArtifactFixture.write_snapshot!(
+      root,
+      [{"left.json", generation}, {"right.json", generation}],
+      generation
+    )
+  end
 end

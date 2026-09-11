@@ -1,8 +1,8 @@
 # Serving Artifacts
 
 Each cache lookup is consistent on its own; separate lookups may cross a reload.
-Multi-artifact consumers need an explicit generation snapshot. The foundation
-hardening plan tracks snapshot support and configurable reload timeouts. A host
+Multi-artifact consumers use `Cache.snapshot/2` for one immutable generation.
+Reloads and snapshots accept a configurable timeout. A host
 continues to own authorization, caching policy, and the artifact directory.
 
 DocShell's primary job is generation: turn documentation sources into versioned
@@ -162,9 +162,17 @@ updated_content["serving-intro"]
 |> Enum.map(& &1["tag"])
 ```
 
-Because `DocShell.Artifact.write/3` writes files atomically and the cache
-validates one generation id across the directory, readers see the old complete
-snapshot or the new complete snapshot. They do not see a half-written build.
+The cache validates generation IDs before publication. Each lookup sees an old
+or new artifact, never a half-written build. For several related artifacts,
+retain one snapshot rather than making separate fetches across a possible reload:
+
+```elixir
+{:ok, snapshot} = DocShell.Web.Cache.snapshot(cache_name, 10_000)
+true = Enum.all?(snapshot.artifacts, fn {_name, envelope} ->
+  envelope["generation_id"] == snapshot.generation_id
+end)
+snapshot.artifacts["content.json"]["data"]["serving-intro"]
+```
 
 ## Serve through `DocShell.Web.Plug`
 
@@ -323,7 +331,15 @@ named caches can be listed directly in one supervision tree.
 ## Cache ownership
 
 Cache ETS tables permit direct concurrent reads, but only the cache process
-may write them. Use `reload/1` to replace a snapshot.
+may write them. Individual fetches are consistent; separate fetches may cross a
+reload. Use `Cache.snapshot/2` for a caller-owned copy of all envelopes from one
+generation, including the manifest. It returns `{:ok, %{generation_id: id,
+artifacts: envelopes}}` and remains valid after reloads, at the cost of retaining
+that copy in caller memory. Snapshot calls queue behind reloads.
+
+`Cache.reload(server, timeout)` and `snapshot(server, timeout)` default to 5,000
+milliseconds. They follow `GenServer.call/3`: timeouts/unavailable processes exit
+the caller, and timing out does not cancel a queued or running reload.
 
 ## HTTP response caching
 

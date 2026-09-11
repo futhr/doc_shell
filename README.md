@@ -488,7 +488,15 @@ named caches can be listed directly in one supervision tree.
 ### Cache ownership
 
 Cache ETS tables permit direct concurrent reads, but only the cache process
-may write them. Use `reload/1` to replace a snapshot.
+may write them. Individual fetches are consistent; separate fetches may cross a
+reload. Use `Cache.snapshot/2` for a caller-owned copy of all envelopes from one
+generation, including the manifest. It returns `{:ok, %{generation_id: id,
+artifacts: envelopes}}` and remains valid after reloads, at the cost of retaining
+that copy in caller memory. Snapshot calls queue behind reloads.
+
+`Cache.reload(server, timeout)` and `snapshot(server, timeout)` default to 5,000
+milliseconds. They follow `GenServer.call/3`: timeouts/unavailable processes exit
+the caller, and timing out does not cancel a queued or running reload.
 
 ### HTTP response caching
 

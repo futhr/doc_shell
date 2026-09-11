@@ -15,7 +15,10 @@ defmodule DocShell.Web.Cache do
 
   `fetch/2` reads an immutable generation in ETS directly from the calling
   process, so lookups never queue behind the GenServer. The process exists to
-  own the table and serialize reloads, not to serve reads.
+  own the table and serialize reloads. Separate fetches may span a reload;
+  `snapshot/2` copies a complete generation through the owner when a consumer
+  needs several related artifacts together. Retained snapshots stay valid after
+  reload without retaining old ETS generations.
 
   ## Disposable by design
 
@@ -49,6 +52,9 @@ defmodule DocShell.Web.Cache do
 
   @default_name __MODULE__
   @active_generation :active_generation
+
+  @typedoc "An immutable, caller-owned copy of one complete generation, including its manifest."
+  @type snapshot :: %{generation_id: String.t(), artifacts: %{String.t() => map()}}
 
   @doc """
   Starts the cache and loads a directory of JSON artifacts.
@@ -100,10 +106,28 @@ defmodule DocShell.Web.Cache do
   Re-reads the artifact directory, replacing the cache contents.
 
   Returns `{:error, {path, reason}}` and leaves the previous contents in place
-  if any file fails to read or validate.
+  if any file fails to read or validate. The optional timeout defaults to 5,000
+  milliseconds and follows `GenServer.call/3` semantics: timeout/process failure
+  exits the caller, and a timeout does not cancel a queued or running reload.
   """
   @spec reload(GenServer.server()) :: :ok | {:error, term()}
-  def reload(server \\ @default_name), do: GenServer.call(server, :reload)
+  @spec reload(GenServer.server(), timeout()) :: :ok | {:error, term()}
+  def reload(server \\ @default_name, timeout \\ 5_000),
+    do: GenServer.call(server, :reload, timeout)
+
+  @doc """
+  Copies one complete generation for consistent multi-artifact consumption.
+
+  Unlike individual ETS fetches, this call queues behind reloads. The returned
+  envelopes all share `generation_id`; the copy remains valid after subsequent
+  reloads. Holding it consumes caller memory. Timeout and unavailable-process
+  behavior follow `GenServer.call/3`, as for `reload/2`.
+  """
+  @spec snapshot() :: {:ok, snapshot()}
+  @spec snapshot(GenServer.server()) :: {:ok, snapshot()}
+  @spec snapshot(GenServer.server(), timeout()) :: {:ok, snapshot()}
+  def snapshot(server \\ @default_name, timeout \\ 5_000),
+    do: GenServer.call(server, :snapshot, timeout)
 
   @impl GenServer
   def init(opts) do
@@ -123,6 +147,17 @@ defmodule DocShell.Web.Cache do
 
   @impl GenServer
   def handle_call(:reload, _, state), do: {:reply, reload_table(state), state}
+
+  def handle_call(:snapshot, _, state) do
+    {:ok, generation_id} = active_generation(state.table)
+
+    artifacts =
+      state.table
+      |> :ets.match_object({{:artifact, generation_id, :_}, :_})
+      |> Map.new(fn {{:artifact, _, name}, envelope} -> {name, envelope} end)
+
+    {:reply, {:ok, %{generation_id: generation_id, artifacts: artifacts}}, state}
+  end
 
   defp reload_table(state) do
     with {:ok, generation_id, artifacts} <- read_artifacts(state.dir) do
