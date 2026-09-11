@@ -436,7 +436,9 @@ of the source return a source-tagged error.
 ## Failed builds and recovery
 
 Builds stage all JSON and back up existing files before publishing. Returned
-publication failures restore earlier files; rollback failures report retained
+publication failures restore earlier files, including a stale `collection.json`
+removed by a non-collection build. `Artifact.Transaction.write/2` accepts a
+`delete: [path]` list covered by the same locks and backups. Rollback failures report retained
 backup paths. Cooperating builds use `.doc-shell-build.lock` directories. After
 a process or machine crash, recover retained backups and remove stale locks
 before rebuilding. Files still publish individually, so cache reloads validate

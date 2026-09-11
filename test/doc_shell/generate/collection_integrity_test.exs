@@ -67,6 +67,19 @@ defmodule DocShell.Generate.CollectionIntegrityTest do
     assert tree(descriptor.artifact_dir) == before
   end
 
+  test "an obstructed stale collection deletion preserves the previous generation" do
+    {descriptor, opts} = build!()
+    path = Path.join(descriptor.artifact_dir, "collection.json")
+    File.rename!(path, path <> ".retained")
+    File.mkdir!(path)
+    manifest = File.read!(Path.join(descriptor.artifact_dir, "manifest.json"))
+
+    assert {:error, {^path, :invalid_transaction_target}} =
+             Build.run(Keyword.delete(opts, :collection))
+
+    assert File.read!(Path.join(descriptor.artifact_dir, "manifest.json")) == manifest
+  end
+
   test "valid checksums do not admit malformed source indexes, OpenAPI or content" do
     for {updates, expected} <- [
           {%{"modules.json" => [42]}, {:invalid_source_entry, 42}},

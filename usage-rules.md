@@ -69,8 +69,10 @@ extraction or writes; use dedicated directories without symlink aliases.
 
 ### Failed builds and recovery
 
-Builds stage all JSON and back up existing files before publishing. Returned
-publication failures restore earlier files; rollback failures report retained
+Builds stage all JSON and back up existing files before publishing. Use the transaction's
+`delete: [path]` option for removals so locks and rollback cover them; duplicate
+targets, directories and symlinks are rejected before publication. Returned
+publication failures restore earlier files, including deleted artifacts; rollback failures report retained
 backup paths. Cooperating builds use `.doc-shell-build.lock` directories. After
 a process or machine crash, recover retained backups and remove stale locks
 before rebuilding. Files still publish individually, so cache reloads validate

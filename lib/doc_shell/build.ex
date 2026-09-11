@@ -220,9 +220,9 @@ defmodule DocShell.Build do
         path -> [{path, result.openapi}]
       end
 
-    with :ok <- DocShell.Artifact.Transaction.write(public_files ++ raw ++ manifests) do
-      remove_stale_collection(public, result)
-    end
+    DocShell.Artifact.Transaction.write(public_files ++ raw ++ manifests,
+      delete: stale_collection(public, result)
+    )
   end
 
   defp index_only(entries), do: Enum.map(entries, &Map.delete(&1, "ast"))
@@ -250,15 +250,8 @@ defmodule DocShell.Build do
 
   defp maybe_add_collection(artifacts, _), do: artifacts
 
-  defp remove_stale_collection(_, %{collection: _}), do: :ok
-
-  defp remove_stale_collection(public, _) do
-    case File.rm(Path.join(public, "collection.json")) do
-      :ok -> :ok
-      {:error, :enoent} -> :ok
-      {:error, reason} -> {:error, {:stale_collection, reason}}
-    end
-  end
+  defp stale_collection(_, %{collection: _}), do: []
+  defp stale_collection(public, _), do: [Path.join(public, "collection.json")]
 
   defp validate_destinations(config) do
     public = Path.expand(config[:public_dir])

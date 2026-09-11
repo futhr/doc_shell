@@ -18,7 +18,9 @@ defmodule DocShell.Artifact.TransactionTest do
       root = tmp_dir!()
       first = Path.join(root, "first.json")
       blocked = Path.join(root, "blocked.json")
+      obsolete = Path.join(root, "obsolete.json")
       File.write!(first, "old bytes")
+      File.write!(obsolete, "old optional artifact")
       # Enough independent renames to observe publication through the filesystem,
       # without adding test callbacks to production code.
       middle = for n <- 1..1_200, do: {Path.join(root, "#{n}.json"), n}
@@ -26,6 +28,7 @@ defmodule DocShell.Artifact.TransactionTest do
       watcher =
         Task.async(fn ->
           await_publication(first, 5_000)
+          refute File.exists?(obsolete)
           File.mkdir!(blocked)
 
           if obstruct_restore? do
@@ -34,13 +37,47 @@ defmodule DocShell.Artifact.TransactionTest do
           end
         end)
 
-      result = Transaction.write([{first, "new"}] ++ middle ++ [{blocked, %{}}])
+      result =
+        Transaction.write([{first, "new"}] ++ middle ++ [{blocked, %{}}], delete: [obsolete])
+
       Task.await(watcher)
       assert_recovery(result, first, obstruct_restore?)
+      assert File.read!(obsolete) == "old optional artifact"
       refute File.exists?(Path.join(root, "1.json"))
       refute File.exists?(Path.join(root, ".doc-shell-build.lock"))
       assert Path.wildcard(Path.join(root, "*.stage")) == []
     end
+  end
+
+  test "deletion targets use the same lock and missing targets are harmless" do
+    root = tmp_dir!()
+    stale = Path.join(root, "stale.json")
+    lock = Path.join(root, ".doc-shell-build.lock")
+    File.write!(stale, "old")
+    File.mkdir!(lock)
+    assert {:error, {^lock, :eexist}} = Transaction.write([], delete: [stale])
+    assert File.read!(stale) == "old"
+    File.rmdir!(lock)
+    assert :ok = Transaction.write([], delete: [stale])
+    assert :ok = Transaction.write([], delete: [stale])
+    refute File.exists?(stale)
+  end
+
+  test "ambiguous or unsupported destinations fail without changing existing files" do
+    root = tmp_dir!()
+    path = Path.join(root, "one.json")
+    File.write!(path, "original")
+
+    assert {:error, :duplicate_transaction_target} =
+             Transaction.write([{path, 1}], delete: [path])
+
+    assert {:error, {^root, :invalid_transaction_target}} = Transaction.write([], delete: [root])
+    assert {:error, _} = Transaction.write([], delete: 42)
+    assert {:error, _} = Transaction.write([], delete: [nil])
+    assert {:error, _} = Transaction.write([nil])
+    assert {:error, _} = Transaction.write([], unknown: true)
+    assert {:error, _} = Transaction.write(nil)
+    assert File.read!(path) == "original"
   end
 
   defp await_publication(_, 0), do: flunk("writer did not publish its first artifact")
