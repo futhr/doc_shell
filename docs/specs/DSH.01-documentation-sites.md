@@ -161,8 +161,9 @@ import boundaries must use checked operations rather than leaking exceptions.
 
 Collection import rejects symlinked roots, including trailing-slash and `/.`
 spellings, symlinked components below a trusted existing parent, and symlinked
-artifact files. System directory aliases (for example the system temporary
-directory on macOS) may be resolved before choosing that trusted parent. Reads
+artifact files. Existing ancestors of the current working directory and system
+temporary directory are trusted parents; their platform aliases (for example
+macOS `/var`) are allowed. Parent (`..`) traversal in an import root is rejected. Reads
 must be bounded before decoding. Import requires a stable directory owned by the
 caller: portable path-based filesystem APIs do not provide a sandbox against a
 hostile process that replaces directories concurrently.
@@ -206,7 +207,16 @@ public descriptor.
 
 ## Resource limits
 
-Core operations accept a `DocShell.Presentation.Limits` value. Defaults are
+Collection import accepts keyword limits through `Collection.load/2` and
+`load_many/2`, validated by `DocShell.Generate.Collection.Limits`. Defaults are
+32 MiB per file, 2 GiB total input bytes (including the manifest), 256 manifested
+artifacts, 100,000 source records, 256 collections per call and 64 levels of JSON
+container nesting. File bytes and nesting are checked before decoding. Byte,
+file and source budgets apply per collection, not to the aggregate retained
+memory of `load_many/2`. No unlimited sentinel is accepted. Duplicate JSON object
+keys fail rather than taking a parser-dependent first/last value.
+
+Future site operations accept a `DocShell.Presentation.Limits` value. Defaults are
 large enough for an ecosystem site and finite:
 
 | Resource | Default maximum |

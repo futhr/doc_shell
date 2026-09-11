@@ -186,6 +186,17 @@ manifest, files, generation IDs, paths, and digests without starting an
 application or making a network request, then qualifies document IDs as
 `collection_id:document_id`.
 
+`Collection.load/2` and `load_many/2` accept finite import budgets:
+`max_file_bytes` (32 MiB), `max_total_bytes` (2 GiB including the manifest),
+`max_artifacts` (256), `max_sources` (100,000), `max_json_depth` (64), and
+`max_collections` (256 per call). Other budgets apply per collection. Limits
+are positive integers and may be explicitly raised or lowered. Byte and nesting
+checks precede decoding; duplicate JSON keys are rejected. Import requires a
+stable caller-owned directory, not a hostile-writer sandbox. Root symlinks,
+including `/` and `/.` suffix variants, are rejected. Existing ancestors of the
+working and system temporary directories are trusted; other symlink components
+and parent (`..`) traversal are rejected.
+
 Collection admission follows the integrity requirements in the
 [site specification](docs/specs/DSH.01-documentation-sites.md); acceptance status
 is tracked in the [implementation plan](docs/plans/documentation-sites.md).

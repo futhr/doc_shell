@@ -27,7 +27,7 @@ defmodule DocShell.Json.Canonical do
   @spec encode(term()) :: {:ok, binary()} | {:error, term()}
   def encode(value) do
     with {:ok, json} <- Jason.encode(value, maps: :strict),
-         {:ok, decoded} <- Jason.decode(json) do
+         {:ok, decoded} <- DocShell.Json.decode(json) do
       {:ok, decoded |> canonical() |> :erlang.iolist_to_binary()}
     end
   rescue

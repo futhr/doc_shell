@@ -27,6 +27,11 @@ defmodule DocShell.Json.CanonicalTest do
 
     fragment = Jason.Fragment.new(fn _ -> raise "encoder failed" end)
     assert {:error, {:json_encoder_failed, "encoder failed"}} = Canonical.encode(fragment)
+
+    for json <- [~s({"x":1,"x":2}), ~s([{"nested":{"x":1,"x":2}}])] do
+      assert {:error, {:duplicate_json_key, "x"}} = DocShell.Json.decode(json)
+      assert {:error, {:duplicate_json_key, "x"}} = Canonical.encode(Jason.Fragment.new(json))
+    end
   end
 
   property "canonical bytes round trip and encoding is idempotent for native JSON trees" do

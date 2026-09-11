@@ -156,8 +156,13 @@ defmodule DocShell.Artifact do
   """
   @spec read_envelope(Path.t()) :: {:ok, map()} | {:error, term()}
   def read_envelope(path) do
-    with {:ok, json} <- File.read(path),
-         {:ok, envelope} <- Jason.decode(json) do
+    with {:ok, json} <- File.read(path), do: decode_envelope(json)
+  end
+
+  @doc "Decodes a JSON envelope, rejecting ambiguous duplicate object keys."
+  @spec decode_envelope(binary()) :: {:ok, map()} | {:error, term()}
+  def decode_envelope(json) do
+    with {:ok, envelope} <- DocShell.Json.decode(json) do
       validate_envelope(envelope)
     end
   end

@@ -101,6 +101,15 @@ returns tagged errors. Keep deletion inside publication locks and rollback.
 Import assumes a stable caller-owned directory and uses finite resource limits;
 hashes and path checks are not source authentication or an OS sandbox.
 
+Use `Collection.load/2` or `load_many/2` with positive keyword overrides for
+`max_file_bytes` (32 MiB), `max_total_bytes` (2 GiB including the manifest),
+`max_artifacts` (256), `max_sources` (100,000), `max_json_depth` (64), and
+`max_collections` (256). Except collection count, these budgets are per corpus.
+No unlimited value is supported. Root symlinks and `..` traversal fail, including
+symlinks spelled with a trailing slash or `/.`. Ancestors of the existing working
+and system temporary directories are trusted aliases; other symlink components
+are rejected. Duplicate JSON object keys also fail before digest validation.
+
 - Treat `DocShell.schema_version/0` and the `doc-shell/v1` shapes as public API.
   Never invent fields or change a field's type in place.
 - Treat the v1 source catalogue as additive. A manifest may list a new

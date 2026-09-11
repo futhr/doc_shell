@@ -33,7 +33,8 @@ defmodule DocShell.Generate.Collection do
   `source_root` is repository-relative and defaults to `"."`.
   """
 
-  alias DocShell.Artifact
+  alias DocShell.Generate.Collection.ArtifactTree
+  alias DocShell.Generate.Collection.Limits
   alias DocShell.Generate.Collection.Provenance
 
   @collection_schema "doc-shell-collection/v1"
@@ -199,17 +200,23 @@ defmodule DocShell.Generate.Collection do
 
   The returned `documents` have qualified IDs while retaining `document_id`.
   Raw decoded payloads are available under `artifacts` without rewriting
-  unknown fields.
+  unknown fields. Keyword options override the finite import budgets in
+  `DocShell.Generate.Collection.Limits`; total bytes include the manifest.
   """
   @spec load(t() | map() | keyword()) :: {:ok, loaded()} | {:error, term()}
-  def load(descriptor) do
-    with {:ok, expected} <- new(descriptor),
-         :ok <- validate_root(expected.artifact_dir),
-         {:ok, manifest} <- read_secure(expected.artifact_dir, "manifest.json"),
-         {:ok, generation_id, names} <- validate_manifest(manifest),
-         :ok <- validate_directory(expected.artifact_dir, names),
-         {:ok, envelopes} <- read_artifacts(expected.artifact_dir, names, generation_id),
+  @spec load(t() | map() | keyword(), keyword()) :: {:ok, loaded()} | {:error, term()}
+  def load(descriptor, opts \\ []) do
+    with {:ok, limits} <- Limits.new(opts),
+         {:ok, expected} <- new(descriptor) do
+      load_validated(expected, limits)
+    end
+  end
+
+  defp load_validated(expected, limits) do
+    with {:ok, generation_id, envelopes} <- ArtifactTree.load(expected.artifact_dir, limits),
          {:ok, payload} <- fetch_collection(envelopes),
+         :ok <- validate_collection_shape(payload),
+         :ok <- Limits.check(limits, :max_sources, length(payload["sources"])),
          :ok <- validate_payload(payload, expected, envelopes),
          {:ok, documents} <- Provenance.documents(payload["sources"], envelopes, expected.id) do
       {:ok,
@@ -224,13 +231,40 @@ defmodule DocShell.Generate.Collection do
     end
   end
 
-  @doc "Loads an ordered set of collections and rejects duplicate collection identities."
+  @doc """
+  Loads an ordered set of collections and rejects duplicate collection identities.
+
+  Options are the same as `load/2`. `:max_collections` bounds this call's input;
+  file, byte, depth and source budgets apply independently to each collection.
+  """
   @spec load_many([t() | map() | keyword()]) :: {:ok, [loaded()]} | {:error, term()}
-  def load_many(descriptors) when is_list(descriptors) do
+  @spec load_many([t() | map() | keyword()], keyword()) :: {:ok, [loaded()]} | {:error, term()}
+  def load_many(descriptors, opts \\ [])
+
+  def load_many(descriptors, opts) when is_list(descriptors) do
+    with {:ok, limits} <- Limits.new(opts),
+         :ok <- count_descriptors(descriptors, limits.max_collections, 0) do
+      load_collections(descriptors, limits)
+    end
+  end
+
+  def load_many(value, _), do: {:error, {:invalid_collection_descriptors, value}}
+
+  defp count_descriptors([], _, _), do: :ok
+
+  defp count_descriptors([_ | _], maximum, count) when count >= maximum,
+    do: {:error, {:collection_limit, :max_collections, count + 1, maximum}}
+
+  defp count_descriptors([_ | rest], maximum, count),
+    do: count_descriptors(rest, maximum, count + 1)
+
+  defp count_descriptors(other, _, _), do: {:error, {:invalid_collection_descriptors, other}}
+
+  defp load_collections(descriptors, limits) do
     prepared =
       Enum.reduce_while(descriptors, {:ok, [], MapSet.new()}, fn descriptor,
                                                                  {:ok, collections, ids} ->
-        case load(descriptor) do
+        case load_with_limits(descriptor, limits) do
           {:ok, %{descriptor: %{id: id}} = collection} ->
             add_collection(collection, id, collections, ids)
 
@@ -242,7 +276,9 @@ defmodule DocShell.Generate.Collection do
     finish_collections(prepared)
   end
 
-  def load_many(value), do: {:error, {:invalid_collection_descriptors, value}}
+  defp load_with_limits(descriptor, limits) do
+    with {:ok, descriptor} <- new(descriptor), do: load_validated(descriptor, limits)
+  end
 
   defp finish_collections({:ok, collections, _}), do: {:ok, Enum.reverse(collections)}
   defp finish_collections(error), do: error
@@ -332,107 +368,6 @@ defmodule DocShell.Generate.Collection do
       "artifact" => artifact,
       "record_digest" => digest(entry)
     }
-  end
-
-  defp validate_root(root) do
-    case File.lstat(root) do
-      {:ok, %File.Stat{type: :directory}} -> :ok
-      {:ok, %File.Stat{type: :symlink}} -> {:error, {:symlink_escape, root}}
-      {:ok, _} -> {:error, {:invalid_artifact_directory, root}}
-      {:error, reason} -> {:error, {root, reason}}
-    end
-  end
-
-  defp read_secure(root, name) do
-    with :ok <- valid_artifact_name(name),
-         path = Path.join(root, name),
-         {:ok, stat} <- File.lstat(path),
-         :ok <- regular_file(stat, name),
-         true <- inside?(Path.expand(path), Path.expand(root)) or {:error, {:path_escape, name}} do
-      Artifact.read_envelope(path)
-    end
-  end
-
-  defp regular_file(%File.Stat{type: :regular}, _), do: :ok
-  defp regular_file(%File.Stat{type: :symlink}, name), do: {:error, {:symlink_escape, name}}
-  defp regular_file(_, name), do: {:error, {:invalid_artifact_file, name}}
-
-  defp validate_manifest(%{"generation_id" => id, "data" => %{"artifacts" => names}})
-       when is_binary(id) and id != "" and is_list(names) do
-    with :ok <- validate_artifact_names(names),
-         true <- "collection.json" in names or {:error, :missing_collection_artifact} do
-      {:ok, id, names}
-    end
-  end
-
-  defp validate_manifest(_), do: {:error, :invalid_collection_manifest}
-
-  defp validate_artifact_names(names) do
-    cond do
-      not Enum.all?(names, &is_binary/1) ->
-        {:error, :invalid_collection_manifest}
-
-      length(names) != MapSet.size(MapSet.new(names)) ->
-        {:error, :duplicate_manifest_artifact}
-
-      true ->
-        validate_artifact_name_list(names)
-    end
-  end
-
-  defp validate_artifact_name_list(names) do
-    Enum.reduce_while(names, :ok, fn name, :ok ->
-      continue_or_halt(valid_artifact_name(name))
-    end)
-  end
-
-  defp continue_or_halt(:ok), do: {:cont, :ok}
-  defp continue_or_halt(error), do: {:halt, error}
-
-  defp valid_artifact_name(name) do
-    if Path.basename(name) == name and Path.extname(name) == ".json" and
-         contained_relative_path?(name),
-       do: :ok,
-       else: {:error, {:invalid_artifact_path, name}}
-  end
-
-  defp validate_directory(root, names) do
-    expected = MapSet.new(["manifest.json" | names])
-
-    with {:ok, actual} <- File.ls(root) do
-      actual = MapSet.new(actual)
-
-      cond do
-        not MapSet.subset?(expected, actual) ->
-          missing = Enum.sort(MapSet.difference(expected, actual))
-          {:error, {:missing_artifacts, missing}}
-
-        actual != expected ->
-          missing = Enum.sort(MapSet.difference(actual, expected))
-          {:error, {:unlisted_artifacts, missing}}
-
-        true ->
-          :ok
-      end
-    end
-  end
-
-  defp read_artifacts(root, names, generation_id) do
-    Enum.reduce_while(names, {:ok, %{}}, fn name, {:ok, artifacts} ->
-      case read_secure(root, name) do
-        {:ok, %{"generation_id" => ^generation_id} = envelope} ->
-          {:cont, {:ok, Map.put(artifacts, name, envelope)}}
-
-        {:ok, %{"generation_id" => other}} ->
-          {:halt, {:error, {:mixed_generation, name, generation_id, other}}}
-
-        {:ok, _} ->
-          {:halt, {:error, {:missing_generation_id, name}}}
-
-        {:error, _} = error ->
-          {:halt, error}
-      end
-    end)
   end
 
   defp fetch_collection(envelopes) do

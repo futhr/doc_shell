@@ -54,6 +54,38 @@ defmodule DocShell.Json do
   @type value ::
           nil | boolean() | number() | String.t() | [value()] | %{optional(String.t()) => value()}
 
+  @doc "Decodes native JSON values and rejects duplicate keys at every object depth."
+  @spec decode(binary()) :: {:ok, value()} | {:error, term()}
+  def decode(json) do
+    with {:ok, value} <- Jason.decode(json, objects: :ordered_objects) do
+      decoded_value(value)
+    end
+  end
+
+  defp decoded_value(%Jason.OrderedObject{values: pairs}) do
+    Enum.reduce_while(pairs, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
+      if Map.has_key?(acc, key),
+        do: {:halt, {:error, {:duplicate_json_key, key}}},
+        else: decode_pair(key, value, acc)
+    end)
+  end
+
+  defp decoded_value(values) when is_list(values), do: decode_list(values, [])
+  defp decoded_value(value), do: {:ok, value}
+
+  defp decode_pair(key, value, acc) do
+    case decoded_value(value) do
+      {:ok, decoded} -> {:cont, {:ok, Map.put(acc, key, decoded)}}
+      error -> {:halt, error}
+    end
+  end
+
+  defp decode_list([], acc), do: {:ok, Enum.reverse(acc)}
+
+  defp decode_list([value | rest], acc) do
+    with {:ok, value} <- decoded_value(value), do: decode_list(rest, [value | acc])
+  end
+
   @doc "Recursively coerces a term into a JSON-encodable value with string keys."
   @spec stringify(term()) :: term()
   def stringify(value) when is_nil(value) or is_boolean(value), do: value

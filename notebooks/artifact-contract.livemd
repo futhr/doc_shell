@@ -156,6 +156,15 @@ artifact digests let an importer validate the complete generation, and
 `DocShell.Generate.Collection.load/1` qualifies document IDs as
 `doc_shell:document_id` without starting the host application.
 
+Import has finite per-corpus budgets: 32 MiB per file, 2 GiB total bytes including
+the manifest, 256 artifacts, 100,000 sources and JSON nesting depth 64.
+`load_many/2` also limits input to 256 collections. Override with positive keywords,
+for example `Collection.load(descriptor, max_file_bytes: 8 * 1_024 * 1_024)`.
+The directory must remain caller-owned and stable during import. Symlink roots
+(even with `/` or `/.` suffixes), untrusted symlink components and `..` traversal
+are rejected; ancestors of the existing working/system temporary directories are
+trusted platform aliases. Duplicate JSON keys fail rather than being overwritten.
+
 ## The artifact tree
 
 DocShell writes public renderer artifacts under `:public_dir` and a separate

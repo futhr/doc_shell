@@ -159,6 +159,75 @@ defmodule DocShell.Generate.CollectionIntegrityTest do
     assert {:error, {:unprovenanced_content, "unowned"}} = Collection.load(descriptor)
   end
 
+  test "root spelling cannot bypass symlink checks" do
+    {descriptor, _} = build!()
+    parent = tmp_dir!()
+    linked = Path.join(parent, "linked")
+    :ok = File.ln_s(descriptor.artifact_dir, linked)
+
+    for root <- [linked, linked <> "/", linked <> "/."] do
+      assert {:error, {:symlink_escape, ^linked}} =
+               Collection.load(%{descriptor | artifact_dir: root})
+    end
+
+    parent_link = Path.join(parent, "parent")
+    :ok = File.ln_s(Path.dirname(descriptor.artifact_dir), parent_link)
+    nested = Path.join(parent_link, Path.basename(descriptor.artifact_dir))
+
+    assert {:error, {:symlink_escape, ^parent_link}} =
+             Collection.load(%{descriptor | artifact_dir: nested})
+
+    for suffix <- ["/", "/."] do
+      assert {:ok, _} =
+               Collection.load(%{descriptor | artifact_dir: descriptor.artifact_dir <> suffix})
+    end
+
+    assert {:error, {:invalid_artifact_directory, _}} =
+             Collection.load(%{descriptor | artifact_dir: linked <> "/../linked"})
+  end
+
+  test "import budgets reject files, aggregate bytes, counts and depth before provenance" do
+    {descriptor, _} = build!()
+    files = Path.wildcard(Path.join(descriptor.artifact_dir, "*.json"))
+    sizes = Enum.map(files, &File.stat!(&1).size)
+    total = Enum.sum(sizes)
+    maximum = Enum.max(sizes)
+
+    assert {:ok, _} = Collection.load(descriptor, max_file_bytes: maximum, max_total_bytes: total)
+
+    assert {:error, {:collection_limit, :max_file_bytes, _, 1}} =
+             Collection.load(descriptor, max_file_bytes: 1)
+
+    assert {:error, {:collection_limit, :max_total_bytes, _, _}} =
+             Collection.load(descriptor, max_total_bytes: total - 1)
+
+    assert {:error, {:collection_limit, :max_artifacts, _, 1}} =
+             Collection.load(descriptor, max_artifacts: 1)
+
+    assert {:error, {:collection_limit, :max_sources, 2, 1}} =
+             Collection.load(descriptor, max_sources: 1)
+
+    assert {:error, {:collection_limit, :max_json_depth, 2, 1}} =
+             Collection.load(descriptor, max_json_depth: 1)
+
+    assert {:error, {:collection_limit, :max_collections, 2, 1}} =
+             Collection.load_many([descriptor, descriptor], max_collections: 1)
+
+    assert {:error, {:invalid_collection_descriptors, :tail}} =
+             Collection.load_many([descriptor | :tail])
+
+    assert {:error, _} = Collection.load_many([%{}])
+    assert {:error, _} = Collection.load(descriptor, max_sources: :infinity)
+  end
+
+  test "ambiguous JSON object keys are rejected before checksums" do
+    {descriptor, _} = build!()
+    path = Path.join(descriptor.artifact_dir, "manifest.json")
+    json = File.read!(path)
+    File.write!(path, String.replace(json, "{", ~s({"data":null,), global: false))
+    assert {:error, {:duplicate_json_key, "data"}} = Collection.load(descriptor)
+  end
+
   property "generated releases preserve identity, order and ASTs through build and load" do
     check all(
             ids <- uniq_list_of(string(:alphanumeric, min_length: 1), max_length: 20),

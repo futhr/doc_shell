@@ -30,7 +30,7 @@ not advance P02–P09 or claim renderer/export conformance.
 | Clarify source/file identities, projection compatibility and canonical JSON | specified | This specification, README, usage rules and notebook guidance agree |
 | Check JSON, descriptor and source input boundaries | complete | Canonical JSON fixtures/properties, malformed descriptor/extraction regressions, consistent OpenAPI errors and invalid UTF-8 build tests |
 | Validate complete indexed provenance and preserve source extensions | complete | Collection integrity regressions and generated build/load properties cover the real multi-release corpus, reserved/duplicate IDs, malformed/future artifacts and projector failure before publication |
-| Secure and bound corpus loading | pending | Root spellings, nested symlinks, file/total/count/depth limits and prior compatible corpora |
+| Secure and bound corpus loading | complete | Root spellings and parent-symlink regressions; exact file/total/count/depth limits; JSON escape properties and duplicate-key rejection; prior compatible corpora |
 | Make stale deletion transactional | complete | Transaction tests cover deletion rollback and lock ownership; collection regression verifies unchanged manifest on obstructed deletion |
 | Strengthen presentation and cache contracts | pending | Equal sort keys, semantic references, opt-in member search, concurrent snapshot reads and configurable reload timeout |
 | Qualify performance and package consumers | pending | Collection scaling, locked/unlocked/minimum consumers, notebooks, complete `mix check` and repeated adversarial review |
