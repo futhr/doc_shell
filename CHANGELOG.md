@@ -5,6 +5,47 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.4.0](https://github.com/futhr/doc_shell/compare/v0.3.0...v0.4.0) (2026-09-16)
+
+
+
+
+### Features:
+
+* search: include module member documentation when explicitly enabled by Tobias Bohwalli
+
+* cache: expose consistent generation snapshots and reload timeouts by Tobias Bohwalli
+
+* collection: add portable documentation corpus provenance by Tobias Bohwalli
+
+### Bug Fixes:
+
+* cache: reject changed bytes under an active generation identity by Tobias Bohwalli
+
+* extraction: reject colliding module member metadata keys by Tobias Bohwalli
+
+* artifacts: contain encoder failures before publication by Tobias Bohwalli
+
+* collection: preserve exact JSON identity during reconstruction by Tobias Bohwalli
+
+* presentation: validate references and stabilize equal-title ordering by Tobias Bohwalli
+
+* collection: bound imports and reject ambiguous filesystem and JSON inputs by Tobias Bohwalli
+
+* artifacts: include stale deletion in publication rollback by Tobias Bohwalli
+
+* collection: validate complete provenance with indexed document identities by Tobias Bohwalli
+
+* validation: reject malformed input and ambiguous JSON encoding by Tobias Bohwalli
+
+* notebooks: run collection example after setup by Tobias Bohwalli
+
+### Performance Improvements:
+
+* collection: scan JSON syntax without per-byte allocation by Tobias Bohwalli
+
+* extraction: reuse parsed bodies for unfenced document titles by Tobias Bohwalli
+
 ## [v0.3.0](https://github.com/futhr/doc_shell/compare/v0.2.0...v0.3.0) (2026-09-07)
 
 
