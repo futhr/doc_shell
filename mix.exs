@@ -129,13 +129,15 @@ defmodule DocShell.MixProject do
         "bench.presentation",
         "bench.json",
         "bench.serving",
-        "bench.collection"
+        "bench.collection",
+        "bench.site"
       ],
       "bench.ast": ["run bench/ast.exs"],
       "bench.presentation": ["run bench/presentation.exs"],
       "bench.json": ["run bench/json.exs"],
       "bench.serving": ["run bench/serving.exs"],
       "bench.collection": ["run bench/collection.exs"],
+      "bench.site": ["run bench/site.exs"],
 
       # Release
       release: ["git_ops.release"]
@@ -143,7 +145,7 @@ defmodule DocShell.MixProject do
   end
 
   defp description do
-    "Renderer-neutral documentation generation and serving for Elixir applications"
+    "Renderer-neutral documentation extraction, site projection, and publication for Elixir"
   end
 
   defp package do
@@ -185,11 +187,13 @@ defmodule DocShell.MixProject do
         "notebooks/openapi-adapters.livemd": [title: "OpenAPI Adapters"],
         "notebooks/artifact-contract.livemd": [title: "Artifact Contract"],
         "notebooks/serving-artifacts.livemd": [title: "Serving Artifacts"],
+        "notebooks/site-publication.livemd": [title: "Publish a Portable Site"],
         "bench/output/ast.md": [title: "Markdown Parsing"],
         "bench/output/presentation.md": [title: "Presentation Projection"],
         "bench/output/json.md": [title: "Term Coercion"],
         "bench/output/artifact.md": [title: "Artifact Round Trip"],
         "bench/output/collection.md": [title: "Collection Preparation and Import"],
+        "bench/output/site.md": [title: "Site Projection and Export"],
         "CONTRIBUTING.md": [title: "Contributing"],
         "LICENSE.md": [title: "License"],
         "usage-rules.md": [title: "Usage Rules (LLM)"]
@@ -213,7 +217,8 @@ defmodule DocShell.MixProject do
           DocShell.Generate.Guides,
           DocShell.Generate.Livebooks,
           DocShell.Generate.Collector,
-          DocShell.Generate.Collection
+          DocShell.Generate.Collection,
+          DocShell.Generate.Cohort
         ],
         Changelog: [
           DocShell.Generate.Changelog,
@@ -234,6 +239,32 @@ defmodule DocShell.MixProject do
           DocShell.Presentation.NavigationItem,
           DocShell.Presentation.SearchEntry,
           DocShell.Presentation.Backlink
+        ],
+        "Site Publication": [
+          DocShell.Presentation.SiteSource,
+          DocShell.Presentation.SiteSource.Default,
+          DocShell.Presentation.SiteProjector,
+          DocShell.Presentation.Site,
+          DocShell.Presentation.Page,
+          DocShell.Presentation.Breadcrumb,
+          DocShell.Presentation.Heading,
+          DocShell.Presentation.Link,
+          DocShell.Presentation.SiteSearchEntry,
+          DocShell.Presentation.SearchAdapter,
+          DocShell.Presentation.SearchAdapter.Output,
+          DocShell.Presentation.SearchAdapter.JSON,
+          DocShell.Presentation.StaticExporter,
+          DocShell.Presentation.Limits
+        ],
+        "Renderer Contracts": [
+          DocShell.Presentation.Renderer,
+          DocShell.Presentation.Renderer.Capabilities,
+          DocShell.Presentation.Renderer.Capability,
+          DocShell.Presentation.Renderer.CapabilityRequirement,
+          DocShell.Presentation.Renderer.Context,
+          DocShell.Presentation.Asset,
+          DocShell.Presentation.Conformance,
+          DocShell.Presentation.Conformance.Surface
         ],
         "Web Serving": [
           DocShell.Web.Cache,

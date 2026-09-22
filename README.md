@@ -6,13 +6,14 @@
 [![Coverage](https://codecov.io/gh/futhr/doc_shell/branch/main/graph/badge.svg)](https://codecov.io/gh/futhr/doc_shell)
 [![License](https://img.shields.io/hexpm/l/doc_shell.svg)](LICENSE.md)
 
-Documentation extraction for Elixir, without a renderer attached.
+Portable documentation data for Elixir, without choosing your renderer.
 
 [Installation](#installation) |
 [Quick start](#quick-start) |
 [Configuration](#configuration) |
 [Try it interactively](#try-it-interactively) |
 [Artifacts](#what-comes-out) |
+[Portable sites](#portable-sites) |
 [Serving](#serving-it)
 
 ---
@@ -32,6 +33,8 @@ Start with the build-pipeline notebook in a browser:
   Work through the default document, shipped adapters, custom adapters, and validation errors.
 - **[Serving Artifacts](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.4.0%2Fnotebooks%2Fserving-artifacts.livemd)** -
   Walk through static serving, runtime caching, reloads, gates, and controller usage.
+- **[Publish a Portable Site](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.4.0%2Fnotebooks%2Fsite-publication.livemd)** -
+  Load a collection, project routes and navigation, then publish a static site.
 
 ---
 
@@ -330,6 +333,89 @@ or retyping an existing field, still requires a schema-version change.
 
 ---
 
+## Portable sites
+
+A `doc-shell/v1` collection answers “what documentation came from this source?”
+A `doc-shell-site/v1` value answers “what should this site expose, and where?”
+Keeping those questions separate lets several packages share a site without
+moving product taxonomy or routes into their extraction builds.
+
+Load exact collection artifacts first:
+
+```elixir
+{:ok, core} = DocShell.Generate.Collection.load(core_descriptor)
+{:ok, api} = DocShell.Generate.Collection.load(api_descriptor)
+```
+
+Then project them through host policy:
+
+```elixir
+{:ok, site} =
+  DocShell.Presentation.SiteProjector.project(
+    collections: [core, api],
+    source: MyApp.Docs.SiteSource,
+    source_options: [title: "My documentation"],
+    profile: "public",
+    canonical_origin: "https://docs.example.com"
+  )
+```
+
+`MyApp.Docs.SiteSource` implements one callback. It selects qualified document
+IDs and declares routes, navigation, redirects, locales, visibility, and any
+provider-specific source/edit links. It does not read collection directories or
+render content. DocShell validates that policy, resolves local links and heading
+anchors, derives breadcrumbs and reading order, builds search records, and binds
+the result to a deterministic cohort digest. It never invents forge URL shapes.
+`DocShell.Presentation.SiteSource.Default` provides flat routes when a host does
+not need custom taxonomy.
+
+The projected `Site` is the handoff to any hosted or static renderer. It carries
+no session, authorization callback, framework component, or deployment setting.
+
+### Renderer contract
+
+A renderer implements `DocShell.Presentation.Renderer`: render a page and the
+not-found page, return local assets, and declare capabilities. Capability values
+say whether a feature has a semantic fallback, browser enhancement, or connected
+live state. Static export rejects live-only requirements; unsupported optional
+features are allowed only when the projected fallback digest still matches.
+
+DocShell ships the contract and conformance fixture, not a visual renderer. That
+keeps Phoenix, LiveView, Svelte, Node, CSS systems, and product branding out of
+the package dependency graph.
+
+### Static export
+
+Pass the validated site to a renderer implementation:
+
+```elixir
+{:ok, manifest} =
+  DocShell.Presentation.StaticExporter.export(
+    site: site,
+    renderer: MyDocs.HtmlRenderer,
+    destination: "_site/docs",
+    canonical_origin: "https://docs.example.com"
+  )
+```
+
+The exporter validates capabilities and returned HTML, hashes local renderer
+assets, builds the JSON search index, checks links and finite byte/file limits,
+and stages the complete tree before replacing the destination. The result
+contains page routes, redirects, `404.html`, `site-manifest.json`, `sitemap.xml`,
+`robots.txt`, `llms.txt`, and `llms-full.txt`. It starts no host application,
+runs no external build tool, and makes no network request.
+
+The built-in `DocShell.Presentation.SearchAdapter.JSON` emits deterministic local
+records and provides `query/3` as the reference filtering behavior. A different
+build-time adapter can produce another local index from the same records.
+
+The [site publication notebook](notebooks/site-publication.livemd) is a complete
+executable example with a small host source and renderer.
+
+---
+
+## Artifact guarantees
+
 ### Document identities
 
 Document IDs must be nonempty and unique across all sources, including entries
@@ -554,11 +640,10 @@ for extracted files and graph-backed content.
 
 ## Development
 
-The [foundation hardening plan](docs/plans/documentation-sites.md) separates
-implemented behavior from outstanding acceptance work. It covers malformed-input
-errors, canonical digest fixtures, bounded collection loading, transactional
-deletion, deterministic presentation, cache snapshots and dependency qualification.
-The future site renderer and static exporter remain separate planned features.
+The [site implementation plan](docs/plans/documentation-sites.md) separates
+implemented core behavior from independent renderer qualification. It records
+the executable evidence for collection loading, site projection, renderer
+admission, search, static publication, and packaged consumers.
 
 ```sh
 mix setup        # fetch and compile
@@ -570,6 +655,7 @@ mix ci           # setup + lint + coverage in one pass
 mix docs         # build the documentation
 mix bench        # run the benchmarks
 mix bench.collection # measure collection preparation and complete import
+mix bench.site   # measure site projection and staged static export
 scripts/notebook_smoke.py # execute tutorial cells against this checkout
 scripts/consumer_smoke.sh # verify the built package in fresh consumers
 ```
@@ -608,6 +694,10 @@ the Performance section of the documentation.
 The collection suite measures 1,000–16,000 documents with preparation outside
 timed work and reports elapsed time and BEAM allocation (not peak RSS). Its CI
 smoke mode is console-only. Measurements are diagnostics, not timing assertions.
+
+The site suite measures projection and full static replacement for 10–500 pages,
+including search serialization and output validation. Renderer work is a small
+fixed fixture; the numbers characterize the portable pipeline, not browser paint.
 
 Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 

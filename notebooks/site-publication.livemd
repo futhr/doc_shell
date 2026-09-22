@@ -1,0 +1,279 @@
+# Publish a Portable Documentation Site
+
+DocShell separates three decisions that are easy to blur together:
+
+1. a collection proves which source artifacts were loaded;
+2. a site source chooses routes, visibility, and navigation;
+3. a renderer turns the validated site into output.
+
+This notebook builds that path end to end. It uses a deliberately small HTML
+renderer so the DocShell boundaries remain visible. A real renderer can live in
+another package and implement the same behaviour.
+
+## Setup
+
+Run the notebook from Livebook's default standalone runtime. The release task
+keeps this exact package version in sync with `mix.exs`.
+
+```elixir
+Mix.install([
+  {:doc_shell, "== 0.4.0"}
+])
+
+Application.ensure_all_started(:doc_shell)
+```
+
+## Define host policy
+
+The source below selects one qualified document and gives it a stable route.
+It does not read files or render HTML; loaded collections are its only input.
+
+```elixir
+defmodule SitePublication.Source do
+  @behaviour DocShell.Presentation.SiteSource
+
+  @impl true
+  def project(_collections, _options) do
+    {:ok,
+     %{
+       "title" => "Example documentation",
+       "base_path" => "/docs/",
+       "default_locale" => "en",
+       "locales" => ["en"],
+       "pages" => [
+         %{"id" => "example:intro", "route" => "/start/"}
+       ],
+       "navigation" => [
+         %{
+           "id" => "guides",
+           "title" => "Guides",
+           "children" => [%{"id" => "example:intro"}]
+         }
+       ],
+       "redirects" => %{"/old/" => "/start/"},
+       "metadata" => %{"owner" => "documentation"}
+     }}
+  end
+end
+```
+
+The slightly explicit map is the public policy boundary. Hosts can replace it
+with a database or graph projection, but the returned values remain inert JSON.
+
+## Define a small renderer
+
+The renderer declares what it can provide, returns logical assets, and renders
+already validated pages. It does not choose routes or write the destination.
+
+```elixir
+defmodule SitePublication.Renderer do
+  @behaviour DocShell.Presentation.Renderer
+
+  alias DocShell.Presentation.{Asset, Page, Site}
+  alias DocShell.Presentation.Renderer.{Capabilities, Capability, Context}
+
+  @impl true
+  def capabilities do
+    %Capabilities{
+      schema_version: Capabilities.schema_version(),
+      renderer_id: "site-publication-example",
+      renderer_version: "1.0.0",
+      output_modes: [:static],
+      features: %{
+        "doc-shell/html/v1" => %Capability{states: [:fallback], runtime: []}
+      }
+    }
+  end
+
+  @impl true
+  def assets(%Site{}, []) do
+    {:ok,
+     [
+       %Asset{
+         path: "site.css",
+         media_type: "text/css",
+         bytes: "main{max-width:48rem;margin:4rem auto;font:18px system-ui}"
+       }
+     ]}
+  end
+
+  @impl true
+  def render_page(%Page{} = page, %Context{} = context) do
+    body = Enum.map(page.content, &render_node/1)
+    css = Map.fetch!(context.assets, "site.css")
+
+    {:ok,
+     [
+       "<!doctype html><html lang=\"",
+       escape(page.locale),
+       "\"><head><meta charset=\"utf-8\"><title>",
+       escape(page.title),
+       "</title><link rel=\"stylesheet\" href=\"",
+       escape(css),
+       "\"></head><body><main id=\"main\">",
+       body,
+       "</main></body></html>"
+     ]}
+  end
+
+  @impl true
+  def render_not_found(%Site{}, %Context{}) do
+    {:ok, "<!doctype html><html><body><main>Not found</main></body></html>"}
+  end
+
+  defp render_node(text) when is_binary(text), do: escape(text)
+
+  defp render_node(%{"tag" => tag, "attrs" => attrs, "content" => content})
+       when tag in ["h1", "p", "strong", "em"] do
+    id = if tag == "h1", do: [" id=\"", escape(Map.get(attrs, "id", "")), "\""], else: []
+    ["<", tag, id, ">", Enum.map(content, &render_node/1), "</", tag, ">"]
+  end
+
+  defp render_node(%{"content" => content}), do: Enum.map(content, &render_node/1)
+
+  defp escape(value) do
+    value
+    |> to_string()
+    |> String.replace("&", "&amp;")
+    |> String.replace("<", "&lt;")
+    |> String.replace("\"", "&quot;")
+  end
+end
+```
+
+Unknown AST elements above keep their safe child content. Production HTML
+renderers should use a complete allowlist and validate link schemes as described
+by the renderer contract.
+
+## Build and load a collection
+
+The source revision and tree digest come from the caller. DocShell records them;
+it does not run Git or authenticate a checkout.
+
+```elixir
+workspace =
+  Path.join(
+    System.tmp_dir!(),
+    "doc_shell_site_publication_#{System.unique_integer([:positive])}"
+  )
+
+File.rm_rf!(workspace)
+File.mkdir_p!(Path.join(workspace, "guides"))
+
+File.write!(Path.join(workspace, "guides/intro.md"), """
+---
+id: intro
+title: Introduction
+---
+
+# Introduction
+
+This page came from a validated portable collection.
+""")
+
+artifact_dir = Path.join(workspace, "artifacts")
+
+{:ok, descriptor} =
+  DocShell.Generate.Collection.new(%{
+    id: "example",
+    title: "Example",
+    version: "1.0.0",
+    revision: String.duplicate("a", 40),
+    tree_digest: "sha256:" <> String.duplicate("b", 64),
+    artifact_dir: artifact_dir,
+    source_url: "https://example.invalid/example",
+    edit_base_url: "https://example.invalid/example/edit"
+  })
+
+{:ok, _result} =
+  File.cd!(workspace, fn ->
+    DocShell.Build.run(
+      modules: [],
+      guide_bases: ["guides"],
+      livebook_base: "notebooks",
+      changelog_source: false,
+      public_dir: artifact_dir,
+      private_dir: Path.join(workspace, "private"),
+      collection: descriptor
+    )
+  end)
+
+{:ok, collection} = DocShell.Generate.Collection.load(descriptor)
+
+Enum.map(collection.documents, & &1["id"])
+```
+
+## Project the site
+
+Projection resolves anchors, links, breadcrumbs, reading order, search records,
+visibility, and capability requirements before a renderer sees the page.
+
+```elixir
+{:ok, site} =
+  DocShell.Presentation.SiteProjector.project(
+    collections: [collection],
+    source: SitePublication.Source,
+    profile: "public",
+    generation_id: "site-publication-example",
+    canonical_origin: "https://docs.example"
+  )
+
+page = site.pages["example:intro"]
+
+%{
+  schema: site.schema_version,
+  route: page.route,
+  headings: Enum.map(page.headings, & &1.id),
+  breadcrumbs: Enum.map(page.breadcrumbs, &{&1.title, &1.path}),
+  requirements: Enum.map(page.requirements, & &1.feature_id)
+}
+```
+
+The cohort digest is deterministic for the same collections and profile. The
+generation ID identifies this publication attempt and may differ on a rebuild.
+
+## Export the static tree
+
+The exporter validates renderer capabilities and output, hashes local assets,
+checks links and limits, stages the whole tree, and then replaces the destination.
+
+```elixir
+destination = Path.join(workspace, "site")
+
+{:ok, manifest} =
+  DocShell.Presentation.StaticExporter.export(
+    site: site,
+    renderer: SitePublication.Renderer,
+    destination: destination,
+    canonical_origin: "https://docs.example"
+  )
+
+%{
+  renderer: manifest["renderer"],
+  routes: manifest["routes"],
+  files: destination |> Path.join("**/*") |> Path.wildcard() |> Enum.map(&Path.relative_to(&1, destination))
+}
+```
+
+`site-manifest.json` records every generated payload except itself, avoiding a
+self-referential digest. The tree also contains `404.html`, search data,
+`sitemap.xml`, `robots.txt`, `llms.txt`, and `llms-full.txt`.
+
+## Query the same search corpus
+
+The built-in adapter is both the default static index and a reference query
+implementation. Other adapters consume the same records.
+
+```elixir
+{:ok, matches} =
+  DocShell.Presentation.SearchAdapter.JSON.query(site.search, "validated", locale: "en")
+
+Enum.map(matches, &{&1.id, &1.route})
+```
+
+## Clean up
+
+```elixir
+File.rm_rf!(workspace)
+:ok
+```

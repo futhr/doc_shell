@@ -1,0 +1,61 @@
+{
+  "schema_version": "doc-shell-renderer-conformance/v1",
+  "features": [
+    "doc-shell/html/v1",
+    "doc-shell/search/v1",
+    "doc-shell/theme/v1",
+    "doc-shell/navigation/v1",
+    "doc-shell/copy/v1",
+    "doc-shell/tabs/v1",
+    "doc-shell/highlight/v1",
+    "doc-shell/mermaid/v1",
+    "doc-shell/island/v1",
+    "doc-shell/request-execution/v1"
+  ],
+  "states": ["fallback", "enhanced", "connected"],
+  "landmarks": ["banner", "navigation", "main", "complementary", "contentinfo"],
+  "focus_order": ["skip-link", "primary-navigation", "search", "main-content"],
+  "keyboard": {
+    "search": ["Escape", "ArrowDown", "ArrowUp", "Enter"],
+    "navigation": ["Escape", "Enter", "Space"],
+    "tabs": ["ArrowLeft", "ArrowRight", "Home", "End"]
+  },
+  "responsive": {
+    "small": ["single-column", "navigation-dialog"],
+    "medium": ["article", "navigation"],
+    "large": ["navigation", "article", "table-of-contents"]
+  },
+  "themes": ["system", "light", "dark", "reduced-motion"],
+  "directives": [
+    "callout",
+    "card",
+    "link-card",
+    "card-grid",
+    "badge",
+    "file-tree",
+    "steps",
+    "tabs",
+    "mermaid",
+    "openapi-operation",
+    "openapi-schema",
+    "unknown"
+  ],
+  "locales": [
+    {"locale": "en", "direction": "ltr", "label": "Search documentation"},
+    {"locale": "ar", "direction": "rtl", "label": "بحث في الوثائق"}
+  ],
+  "fallbacks": {
+    "code": "plain preformatted text remains visible",
+    "mermaid": "diagram source remains visible",
+    "tabs": "all labelled panels remain readable",
+    "island": "labelled inert content remains visible",
+    "request_execution": "control is absent or explicitly unavailable"
+  },
+  "unsafe_inputs": {
+    "tags": ["script", "iframe", "object"],
+    "attributes": ["onclick", "srcdoc", "style"],
+    "urls": ["javascript:alert(1)", "data:text/html,unsafe", "file:///etc/passwd"],
+    "raw_html": "<script>alert(1)</script>",
+    "oversized": ["page", "depth", "route", "asset", "output"]
+  }
+}

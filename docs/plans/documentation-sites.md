@@ -8,14 +8,14 @@ own fixtures pass.
 | Package | Status | Requires | Deliverable | Acceptance |
 | --- | --- | --- | --- | --- |
 | DSH-P01 | complete | Existing `doc-shell/v1` reader | Additive `collection.json`, `DocShell.Generate.Collection` and collection descriptor | DSH-V01/V02 plus collection integrity requirements below; no network or process startup |
-| DSH-P02 | planned | DSH-P01 | `DocShell.Generate.Cohort`, canonical payload digest, normalized source provenance | DSH-V03; digest excludes time, random IDs, and absolute workspace paths |
-| DSH-P03 | planned | DSH-P01/P02 | `Site`, `Page`, navigation/link types and `SiteSource` validation | DSH-V04–V06; all public structs/functions documented and typed |
-| DSH-P04 | planned | DSH-P03 | Heading/anchor, reading-order, locale/audience/version, canonical/source/edit and redirect projection | DSH-V04–V06 with property tests for route and anchor normalization |
-| DSH-P05 | planned | DSH-P03/P04 | Section-aware search records, built-in deterministic JSON adapter and adapter behaviour | DSH-V07; fixed query corpus and browser-neutral output |
-| DSH-P06 | planned | DSH-P03–P05 | Renderer behaviour, context, asset contract and shared conformance fixtures | DSH-V09/V10; fixtures published with the package for independent renderers |
-| DSH-P07 | planned | DSH-P02–P06 | Atomic static exporter, site manifest, sitemap, robots and llms outputs | DSH-V08; clean build, rollback, subpath and output-bound evidence |
-| DSH-P08 | planned | DSH-P06/P07 | Hosted/static semantic parity tool | DSH-V11 against two independent renderer implementations |
-| DSH-P09 | planned | DSH-P01–P08 | Documentation, Livebooks, benchmarks, compatibility and packaged-consumer qualification | DSH-V12; `mix check`, minimum/current Elixir and OTP, clean Hex archive consumer |
+| DSH-P02 | complete | DSH-P01 | `DocShell.Generate.Cohort`, canonical payload digest, normalized source provenance | DSH-V03; digest excludes time, random IDs, and absolute workspace paths |
+| DSH-P03 | complete | DSH-P01/P02 | `Site`, `Page`, navigation/link types and `SiteSource` validation | DSH-V04–V06; all public structs/functions documented and typed |
+| DSH-P04 | complete | DSH-P03 | Heading/anchor, reading-order, locale/audience/version, canonical/source/edit and redirect projection | DSH-V04–V06 with property tests for route and anchor normalization |
+| DSH-P05 | complete | DSH-P03/P04 | Section-aware search records, built-in deterministic JSON adapter and adapter behaviour | DSH-V07; fixed query corpus and browser-neutral output |
+| DSH-P06 | complete | DSH-P03–P05 | Renderer behaviour, normalized capability/requirement/context/asset contracts, reserved feature IDs and shared fallback/enhanced/connected conformance fixtures | DSH-V09/V10; fixtures published with the package for independent renderers |
+| DSH-P07 | complete | DSH-P02–P06 | Atomic static exporter, site manifest, sitemap, robots and llms outputs | DSH-V08; clean build, rollback, subpath and output-bound evidence |
+| DSH-P08 | in progress | DSH-P06/P07 | Hosted/static semantic parity and live-capability degradation tool | Core comparison is complete; DSH-V11 still requires two independent renderer implementations |
+| DSH-P09 | complete | DSH-P01–P08 | Documentation, Livebooks, benchmarks, compatibility and packaged-consumer qualification | DSH-V12 and the core release evidence recorded below |
 
 ## Public API shape
 
@@ -80,10 +80,37 @@ remote ref, release tag, repository visibility or dependency lock was changed.
 Do not change schemas, dependency ranges, workflow checks, release refs, or
 repository visibility merely to make a check pass.
 
-### Planned site modules
+### Core site qualification record — 2026-09-22
 
-The implementation should converge on these modules unless tests demonstrate a
-smaller boundary with the same ownership:
+Core site publication was qualified locally on Elixir 1.18.4 and OTP
+27.3.4.15. Fresh endpoint builds also passed on Elixir 1.17.3/OTP 27.3.4.15
+and Elixir 1.20.4/OTP 28.5. These checks qualify the DocShell package; they do
+not substitute for the two independent renderer results still required by P08.
+
+| Check | Result |
+| --- | --- |
+| Full `mix check`, without retry-only behavior | 303 tests, 28 properties, 16 doctests; zero failures; 95.3% coverage |
+| Compilation, strict Credo, Dialyzer, Doctor, ExDoc, formatting and dependency audits | Pass; 100% documentation, moduledoc and typespec coverage |
+| Compile without optional integrations | Pass |
+| Supported-version endpoints | Full tests pass on Elixir 1.17/OTP 27 and Elixir 1.20/OTP 28 |
+| Executable notebooks | All five pass, 62 executable cells |
+| Unpacked Hex archive consumers | Core, Plug and Ash pass with locked, newly resolved and selected compatible-minimum dependencies |
+| Package contents | Site contracts, conformance fixture, specification, plan, notebooks and benchmark reports are present |
+| Site benchmark | Projection and complete staged export measured at 10, 100 and 500 pages, with search/output sizes and allocated memory |
+
+The 500-page local benchmark recorded a 204.50 ms median for projection and a
+338.92 ms median for full static replacement. Benchee reported 585.74 MB and
+311.04 MB of allocated memory respectively; these are allocation measurements,
+not peak resident memory or performance assertions. The minimum consumer set
+retains the dependency versions recorded in the earlier qualification section.
+Old minimum EarmarkParser releases emit upstream deprecation warnings on modern
+Elixir, and Ash emits optional Igniter warnings when Igniter is absent; neither
+warning originates in DocShell.
+
+### Site modules
+
+The implementation exposes these public modules while keeping projection and
+filesystem publication mechanisms in private supporting modules:
 
 ```text
 DocShell.Generate.Collection
@@ -97,6 +124,9 @@ DocShell.Presentation.SiteSource
 DocShell.Presentation.SiteProjector
 DocShell.Presentation.SearchAdapter
 DocShell.Presentation.Renderer
+DocShell.Presentation.Renderer.Capabilities
+DocShell.Presentation.Renderer.Capability
+DocShell.Presentation.Renderer.CapabilityRequirement
 DocShell.Presentation.Asset
 DocShell.Presentation.StaticExporter
 DocShell.Presentation.Conformance
@@ -127,5 +157,5 @@ validation, following `DocShell.Presentation.GraphProjector`.
   and enabled.
 - The package archive contains the public schemas, conformance fixtures, and
   usage documentation.
-- Benchmarks record projection and export time, peak memory, page count, search
+- Benchmarks record projection and export time, allocated memory, page count, search
   size, and output bytes for small and large fixed corpora.

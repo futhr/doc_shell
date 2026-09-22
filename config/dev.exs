@@ -13,7 +13,7 @@ config :git_ops,
        fn v -> "doc_shell%2Fv#{v}%2Fnotebooks" end}
     ] ++
       Enum.map(
-        ~w(build-pipeline artifact-contract openapi-adapters serving-artifacts),
+        ~w(build-pipeline artifact-contract openapi-adapters serving-artifacts site-publication),
         fn name ->
           {"notebooks/#{name}.livemd", fn v -> "\"== #{v}\"" end, fn v -> "\"== #{v}\"" end}
         end

@@ -19,6 +19,7 @@ and commit the result when you change a hot path.
 | `presentation.exs` | `output/presentation.md` | Navigation, search, and content projection, plus contract validation |
 | `json.exs` | `output/json.md`, `output/artifact.md` | Term coercion by tree depth, and artifact envelope round-trips |
 | `collection.exs` | `output/collection.md` (non-CI only) | Preparation and complete import for 1,000–16,000 documents; time and allocated memory |
+| `site.exs` | `output/site.md` | Portable site projection and complete staged static export for 10–500 pages |
 | `serving.exs` | Console only | Cached response bytes versus per-request encoding |
 
 They exist to catch regressions in the hot paths, not to produce numbers worth

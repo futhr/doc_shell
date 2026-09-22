@@ -31,6 +31,42 @@ defmodule DocShell.Bench.Documents do
     end)
   end
 
+  @doc "Builds an in-memory loaded collection with `count` qualified documents."
+  @spec collection(pos_integer()) :: DocShell.Generate.Collection.loaded()
+  def collection(count) do
+    {:ok, descriptor} =
+      DocShell.Generate.Collection.new(%{
+        id: "benchmark",
+        title: "Benchmark",
+        version: "1.0.0",
+        revision: String.duplicate("a", 40),
+        tree_digest: "sha256:" <> String.duplicate("b", 64),
+        artifact_dir: "/tmp/doc-shell-benchmark",
+        source_url: "https://example.invalid/benchmark",
+        edit_base_url: "https://example.invalid/benchmark/edit"
+      })
+
+    documents =
+      count
+      |> entries()
+      |> Enum.map(fn entry ->
+        entry
+        |> Map.put("id", "benchmark:#{entry["id"]}")
+        |> Map.put("document_id", entry["id"])
+        |> Map.put("collection_id", "benchmark")
+        |> put_in(["meta", "source_path"], "guides/#{entry["id"]}.md")
+      end)
+
+    %{
+      descriptor: descriptor,
+      generation_id: "benchmark-source",
+      content_digest: "sha256:" <> String.duplicate("c", 64),
+      artifacts: %{},
+      sources: [],
+      documents: documents
+    }
+  end
+
   @doc "Builds a nested term of the shape docs-chunk metadata arrives in."
   @spec metadata(pos_integer()) :: map()
   def metadata(depth) when depth > 0, do: nested(depth)

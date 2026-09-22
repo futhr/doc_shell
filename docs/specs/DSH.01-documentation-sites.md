@@ -1,9 +1,10 @@
 # DSH.01: Portable documentation sites
 
-Specification version: 0.2.0. Contract: accepted. Collection implementation:
-present, acceptance hardening in progress. Site projection and export: planned.
+Specification version: 0.3.0. Contract: accepted. Collection loading, core site
+projection, renderer admission, search, and static publication are implemented.
+Qualification of two independent renderers remains external acceptance work.
 The implementation plan records executable evidence; this specification states
-the required behavior and does not claim that every requirement is implemented.
+the required behavior and does not treat core tests as renderer qualification.
 
 ## Purpose
 
@@ -39,9 +40,10 @@ The following behavior is implemented before this specification:
 - `DocShell.Web.Cache` can serve a validated generation without making the
   extraction pipeline a runtime requirement.
 
-This source is the input to the site contract. It does not satisfy the
-multi-corpus, route, static HTML, renderer parity, or publication requirements
-below.
+This source is the input to the site contract. The implementation described
+below adds multi-corpus projection and static publication without changing the
+existing extraction format. Renderer parity still requires evidence from the
+independent packages that render the contract.
 
 ## Ownership boundaries
 
@@ -227,7 +229,7 @@ file and source budgets apply per collection, not to the aggregate retained
 memory of `load_many/2`. No unlimited sentinel is accepted. Duplicate JSON object
 keys fail rather than taking a parser-dependent first/last value.
 
-Future site operations accept a `DocShell.Presentation.Limits` value. Defaults are
+Site operations accept a `DocShell.Presentation.Limits` value. Defaults are
 large enough for an ecosystem site and finite:
 
 | Resource | Default maximum |
@@ -308,7 +310,14 @@ Every `DocShell.Presentation.Page` has:
 - source revision, source-relative path, package version, last-modified value,
   tags, status, and arbitrary JSON metadata;
 - search and navigation inclusion flags; and
-- optional renderer-neutral banner and hero records.
+- optional renderer-neutral banner and hero records; and
+- capability requirements derived from its AST and site profile.
+
+The host may declare exact page `source_url` and `edit_url` values when its
+source provider has file-specific URL rules. Otherwise `source_url` remains the
+collection descriptor's exact inert URL and `edit_url` joins the normalized
+source path to `edit_base_url`. DocShell validates HTTP(S) syntax but does not
+invent provider-specific path segments such as repository blob routes.
 
 Raw `<head>` HTML, arbitrary scripts, renderer class names, and framework
 component names are not page metadata. A renderer may add host-owned metadata
@@ -375,11 +384,79 @@ no server connection.
             {:ok, iodata()} | {:error, term()}
 @callback assets(Site.t(), keyword()) ::
             {:ok, [Asset.t()]} | {:error, term()}
+@callback capabilities() :: Renderer.Capabilities.t()
 ```
 
 The context contains site identity, navigation, current route, locale,
 canonical origin, search contract, and asset paths. It contains no application
 session or authorization decision.
+
+`DocShell.Presentation.Renderer.Capabilities` identifies the renderer, its
+contract version, supported directives, static-output support, browser
+enhancements, and whether a capability needs a live server transport. The
+capability value contains data, not executable callbacks or framework module
+names. A renderer must reject a page that requires an unsupported capability
+or render the fixture's declared accessible fallback. It must not silently
+drop the content or emit a control that cannot operate in the selected output
+mode.
+
+The public values have this normalized shape:
+
+```elixir
+%DocShell.Presentation.Renderer.Capabilities{
+  schema_version: "doc-shell-renderer-capabilities/v1",
+  renderer_id: "example-html",
+  renderer_version: "1.0.0",
+  output_modes: [:hosted, :static],
+  features: %{
+    "doc-shell/search/v1" =>
+      %DocShell.Presentation.Renderer.Capability{
+        states: [:fallback, :enhanced],
+        runtime: [:browser_js]
+      }
+  }
+}
+```
+
+Renderer and feature IDs match `[a-z0-9][a-z0-9._/-]*`; feature IDs include
+their contract revision and renderer versions use Semantic Versioning.
+`output_modes` and feature states are closed atoms.
+The states are `:fallback`, `:enhanced`, and `:connected`. Runtime values are
+`:browser_js` and `:live_transport`; an empty list means that the emitted
+output needs neither. Build tools do not appear as served runtime requirements:
+a renderer may use Node while producing an asset, but a static result cannot
+require Node to serve or operate.
+
+Each page carries normalized
+`DocShell.Presentation.Renderer.CapabilityRequirement` values with `feature_id`,
+`acceptable_states`, `essential?`, and an optional `fallback_digest`. The
+projector derives them from typed AST nodes and the selected site profile, not
+from arbitrary metadata. An essential requirement with no supported acceptable
+state fails rendering. A nonessential requirement may be omitted only when its
+declared fallback is present and its digest matches. A connected action is not
+equivalent to a fallback that merely resembles its successful result.
+
+DSH.01 reserves these feature IDs:
+
+- `doc-shell/html/v1` for semantic document rendering;
+- `doc-shell/search/v1` for query and result interaction;
+- `doc-shell/theme/v1`, `doc-shell/navigation/v1`, `doc-shell/copy/v1`, and
+  `doc-shell/tabs/v1` for local browser enhancement;
+- `doc-shell/highlight/v1` and `doc-shell/mermaid/v1` for code and diagram
+  enhancement;
+- `doc-shell/island/v1` for an explicit client-owned component boundary; and
+- `doc-shell/request-execution/v1` for host-authorized API requests.
+
+A renderer may publish additional namespaced IDs. A portable source cannot
+make such an extension essential unless the site profile explicitly selects
+the renderer that owns it.
+
+The conformance corpus records three states for an enhanced component: the
+semantic fallback before browser code runs, the enhanced browser state, and,
+when applicable, the connected live state. The same fixture IDs, labels,
+content digests, keyboard outcomes, and accessible names apply across those
+states. Renderer-specific animation, transport attributes, and internal DOM
+are not part of the portable contract.
 
 Conforming HTML renderers provide:
 
@@ -412,6 +489,14 @@ The renderer must be useful without JavaScript. Browser code enhances search,
 theme persistence, mobile navigation, copy controls, tabs, code highlighting,
 and diagrams. It must not hide the article, navigation, or source links when
 JavaScript fails.
+
+A hosted renderer may mount a client component inside an explicitly declared
+island boundary. The host and client renderer must not mutate the same DOM
+subtree. The page's article, ordinary links, provenance, navigation, headings,
+and search records remain present outside, or as the declared fallback of, any
+island. Live transport is an enhancement capability and cannot be required by
+a static export. DocShell defines these capability and fallback semantics but
+does not define an island protocol or depend on a browser framework.
 
 ## Static export
 
@@ -447,6 +532,13 @@ missing assets, external runtime assets, mixed cohort digests, and output above
 host-configured file and byte limits. It emits no current-time value inside
 deterministic payloads unless the caller explicitly supplies one.
 
+The exporter also rejects a required renderer capability whose manifest needs
+a WebSocket, endpoint, server process, Node runtime, or other unavailable
+runtime. Optional live islands may export only when their declared static
+fallback is complete and the live control is absent or visibly unavailable.
+Static browser enhancements use manifested local assets and deterministic
+input; they do not convert a live-only operation into a static claim.
+
 ## Host rendering parity
 
 An application may serve the same `Site` and `Page` values through LiveView,
@@ -462,6 +554,12 @@ Exact HTML bytes are not required because a hosted framework may add transport
 metadata. Renderer conformance compares normalized semantics rather than
 framework bookkeeping.
 
+Hosted output may add richer client interaction. Parity requires the same
+essential content, routes, actions that are meaningful without the host
+runtime, and accessible fallback. It does not require a static page to imitate
+a server-authorized command. A live-only action is excluded from static output
+or presented as unavailable rather than mocked as successful.
+
 ## Requirement catalogue
 
 | ID | Requirement |
@@ -470,11 +568,11 @@ framework bookkeeping.
 | DSH-S02 | Namespace document identities and reject corpus, route, path, locale, and navigation ambiguity. |
 | DSH-S03 | Produce deterministic `Site` and `Page` values with headings, provenance, reading flow, visibility, and content digests. |
 | DSH-S04 | Produce one renderer-neutral search corpus with page/section records and public filters. |
-| DSH-S05 | Define renderer and search adapter behaviours without a required frontend or hosted service dependency. |
+| DSH-S05 | Define normalized renderer capability and page-requirement values without a required frontend or hosted service dependency. |
 | DSH-S06 | Export a complete static site atomically with hashed local assets, manifests, sitemap, robots, and machine-readable documentation. |
 | DSH-S07 | Validate internal links, anchors, canonical URLs, source/edit URLs, redirects, generated files, and output limits before publication. |
-| DSH-S08 | Supply shared conformance fixtures for navigation, accessibility semantics, content directives, OpenAPI, localization, responsive behavior, and unsafe input. |
-| DSH-S09 | Prove hosted/static parity from the same site generation without requiring byte-identical framework markup. |
+| DSH-S08 | Supply shared conformance fixtures for navigation, accessibility semantics, content directives, OpenAPI, localization, responsive behavior, progressive enhancement states, and unsafe input. |
+| DSH-S09 | Prove hosted/static parity and honest live-capability degradation from the same site generation without requiring byte-identical framework markup. |
 | DSH-S10 | Preserve `doc-shell/v1` compatibility and keep framework adapters outside the core dependency closure. |
 
 ## Executable vectors
@@ -489,9 +587,9 @@ framework bookkeeping.
 | DSH-V06 | Heading anchors, breadcrumbs, table of contents, previous/next links, source/edit links, canonical URLs, and redirects resolve across collections and base paths. |
 | DSH-V07 | Search returns page and section matches and filters by collection, kind, locale, audience, version, tag, and status without a server. |
 | DSH-V08 | Static export contains only manifested local files, works below `/` and a subpath, reports broken links/assets, and restores the prior complete tree after failure. |
-| DSH-V09 | Renderer fixtures cover semantic landmarks, skip link, focus order, dialog keyboard flow, mobile navigation, themes, reduced motion, code fallback, diagrams, directives, and OpenAPI reference. |
+| DSH-V09 | Renderer fixtures cover capability normalization, unknown essential and optional features, fallback digests, semantic landmarks, skip link, focus order, dialog keyboard flow, mobile navigation, themes, reduced motion, code fallback, diagrams, directives, OpenAPI reference, and fallback/enhanced/connected states. |
 | DSH-V10 | Unsafe tags, attributes, URLs, raw HTML, malformed AST, oversized content, limit overflow, and request-execution configuration follow the closed renderer policy. |
-| DSH-V11 | Hosted and static consumers report identical cohort/page digests, route graphs, visible text, accessible names, headings, and links. |
+| DSH-V11 | Hosted and static consumers report identical cohort/page digests, route graphs, essential visible text, accessible names, headings, and links; live-only actions are absent or explicitly unavailable in static output. |
 | DSH-V12 | A fresh consumer compiles and uses core site projection without Phoenix, LiveView, Node, Svelte, or a browser dependency. |
 
 ## Completion rule

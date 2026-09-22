@@ -1,8 +1,10 @@
 # DocShell usage rules
 
-DocShell extracts documentation into versioned JSON and stops there. It owns
-generation and the artifact contract; it does not own a renderer, routing,
-authorization policy, tenancy, or product taxonomy.
+DocShell extracts documentation into versioned JSON and can project validated
+collections into a portable site. It owns artifact and site contracts, route
+validation, renderer admission, and static publication. It does not own a visual
+renderer, host route taxonomy, authorization policy, tenancy, branding, or
+deployment.
 
 Requires Elixir 1.17 or later. Install `ash_oaskit`, `open_api_spex`, or `plug`
 when the host uses the corresponding optional integration.
@@ -200,6 +202,65 @@ searchable. Token generation uses this same text.
 Each document path is calculated once and reused by navigation and search.
 Default paths percent-encode kind and ID as individual URL segments. Use a
 custom `path_builder` when IDs intentionally represent a path hierarchy.
+
+## Portable site projection
+
+- Load every input with `DocShell.Generate.Collection.load/1` before projection.
+  `DocShell.Generate.Cohort` hashes portable descriptors, content digests, and
+  the selected profile; local paths and generation IDs never enter that digest.
+- Implement `DocShell.Presentation.SiteSource` to choose page declarations,
+  routes, navigation, redirects, locales, and site metadata. The callback is a
+  policy seam, not an extractor or renderer: it receives loaded collections and
+  returns inert JSON-compatible values.
+- Put provider-specific file links in a page declaration's `source_url` and
+  `edit_url`. Without an override, `source_url` is the collection descriptor's
+  exact URL and `edit_url` appends the encoded source path to `edit_base_url`.
+  DocShell validates these HTTP(S) links but never invents forge-specific URL
+  segments.
+- Use `DocShell.Presentation.SiteSource.Default` for deterministic flat routes.
+  Do not treat its collection/kind/document layout as product taxonomy.
+- Call `DocShell.Presentation.SiteProjector.project/1` to join declarations to
+  exact documents. It derives anchors, resolved local links, breadcrumbs,
+  reading flow, search records, content digests, and renderer requirements.
+- Pass an origin such as `https://docs.example.com` as `:canonical_origin`.
+  Origins with a path, query, or fragment are rejected; put the mount path in
+  the site declaration's `base_path` instead.
+- Navigation groups are structural and have no route. Projected breadcrumbs use
+  `DocShell.Presentation.Breadcrumb`; group items have `path: nil`, while the
+  page item carries its canonical route.
+- The `"public"` profile excludes page declarations or derived page status set
+  to `"draft"` or `"private"`. A private corpus is never inherited from a
+  public descriptor; pass it as a separate loaded collection under host policy.
+- Keep presentation limits finite through `DocShell.Presentation.Limits`.
+  Projection checks collections, pages, AST bytes/depth, identities, routes,
+  navigation, and redirects before returning a `Site`.
+
+## Renderers and static publication
+
+- Implement `DocShell.Presentation.Renderer` in a renderer package or host. A
+  renderer receives only `Site`, `Page`, and inert `Renderer.Context` values; it
+  does not choose routes, authorize users, fetch sources, or write output files.
+- Return logical local `Asset` values and a validated `Renderer.Capabilities`
+  declaration. Build tools are not served-runtime requirements. Static output
+  may use local browser JavaScript but cannot require live transport.
+- Use `Renderer.admit/3` for hosted output. `StaticExporter.export/1` performs
+  the same admission automatically and rejects unsupported essential features.
+  Optional degradation requires the exact projected fallback digest.
+- The built-in `SearchAdapter.JSON` emits a deterministic local index and offers
+  `query/3` as the portable substring/filter reference. Custom adapters consume
+  the same `SiteSearchEntry` records and return local assets plus inert query
+  metadata.
+- `StaticExporter.export/1` owns final paths, content hashes, local-link checks,
+  output budgets, staging, replacement, and rollback. Renderer and search
+  callbacks return data; they never receive the destination.
+- Supply only a stable caller-owned destination. Existing non-directory or
+  symlink destinations fail. A lock directory serializes cooperating exports;
+  failed rendering or validation leaves the prior tree untouched.
+- `site-manifest.json` records every generated payload except itself, avoiding a
+  recursive digest. `generated_at` is absent unless the caller supplies it.
+- Use `DocShell.Presentation.Conformance` and the packaged
+  `priv/contracts/site-conformance-v1.json` fixture to compare normalized hosted
+  and static semantics. Do not compare framework-specific HTML bytes.
 
 ## Source integrations
 
