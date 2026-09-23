@@ -170,17 +170,11 @@ person reading the release notes.
 ## Releases
 
 Maintainers only, via [git_ops](https://hexdocs.pm/git_ops). `CHANGELOG.md` is
-generated from Conventional Commit subjects — do not hand-edit it, and do not
-create it by hand: `--initial` refuses to run if the file already exists.
+generated from Conventional Commit subjects; do not hand-edit it. It already
+exists and is included in `docs.extras` and `package.files` in `mix.exs`, so
+the `--initial` release command no longer applies.
 
-The first release creates the changelog and takes the version from `mix.exs`:
-
-```sh
-mix git_ops.release --initial
-```
-
-Then add `CHANGELOG.md` to `docs.extras` and `package.files` in `mix.exs`,
-which are deliberately without it until the file exists. After that:
+For a subsequent release:
 
 1. `mix check`
 2. `mix release` — updates the changelog, bumps the version, commits, and tags

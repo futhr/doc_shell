@@ -188,9 +188,8 @@ absolute HTTP(S) links may omit content; content may be hidden from both indexes
 Backlink targets require content, while origins may belong to the wider host graph
 provided they do not contradict a known path. Default ordering is kind/title/ID.
 
-Host projectors and changelog sources must provide complete recursive AST nodes
-and JSON metadata with string keys. Invalid nested content fails validation
-before output is written. `DocShell.Ast.valid?/1` checks node lists.
+Metadata keys must be strings. Invalid nested content fails validation before
+output is written. `DocShell.Ast.valid?/1` checks node lists.
 
 ### Legacy envelope compatibility
 

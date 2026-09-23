@@ -39,7 +39,8 @@ DocShell emits a provider-neutral directory.
 | Code, diagrams and OpenAPI | AST/reference contract | Yes | Enables request execution |
 | Static file transaction and manifest | Yes | Supplies HTML/assets | Publishes directory |
 | LiveView lifecycle | No | Phoenix adapter | Mounts routes and authorization |
-| Canonical origin, robots and release retention | Validates | Emits metadata | Chooses policy |
+| Canonical origin and robots policy | Validates and emits static files | Emits page metadata | Chooses origin and policy |
+| Release retention | Preserves named cohorts in a site generation | Displays selected release | Selects and retains published generations |
 
 ## Sources
 
@@ -52,3 +53,4 @@ DocShell emits a provider-neutral directory.
 7. Phoenix, [components and HEEx](https://hexdocs.pm/phoenix/components.html).
 8. Phoenix LiveView, [JavaScript interoperability](https://hexdocs.pm/phoenix_live_view/js-interop.html).
 9. GitHub, [custom workflows for GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
+10. GitHub, [GitHub Pages availability](https://docs.github.com/en/pages/getting-started-with-github-pages).

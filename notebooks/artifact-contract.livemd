@@ -233,7 +233,7 @@ The value should be the same for every file in that map.
 ## manifest.json
 
 The manifest describes exactly the artifacts beside it. It is written last and
-acts as the commit marker for a generation.
+marks a committed generation.
 
 ```elixir
 {:ok, public_manifest} = DocShell.Artifact.read(Path.join(public_dir, "manifest.json"))

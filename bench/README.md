@@ -22,10 +22,10 @@ and commit the result when you change a hot path.
 | `site.exs` | `output/site.md` | Portable site projection and complete staged static export for 10–500 pages |
 | `serving.exs` | Console only | Cached response bytes versus per-request encoding |
 
-They exist to catch regressions in the hot paths, not to produce numbers worth
-quoting. A documentation build is a batch job; the point is that a project with
-a thousand modules does not take a qualitatively different amount of time from
-one with a hundred.
+They exist to catch regressions in the hot paths. Report measurements with the
+machine, Elixir/OTP versions, input size, and timed operation; do not treat a
+local measurement as a performance guarantee. A documentation build is a batch
+job, so compare complete runs at representative corpus sizes.
 
 Setting `CI=true` shortens every suite to a smoke run, which verifies the
 benchmarks still execute without spending minutes measuring. Real numbers move
