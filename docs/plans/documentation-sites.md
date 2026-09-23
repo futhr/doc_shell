@@ -153,6 +153,8 @@ validation, following `DocShell.Presentation.GraphProjector`.
   canonical JSON, and output path containment.
 - Corpus fixtures include modules, guides, Livebooks, release entries, OpenAPI,
   unknown source kinds, nested navigation, multiple locales, and versions.
+- Hosted graph fixtures prove DocShell consumes one already-authorized projection
+  without repository discovery, cohort inference or renderer-side privacy filtering.
 - Static fixtures run from `/` and a repository subpath with JavaScript blocked
   and enabled.
 - The package archive contains the public schemas, conformance fixtures, and

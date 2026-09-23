@@ -63,6 +63,36 @@ React, a CSS framework, Node, a browser, a network client, or a hosted search
 service as a required dependency. Optional tools may implement public
 behaviours from another package.
 
+### Hosted graph projection boundary
+
+`DocShell.Presentation.GraphProjector` is a presentation port, not a graph
+database client or source-cohort manager. A host may index one repository, a
+monorepo with many components, or an authorized set of several repositories.
+The host resolves that topology, pins exact revisions, applies authorization
+and disclosure policy, and projects the resulting store before DocShell is
+called.
+
+DocShell receives one renderer-neutral presentation from the host callback. It
+does not discover repositories, infer current revisions, compile dependencies,
+merge graph stores, fetch HexDocs, or remove private records from a broader
+result. A host that needs public and internal sites constructs two independently
+authorized projections; it must not pass an internal projection to DocShell and
+expect the renderer to hide private content.
+
+The hosted `doc-shell/v1` path and the portable collection/site path are related
+but distinct:
+
+- a hosted graph-backed application may serve one validated `doc-shell/v1`
+  presentation directly from its own store;
+- `DocShell.Generate.Collection` represents one portable extracted corpus; and
+- `DocShell.Generate.Cohort` and the `doc-shell-site/v1` contract combine
+  portable collections for static or application-neutral publication.
+
+Using the hosted path does not require manufacturing one collection per
+repository or component. Using the portable site path does not make DocShell an
+authorization authority. In both cases, source authenticity and admission are
+established before rendering.
+
 ## Source collection contract
 
 ### Collection descriptor
@@ -217,6 +247,11 @@ repository lockfile, release refs, or GitHub workflow topology.
 An absent private corpus is valid. A supplied private corpus requires a
 separate explicit input and cannot enter a public site by inheritance from the
 public descriptor.
+
+For a graph-backed hosted projection, the equivalent rule is stronger: the
+private repository/view must be absent from the public host projection before
+navigation, search, backlinks or content are constructed. Renderer-side
+filtering is not a disclosure boundary.
 
 ## Resource limits
 

@@ -575,6 +575,10 @@ tuple, returning `:ok` or `true` to allow the request. DocShell has no view on
 sessions, roles, or tenancy, and that callback is the whole extension point.
 Hosts that would rather keep their own pipeline can call
 `DocShell.Web.Controller.show/2` from an ordinary controller action instead.
+For private documentation, the gate must consume server-validated request state;
+a client route guard, audience query or possession of an unvalidated browser
+value is not authorization. Keep public and private artifact caches/routes
+separate unless the host can prove complete authorization partitioning.
 
 The [serving artifacts notebook](notebooks/serving-artifacts.livemd) walks
 through static serving, runtime caching, reloads, gates, and controller usage.
@@ -635,6 +639,13 @@ The default generator sorts by kind, title, then ID, including tied titles.
 The pipeline validates the projector's field types, recursive AST content,
 and metadata before writing files. Hosts use the same presentation contract
 for extracted files and graph-backed content.
+
+A graph-backed host supplies one already-authorized projection. Its store may
+represent a monorepo or several exact repository revisions; DocShell neither
+discovers nor combines them. Public and internal documentation are separate
+host projections—renderer-side filtering is not an authorization boundary.
+Portable collection/cohort assembly is a separate site path for hosted or static
+renderers. A hosted graph does not need one collection per repository.
 
 ---
 

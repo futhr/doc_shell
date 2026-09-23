@@ -149,6 +149,13 @@ are rejected. Duplicate JSON object keys also fail before digest validation.
   `SearchEntry`, and `Backlink` structs, not bare maps.
 - Validate graph-backed output through
   `DocShell.Presentation.GraphProjector.project/2` before exposing it.
+- Resolve repository membership, exact revisions, graph position and disclosure
+  policy in the host before invoking the projector. DocShell consumes one
+  admitted presentation; it does not discover repositories or filter an
+  internal graph into a public site.
+- Do not manufacture per-package or per-repository collections merely to feed a
+  hosted graph projection. Collections/cohorts are the portable site path, not
+  the hosted authorization boundary.
 - Changing a `doc-shell/v1` shape is a breaking change to every producer and
   renderer at once. Adding an optional field is usually safe; renaming,
   removing, or retyping one is not.
@@ -346,6 +353,10 @@ AshOaskit themselves. Core consumers do not resolve its dependency tree.
 - Supply host authorization through the plug's `:gate` option — a unary function
   or an MFA tuple, returning `:ok` or `true` to allow. Omitting it serves
   everything to everyone.
+- For private documentation, base the gate on server-validated request state and
+  keep public/private routes and caches separate unless complete authorization
+  partitioning is proven. Client-side redirects, audience parameters and raw
+  browser storage are not gates.
 - Use `DocShell.Web.Controller.show/2` instead when the host wants its own
   pipeline in front; put authorization in a plug there.
 - DocShell must not implement application-specific access policy.
