@@ -1,8 +1,9 @@
 # DSH.01: Portable documentation sites
 
-Specification version: 0.3.0. Contract: accepted. Collection loading, core site
+Specification version: 0.4.0. Contract: accepted. Collection loading, core site
 projection, renderer admission, search, and static publication are implemented.
-Qualification of two independent renderers remains external acceptance work.
+Qualification of two independent renderers and hosted presentation/OpenAPI pair
+validation remain acceptance work.
 The implementation plan records executable evidence; this specification states
 the required behavior and does not treat core tests as renderer qualification.
 
@@ -92,6 +93,35 @@ Using the hosted path does not require manufacturing one collection per
 repository or component. Using the portable site path does not make DocShell an
 authorization authority. In both cases, source authenticity and admission are
 established before rendering.
+
+#### Hosted API pairing: current boundary and planned contract
+
+Today `GraphProjector.validate/1` checks one renderer-neutral presentation, and
+`DocShell.Generate.OpenApi.validate/1` checks the OpenAPI version and JSON
+encodability, not the complete OpenAPI schema. `DocShell.Build.run/1` gives
+artifacts written in one build the same `generation_id`; the runtime cache
+checks that identity across one loaded artifact directory. None of these APIs
+checks a separately supplied hosted graph presentation against an OpenAPI
+document, and the current presentation contract has no publication binding.
+
+Until a pair contract exists, a host serving graph-backed API reference must
+ensure both inputs come from the same admitted source view, graph position,
+locale, release, and disclosure surface. A public pair and an authenticated
+internal pair are independent inputs; matching operation IDs or API versions
+do not make their OpenAPI documents interchangeable. The host validates the
+session, organization, and disclosure decision before constructing and serving
+either input. A process-global current OpenAPI document must not be attached to
+an older or differently authorized graph-backed presentation.
+
+DSH-S11 requires a future DocShell contract to accept a host-declared pair with
+one opaque immutable publication binding and reject missing or mismatched
+bindings before renderer consumption. Both sides must also declare comparable
+source-view, graph-position, locale, release, and disclosure-surface values;
+equality of an opaque binding alone cannot detect a token reused for the wrong
+view. The binding's location and input shape must be defined as an additive
+API, without changing existing `doc-shell/v1` fields. DocShell validates the
+declared pair consistency; the host authenticates those declarations and owns
+the login session, organization, disclosure capability, and graph query.
 
 ## Source collection contract
 
@@ -609,6 +639,7 @@ or presented as unavailable rather than mocked as successful.
 | DSH-S08 | Supply shared conformance fixtures for navigation, accessibility semantics, content directives, OpenAPI, localization, responsive behavior, progressive enhancement states, and unsafe input. |
 | DSH-S09 | Prove hosted/static parity and honest live-capability degradation from the same site generation without requiring byte-identical framework markup. |
 | DSH-S10 | Preserve `doc-shell/v1` compatibility and keep framework adapters outside the core dependency closure. |
+| DSH-S11 | For hosted graph-backed API documentation, validate one host-admitted presentation/OpenAPI pair with a common immutable publication binding while leaving session and disclosure policy in the host. |
 
 ## Executable vectors
 
@@ -626,11 +657,12 @@ or presented as unavailable rather than mocked as successful.
 | DSH-V10 | Unsafe tags, attributes, URLs, raw HTML, malformed AST, oversized content, limit overflow, and request-execution configuration follow the closed renderer policy. |
 | DSH-V11 | Hosted and static consumers report identical cohort/page digests, route graphs, essential visible text, accessible names, headings, and links; live-only actions are absent or explicitly unavailable in static output. |
 | DSH-V12 | A fresh consumer compiles and uses core site projection without Phoenix, LiveView, Node, Svelte, or a browser dependency. |
+| DSH-V13 | Hosted public and internal fixtures accept matching presentation/OpenAPI publication bindings and reject cross-surface, mixed-generation, graph-position, locale, and release mismatches before rendering. |
 
 ## Completion rule
 
-DSH.01 is complete only when DSH-S01 through DSH-S10 are implemented and
-DSH-V01 through DSH-V12 run in the owning repository or in named independent
+DSH.01 is complete only when DSH-S01 through DSH-S11 are implemented and
+DSH-V01 through DSH-V13 run in the owning repository or in named independent
 renderer consumers. A renderer's visual tests cannot close core collection or
 export requirements. Core tests cannot claim a renderer meets the browser and
 accessibility contract.

@@ -647,6 +647,19 @@ host projections—renderer-side filtering is not an authorization boundary.
 Portable collection/cohort assembly is a separate site path for hosted or static
 renderers. A hosted graph does not need one collection per repository.
 
+If that surface includes API reference, the host must pair the presentation and
+OpenAPI document from the same admitted source view, graph position, locale,
+release, and disclosure surface before rendering or serving them. The host
+validates the session, organization, and disclosure decision. Never attach a
+process-global current OpenAPI document to an older or differently authorized
+graph presentation.
+
+Current APIs check the presentation and basic OpenAPI version/JSON shape
+separately. A normal `DocShell.Build.run/1` gives its written artifacts one
+`generation_id`, but that does not bind independently supplied hosted graph
+and OpenAPI inputs. DSH.01 proposes a hosted pair contract with an opaque
+publication binding and pre-render mismatch rejection; it is not implemented.
+
 ---
 
 ## Development

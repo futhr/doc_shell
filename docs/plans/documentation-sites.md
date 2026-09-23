@@ -16,6 +16,19 @@ own fixtures pass.
 | DSH-P07 | complete | DSH-P02–P06 | Atomic static exporter, site manifest, sitemap, robots and llms outputs | DSH-V08; clean build, rollback, subpath and output-bound evidence |
 | DSH-P08 | in progress | DSH-P06/P07 | Hosted/static semantic parity and live-capability degradation tool | Core comparison is complete; DSH-V11 still requires two independent renderer implementations |
 | DSH-P09 | complete | DSH-P01–P08 | Documentation, Livebooks, benchmarks, compatibility and packaged-consumer qualification | DSH-V12 and the core release evidence recorded below |
+| DSH-P10 | planned | DSH-P03/P06 | Preserve the hosted graph/source-cohort boundary and validate a host publication/OpenAPI pair before renderer invocation | DSH-V13; hosted projection needs no synthetic per-repository collection; cross-surface and mixed-generation pairs fail |
+
+P10 is outside the core site qualification record below. The existing
+`generation_id` joins artifacts written by one `DocShell.Build` run; it does not
+bind independently supplied hosted graph and OpenAPI inputs. The build invokes
+the OpenAPI adapter and presentation source separately, then creates that ID
+when writing artifacts. Define an additive pair contract and its admission
+point before implementing validation, without changing existing
+`doc-shell/v1` artifact fields or putting host authorization policy in DocShell.
+The pair contract needs comparable context on both sides: an opaque binding
+alone cannot detect a token reused across source views, graph positions,
+locales, releases, or disclosure surfaces. The host authenticates the claims;
+DocShell checks their declared equality before renderer invocation.
 
 ## Public API shape
 
@@ -155,6 +168,9 @@ validation, following `DocShell.Presentation.GraphProjector`.
   unknown source kinds, nested navigation, multiple locales, and versions.
 - Hosted graph fixtures prove DocShell consumes one already-authorized projection
   without repository discovery, cohort inference or renderer-side privacy filtering.
+- Hosted public/internal fixtures carry matching narrative/OpenAPI publication,
+  graph-position, locale and release bindings; cross-surface and mixed-generation
+  pairs fail before renderer invocation.
 - Static fixtures run from `/` and a repository subpath with JavaScript blocked
   and enabled.
 - The package archive contains the public schemas, conformance fixtures, and

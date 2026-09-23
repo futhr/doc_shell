@@ -153,6 +153,12 @@ are rejected. Duplicate JSON object keys also fail before digest validation.
   policy in the host before invoking the projector. DocShell consumes one
   admitted presentation; it does not discover repositories or filter an
   internal graph into a public site.
+- When API reference accompanies a hosted graph presentation, the host must
+  validate that both inputs came from the same admitted source view, graph
+  position, locale, release, and disclosure surface before rendering. Never
+  reuse a public artifact for an internal projection or attach a process-global
+  current spec to an older presentation. DocShell does not yet validate this
+  pair; DSH-P10 plans a common opaque publication binding and pre-render check.
 - Do not manufacture per-package or per-repository collections merely to feed a
   hosted graph projection. Collections/cohorts are the portable site path, not
   the hosted authorization boundary.
