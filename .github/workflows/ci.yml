@@ -111,7 +111,7 @@ jobs:
       - name: Check dependency lock
         run: mix deps.unlock --check-unused
 
-      - name: Audit retired packages
+      - name: Audit Hex dependencies
         run: mix hex.audit
 
       - name: Audit advisories
