@@ -82,7 +82,7 @@ defmodule DocShell.MixProject do
         {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
         {:doctor, "~> 0.21", only: [:dev, :test], runtime: false},
         {:doctest_formatter, "~> 0.4", only: [:dev, :test], runtime: false},
-        {:ex_check, "~> 0.16", only: :dev, runtime: false},
+        {:ex_check, "~> 0.17", only: :dev, runtime: false},
         {:excoveralls, "~> 0.18", only: :test},
         {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false},
         {:mix_test_watch, "~> 1.2", only: [:dev, :test], runtime: false},
