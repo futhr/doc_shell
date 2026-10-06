@@ -275,19 +275,21 @@ defmodule DocShell.Presentation.SiteProjection.Navigation do
   end
 
   defp acyclic_redirects(redirects) do
-    case Enum.find(Map.keys(redirects), &redirect_cycle?(&1, redirects, MapSet.new())) do
+    case Enum.find(Map.keys(redirects), &redirect_cycle?(&1, redirects, %{})) do
       nil -> :ok
       route -> {:error, {:redirect_cycle, route}}
     end
   end
 
+  @spec redirect_cycle?(String.t(), %{String.t() => String.t()}, %{String.t() => true}) ::
+          boolean()
   defp redirect_cycle?(route, redirects, seen) do
     cond do
-      MapSet.member?(seen, route) ->
+      Map.has_key?(seen, route) ->
         true
 
       Map.has_key?(redirects, route) ->
-        redirect_cycle?(redirects[route], redirects, MapSet.put(seen, route))
+        redirect_cycle?(redirects[route], redirects, Map.put(seen, route, true))
 
       true ->
         false

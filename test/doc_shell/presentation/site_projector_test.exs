@@ -634,6 +634,25 @@ defmodule DocShell.Presentation.SiteProjectorTest do
       assert {:error, {:invalid_redirect, _, _}} = project(collision)
     end
 
+    test "accepts converging redirect chains and rejects cycles reached through a prefix" do
+      redirects = %{
+        "/older/" => "/old/",
+        "/other/" => "/old/",
+        "/old/" => "alpha:intro"
+      }
+
+      assert {:ok, site} = project(Map.put(declaration(), "redirects", redirects))
+
+      assert site.redirects == %{
+               "/docs/older/" => "/docs/old/",
+               "/docs/other/" => "/docs/old/",
+               "/docs/old/" => "/docs/start/"
+             }
+
+      cycle = Map.put(redirects, "/old/", "/older/")
+      assert {:error, {:redirect_cycle, _}} = project(Map.put(declaration(), "redirects", cycle))
+    end
+
     test "supports internal profiles, file routes and every reserved content feature" do
       ast = [
         heading("Features"),
