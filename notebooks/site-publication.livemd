@@ -17,7 +17,7 @@ keeps this exact package version in sync with `mix.exs`.
 
 ```elixir
 Mix.install([
-  {:doc_shell, "== 0.4.0"}
+  {:doc_shell, "== 0.5.0"}
 ])
 
 Application.ensure_all_started(:doc_shell)

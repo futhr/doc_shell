@@ -5,6 +5,27 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v0.5.0](https://github.com/futhr/doc_shell/compare/v0.4.0...v0.5.0) (2026-10-10)
+
+
+
+
+### Features:
+
+* site: publish renderer-neutral documentation sites by Tobias Bohwalli
+
+### Bug Fixes:
+
+* ci: isolate packaged consumers from inherited Mix paths by futhr
+
+* resolve patched Ash dependency by futhr
+
+* presentation: use portable redirect cycle tracking by futhr
+
+* deps: update Ash and Mint past security advisories by Tobias Bohwalli
+
+* deps: update Mint past its security advisory by Tobias Bohwalli
+
 ## [v0.4.0](https://github.com/futhr/doc_shell/compare/v0.3.0...v0.4.0) (2026-09-16)
 
 
