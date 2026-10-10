@@ -688,7 +688,7 @@ scripts/consumer_smoke.sh # verify the built package in fresh consumers
 documentation and typespec coverage, tests with coverage, dependency
 advisories, Dialyzer, and a compile with the optional dependencies removed. CI also executes the notebooks and packaged consumer checks. CI
 runs tests and coverage across Elixir 1.17 through 1.20, with the remaining
-quality checks on Elixir 1.18.
+quality checks on Elixir 1.20.
 
 The local gate disables automatic retry-only mode: every `mix check` runs all
 configured checks unless you explicitly request a narrower run. Packaged consumer
