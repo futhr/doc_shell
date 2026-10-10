@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+unset MIX_BUILD_PATH MIX_BUILD_ROOT MIX_DEPS_PATH
 repo_dir="$(cd "$(dirname "$0")/.." && pwd)"
 dependency_mode="${DOC_SHELL_DEPENDENCIES:-locked}"
 case "$dependency_mode" in

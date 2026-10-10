@@ -140,7 +140,7 @@ jobs:
         run: scripts/notebook_smoke.py
 
       - name: Verify packaged consumers
-        run: scripts/consumer_smoke.sh
+        run: scripts/consumer_isolation_smoke.sh
 
       # CI=true shortens every suite; this only proves they still execute
       - name: Smoke-run benchmarks
