@@ -50,6 +50,8 @@ when the host uses the corresponding optional integration.
   Member search defaults off. Enable it to append module member names/arities,
   signatures and parsed docs to page search text, without changing content or
   overriding `skip_empty`; malformed member Markdown fails with the module ID.
+- Artifacts are compact canonical JSON. Use `pretty: true` only for debugging,
+  and never compare or hash the formatted bytes.
 - Set `:openapi_spec_path` when external tooling needs a bare OpenAPI file.
   Put it outside the artifact directories — `DocShell.Web.Cache` rejects a
   directory holding an unenveloped `.json`.

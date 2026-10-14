@@ -184,7 +184,18 @@ defmodule DocShell.Generate.Collection do
   @spec payload(t(), [map()], [{String.t(), term()}]) :: map()
   def payload(%__MODULE__{} = descriptor, sources, artifacts) do
     artifact_digests = Map.new(artifacts, fn {name, data} -> {name, digest(data)} end)
+    payload_for_digests(descriptor, sources, artifact_digests)
+  end
 
+  @doc """
+  Builds the portable collection payload from precomputed artifact digests.
+
+  Each digest must be `DocShell.Json.Canonical.digest/1` of the artifact's
+  `data`. A build that has already encoded its artifacts passes their digests
+  here instead of having every payload encoded a second time.
+  """
+  @spec payload_for_digests(t(), [map()], %{String.t() => String.t()}) :: map()
+  def payload_for_digests(%__MODULE__{} = descriptor, sources, artifact_digests) do
     core = %{
       "schema_version" => @collection_schema,
       "descriptor" => portable_descriptor(descriptor),

@@ -19,6 +19,20 @@ defmodule DocShell.Artifact do
   the failure mode worth engineering against, since artifacts are read by
   renderers in other repositories on their own release cadence.
 
+  ## Canonical bytes
+
+  Files hold compact canonical JSON: object keys sorted by UTF-8 bytes and no
+  insignificant whitespace, as produced by `DocShell.Json.Canonical`. The
+  bytes on disk are therefore exactly the bytes collection digests are
+  computed over, and two builds of the same content differ only in their
+  envelope fields. Pass `pretty: true` to `write/3`, or `pretty: true` to
+  `DocShell.Build.run/1`, when a person needs to read the files; decoded
+  values and digests do not change.
+
+  `encode/2` and `encode_envelope/4` return a `DocShell.Artifact.Encoded`
+  value. A build encodes each payload once, hashes those bytes, and splices
+  them into the envelope, so no artifact is encoded twice.
+
   ## Atomic writes
 
   `write/2` writes to a temporary file in the destination directory and renames
@@ -26,7 +40,9 @@ defmodule DocShell.Artifact do
   build runs — therefore sees either the previous artifact or the complete new
   one, never a half-written file. The rename is atomic on POSIX filesystems
   within a single filesystem, which is why the temporary lives beside its
-  target rather than in the system temp directory.
+  target rather than in the system temp directory. The temporary is opened in
+  raw mode and the encoded iodata is written to it directly, without first
+  being copied into one binary or through a file server process.
 
   ## Usage
 
@@ -36,6 +52,9 @@ defmodule DocShell.Artifact do
   Producers should go through this module rather than encoding JSON themselves,
   so that a schema-version bump is one change instead of one per artifact.
   """
+
+  alias DocShell.Artifact.Encoded
+  alias DocShell.Json.Canonical
 
   @doc """
   Wraps a payload in the public artifact envelope.
@@ -89,12 +108,16 @@ defmodule DocShell.Artifact do
   end
 
   @doc """
-  Writes a payload to `path` as a pretty-printed, enveloped JSON artifact.
+  Writes a payload to `path` as an enveloped canonical JSON artifact.
 
   Creates the destination directory if needed, and swaps the file into place
   with a rename so concurrent readers never observe a partial write. Pass
   `:generated_at` and `:generation_id` when writing a complete tree so every
   file carries the same build identity.
+
+  The file holds compact canonical JSON (see `DocShell.Json.Canonical`). Pass
+  `pretty: true` to indent it for reading by eye; the decoded value, and every
+  digest computed over it, is the same either way.
 
   Invalid JSON values, duplicate encoded keys and exceptions from custom Jason
   encoders return tagged errors before replacing the destination. Protocol output
@@ -103,15 +126,50 @@ defmodule DocShell.Artifact do
   @spec write(Path.t(), term()) :: :ok | {:error, term()}
   @spec write(Path.t(), term(), keyword()) :: :ok | {:error, term()}
   def write(path, payload, opts \\ []) do
+    with :ok <- path |> Path.dirname() |> File.mkdir_p(),
+         {:ok, %Encoded{iodata: iodata}} <- encode(payload, opts) do
+      write_atomically(path, iodata)
+    end
+  end
+
+  @doc """
+  Encodes a payload as the bytes of an enveloped artifact file.
+
+  Accepts the same `:generated_at`, `:generation_id` and `:pretty` options as
+  `write/3`, and returns exactly the bytes `write/3` would write.
+  """
+  @spec encode(term()) :: {:ok, Encoded.t()} | {:error, term()}
+  @spec encode(term(), keyword()) :: {:ok, Encoded.t()} | {:error, term()}
+  def encode(payload, opts \\ []) do
     generated_at = Keyword.get_lazy(opts, :generated_at, &DateTime.utc_now/0)
     generation_id = Keyword.get_lazy(opts, :generation_id, &new_generation_id/0)
 
-    with :ok <- path |> Path.dirname() |> File.mkdir_p(),
-         {:ok, json} <-
-           payload
-           |> envelope(generated_at, generation_id)
-           |> encode_payload() do
-      write_atomically(path, [json, "\n"])
+    with {:ok, data} <- Canonical.encode_to_iodata(payload) do
+      encode_envelope(data, generated_at, generation_id, opts)
+    end
+  end
+
+  @doc """
+  Wraps payload bytes that are already canonical JSON in an artifact envelope.
+
+  `data` must come from `DocShell.Json.Canonical.encode_to_iodata/1`. The
+  envelope keys sort after `"data"`, so splicing the bytes in yields the same
+  canonical document as encoding the whole envelope, without encoding the
+  payload a second time. Pass `pretty: true` for indented output.
+  """
+  @spec encode_envelope(iodata(), DateTime.t(), String.t()) ::
+          {:ok, Encoded.t()} | {:error, term()}
+  @spec encode_envelope(iodata(), DateTime.t(), String.t(), keyword()) ::
+          {:ok, Encoded.t()} | {:error, term()}
+  def encode_envelope(data, generated_at, generation_id, opts \\ []) do
+    fields = %{
+      "schema_version" => DocShell.schema_version(),
+      "generated_at" => DateTime.to_iso8601(generated_at),
+      "generation_id" => generation_id
+    }
+
+    with {:ok, "{" <> rest} <- Canonical.encode(fields) do
+      {:ok, finish([~s({"data":), data, ?,, rest], opts)}
     end
   end
 
@@ -120,33 +178,42 @@ defmodule DocShell.Artifact do
 
   For documents that have to satisfy an external format rather than this
   package's contract — an OpenAPI file a UI is pointed at, say. Artifacts a
-  renderer reads should go through `write/2` instead.
+  renderer reads should go through `write/2` instead. The term is written as
+  canonical JSON, or indented with `pretty: true`. A `DocShell.Artifact.Encoded`
+  payload is written verbatim.
 
   Note that `DocShell.Web.Cache` rejects a directory containing an
   unenveloped `.json` file, so these belong outside the artifact directories.
   """
   @spec write_raw(Path.t(), term()) :: :ok | {:error, term()}
-  def write_raw(path, payload) do
+  @spec write_raw(Path.t(), term(), keyword()) :: :ok | {:error, term()}
+  def write_raw(path, payload, opts \\ []) do
     with :ok <- path |> Path.dirname() |> File.mkdir_p(),
-         {:ok, json} <- encode_payload(payload) do
-      write_atomically(path, [json, "\n"])
+         {:ok, %Encoded{iodata: iodata}} <- encode_raw(payload, opts) do
+      write_atomically(path, iodata)
     end
   end
 
-  defp encode_payload(payload) do
-    with {:ok, json} <- Jason.encode_to_iodata(payload, pretty: true, maps: :strict),
-         :ok <- validate_encoding(payload, json) do
-      {:ok, json}
+  @doc """
+  Encodes a term as the bytes `write_raw/3` would write, with no envelope.
+
+  An `Encoded` payload is returned unchanged. Accepts `pretty: true`.
+  """
+  @spec encode_raw(term()) :: {:ok, Encoded.t()} | {:error, term()}
+  @spec encode_raw(term(), keyword()) :: {:ok, Encoded.t()} | {:error, term()}
+  def encode_raw(payload, opts \\ [])
+  def encode_raw(%Encoded{} = encoded, _), do: {:ok, encoded}
+
+  def encode_raw(payload, opts) do
+    with {:ok, iodata} <- Canonical.encode_to_iodata(payload) do
+      {:ok, finish(iodata, opts)}
     end
-  rescue
-    error -> {:error, {:json_encoder_failed, Exception.message(error)}}
   end
 
-  defp validate_encoding(payload, json) do
-    if DocShell.Json.valid?(payload) do
-      :ok
-    else
-      with {:ok, _} <- DocShell.Json.decode(:erlang.iolist_to_binary(json)), do: :ok
+  defp finish(iodata, opts) do
+    case Keyword.get(opts, :pretty, false) do
+      true -> %Encoded{iodata: [Jason.Formatter.pretty_print_to_iodata(iodata), ?\n]}
+      false -> %Encoded{iodata: [iodata, ?\n]}
     end
   end
 
@@ -191,7 +258,7 @@ defmodule DocShell.Artifact do
   defp write_atomically(path, contents) do
     temporary = "#{path}.#{new_generation_id()}.tmp"
 
-    with {:ok, file} <- File.open(temporary, [:write, :exclusive, :binary]) do
+    with {:ok, file} <- File.open(temporary, [:write, :exclusive, :binary, :raw]) do
       try do
         with :ok <- :file.write(file, contents),
              :ok <- File.close(file) do

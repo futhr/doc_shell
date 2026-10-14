@@ -63,6 +63,11 @@ defmodule DocShell.Build do
   its parsed body, which lives once in `content.json` under the same id.
   Writing the AST in both places doubled the tree for no reader.
 
+  Every artifact is encoded once, as compact canonical JSON. When a collection
+  is configured, its artifact digests are computed from those same bytes
+  rather than by encoding each payload again. Set `pretty: true` to indent the
+  files for debugging.
+
   See the [artifact contract notebook](artifact-contract.html) for the full tree.
   """
 
@@ -175,58 +180,9 @@ defmodule DocShell.Build do
   defp maybe_write(config, result) do
     case Keyword.get(config, :write, true) do
       false -> :ok
-      _ -> write_tree(config, result)
+      _ -> DocShell.Build.Tree.write(config, result)
     end
   end
-
-  defp write_tree(config, result) do
-    public = Config.fetch!(config, :public_dir)
-    private = Config.fetch!(config, :private_dir)
-    generated_at = DateTime.utc_now()
-    generation_id = DocShell.Artifact.new_generation_id()
-
-    artifacts = [
-      {"modules.json", index_only(result.modules)},
-      {"guides.json", index_only(result.guides)},
-      {"livebooks.json", index_only(result.livebooks)},
-      {"changelog.json", index_only(result.changelog)},
-      {"openapi.json", result.openapi},
-      {"navigation.json", result.presentation.navigation},
-      {"search-index.json", result.presentation.search},
-      {"content.json", result.presentation.content}
-    ]
-
-    artifacts = maybe_add_collection(artifacts, result)
-
-    public_files =
-      Enum.map(artifacts, fn {name, payload} ->
-        {Path.join(public, name),
-         DocShell.Artifact.envelope(payload, generated_at, generation_id)}
-      end)
-
-    manifests =
-      [
-        {Path.join(public, "manifest.json"), %{"artifacts" => Enum.map(artifacts, &elem(&1, 0))}},
-        {Path.join(private, "manifest.json"), %{"artifacts" => []}}
-      ]
-
-    manifests =
-      Enum.map(manifests, fn {path, payload} ->
-        {path, DocShell.Artifact.envelope(payload, generated_at, generation_id)}
-      end)
-
-    raw =
-      case config[:openapi_spec_path] do
-        nil -> []
-        path -> [{path, result.openapi}]
-      end
-
-    DocShell.Artifact.Transaction.write(public_files ++ raw ++ manifests,
-      delete: stale_collection(public, result)
-    )
-  end
-
-  defp index_only(entries), do: Enum.map(entries, &Map.delete(&1, "ast"))
 
   defp prepare_collection(extracted, config) do
     case config[:collection] do
@@ -243,16 +199,6 @@ defmodule DocShell.Build do
 
   defp put_collection(result, nil), do: result
   defp put_collection(result, collection), do: Map.put(result, :collection, collection)
-
-  defp maybe_add_collection(artifacts, %{collection: collection}) do
-    payload = Collection.payload(collection.descriptor, collection.sources, artifacts)
-    artifacts ++ [{"collection.json", payload}]
-  end
-
-  defp maybe_add_collection(artifacts, _), do: artifacts
-
-  defp stale_collection(_, %{collection: _}), do: []
-  defp stale_collection(public, _), do: [Path.join(public, "collection.json")]
 
   defp validate_destinations(config) do
     public = Path.expand(config[:public_dir])

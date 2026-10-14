@@ -39,6 +39,7 @@ defmodule DocShell.Config do
   | `:skip_empty` | `true` | Drop entries with no content from the presentation. |
   | `:search_tokens` | `false` | Populate `SearchEntry.tokens`. |
   | `:search_members` | `false` | Include module member names, signatures and docs in page search text. |
+  | `:pretty` | `false` | Indent written artifacts for debugging. Artifacts are compact canonical JSON otherwise. |
   | `:write` | `true` | Write the artifact tree. `false` returns the data only. |
 
   Every key is optional, including `:open_api_adapter` — with no adapter the
@@ -76,6 +77,7 @@ defmodule DocShell.Config do
     :skip_empty,
     :search_tokens,
     :search_members,
+    :pretty,
     :write
   ]
 
@@ -96,6 +98,7 @@ defmodule DocShell.Config do
     skip_empty: true,
     search_tokens: false,
     search_members: false,
+    pretty: false,
     write: true
   ]
 
@@ -175,7 +178,7 @@ defmodule DocShell.Config do
     do: is_list(value) and Keyword.keyword?(value)
 
   defp valid_option?(key, value)
-       when key in [:write, :skip_empty, :search_tokens, :search_members],
+       when key in [:write, :skip_empty, :search_tokens, :search_members, :pretty],
        do: is_boolean(value)
 
   defp valid_option?(:path_builder, value), do: is_function(value, 1)

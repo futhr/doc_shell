@@ -145,6 +145,7 @@ config :doc_shell,
   # Where it goes
   public_dir: "priv/doc_shell/public",
   private_dir: "priv/doc_shell/private",
+  pretty: false,
 
   # Where the API description comes from
   open_api_adapter: DocShell.Generate.OpenApi.Adapters.AshOaskit,
@@ -160,6 +161,10 @@ config :doc_shell,
   skip_empty: true,
   search_tokens: false
 ```
+
+Artifacts are written as compact canonical JSON. Set `pretty: true` to indent
+them while debugging; decoded values and collection digests are identical either
+way.
 
 Set `search_members: true` to include module member names/arities, signatures and
 parsed documentation in the containing page's search text. It defaults to false,
@@ -311,6 +316,9 @@ Text nodes are bare strings; everything else is a map with all four keys always
 present. The AST preserves raw HTML tags, attributes, and link destinations.
 Renderers must allow-list tags and attributes, validate URL schemes, and escape
 text for their output context before rendering untrusted documents.
+
+Files are compact canonical JSON (sorted keys, no insignificant whitespace)
+unless the build sets `pretty: true`.
 
 `navigation.json`, `search-index.json`, and `content.json` are the three files a
 renderer actually reads. `modules.json`, `guides.json`, `livebooks.json`, and

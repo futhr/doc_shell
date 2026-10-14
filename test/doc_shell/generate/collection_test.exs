@@ -500,6 +500,15 @@ defmodule DocShell.Generate.CollectionTest do
     ]
   end
 
+  test "precomputed artifact digests build the same collection payload" do
+    descriptor = descriptor("digest_reuse", "/tmp/digest-reuse")
+    artifacts = [{"modules.json", [%{"id" => "A", "meta" => %{"b" => 1, "a" => 2.0}}]}]
+    digests = Map.new(artifacts, fn {name, data} -> {name, Collection.digest(data)} end)
+
+    assert Collection.payload(descriptor, [], artifacts) ==
+             Collection.payload_for_digests(descriptor, [], digests)
+  end
+
   defp descriptor(id, artifact_dir) do
     {:ok, descriptor} =
       Collection.new(%{

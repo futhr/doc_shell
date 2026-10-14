@@ -215,6 +215,10 @@ The fields are:
 `generation_id` is only for equality checks. Do not sort by it, decode meaning
 from it, or reuse it between builds.
 
+The file itself is compact canonical JSON: keys sorted by UTF-8 bytes and no
+insignificant whitespace. Build with `pretty: true` to read it by eye; the
+decoded value is the same.
+
 ## One generation per tree
 
 Every public artifact and the public manifest from one build share a generation

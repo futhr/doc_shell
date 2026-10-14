@@ -7,6 +7,8 @@ defmodule DocShell.ArtifactTest do
   import DocShell.TmpDir
 
   alias DocShell.Artifact
+  alias DocShell.Artifact.Encoded
+  alias DocShell.Json.Canonical
 
   doctest DocShell.Artifact
 
@@ -63,6 +65,68 @@ defmodule DocShell.ArtifactTest do
       path = Path.join(tmp_dir!(), "a.json")
       assert :ok = Artifact.write(path, %{"x" => 1})
       assert String.ends_with?(File.read!(path), "\n")
+    end
+  end
+
+  describe "encoding" do
+    test "writes compact canonical JSON whose bytes encode the whole envelope" do
+      path = Path.join(tmp_dir!(), "a.json")
+      at = ~U[2026-07-23 10:20:30Z]
+      payload = %{"z" => [1, %{"b" => 2, "a" => 1}], "a" => "é"}
+
+      assert :ok = Artifact.write(path, payload, generated_at: at, generation_id: "g")
+      assert {:ok, canonical} = Canonical.encode(Artifact.envelope(payload, at, "g"))
+      assert File.read!(path) == canonical <> "\n"
+      refute File.read!(path) =~ "\n  "
+    end
+
+    test "pretty output is indented and decodes to the same envelope" do
+      dir = tmp_dir!()
+      opts = [generated_at: ~U[2026-07-23 10:20:30Z], generation_id: "g"]
+      payload = %{"nested" => %{"list" => [1, 2]}}
+
+      assert :ok = Artifact.write(Path.join(dir, "compact.json"), payload, opts)
+      assert :ok = Artifact.write(Path.join(dir, "pretty.json"), payload, [pretty: true] ++ opts)
+      assert File.read!(Path.join(dir, "pretty.json")) =~ "\n  \"data\": {"
+
+      assert Artifact.read_envelope(Path.join(dir, "pretty.json")) ==
+               Artifact.read_envelope(Path.join(dir, "compact.json"))
+    end
+
+    test "encoded bytes are written verbatim by write_raw and transactions" do
+      dir = tmp_dir!()
+      assert {:ok, %Encoded{} = encoded} = Artifact.encode(%{"a" => 1}, generation_id: "g")
+
+      assert :ok = Artifact.write_raw(Path.join(dir, "raw.json"), encoded)
+      assert :ok = Artifact.Transaction.write([{Path.join(dir, "staged.json"), encoded}])
+
+      bytes = IO.iodata_to_binary(encoded.iodata)
+      assert File.read!(Path.join(dir, "raw.json")) == bytes
+      assert File.read!(Path.join(dir, "staged.json")) == bytes
+      assert {:ok, %{"a" => 1}} = Artifact.read(Path.join(dir, "staged.json"))
+    end
+
+    test "raw encoding matches write_raw bytes" do
+      path = Path.join(tmp_dir!(), "raw.json")
+      assert {:ok, %Encoded{iodata: iodata}} = Artifact.encode_raw(%{"b" => 1, "a" => 2})
+      assert :ok = Artifact.write_raw(path, %{"b" => 1, "a" => 2})
+      assert File.read!(path) == IO.iodata_to_binary(iodata)
+      assert File.read!(path) == ~s({"a":2,"b":1}\n)
+    end
+
+    test "an envelope field that cannot be encoded is returned as an error" do
+      assert {:error, _} = Artifact.encode_envelope("1", DateTime.utc_now(), <<255>>)
+      assert {:error, _} = Artifact.encode(%{"a" => 1}, generation_id: self())
+    end
+
+    property "a spliced envelope equals the canonical encoding of the whole envelope" do
+      check all(value <- payload_generator(), id <- string(:alphanumeric, min_length: 1)) do
+        at = DateTime.utc_now()
+        assert {:ok, data} = Canonical.encode_to_iodata(value)
+        assert {:ok, %Encoded{iodata: iodata}} = Artifact.encode_envelope(data, at, id)
+        assert {:ok, whole} = Canonical.encode(Artifact.envelope(value, at, id))
+        assert IO.iodata_to_binary(iodata) == whole <> "\n"
+      end
     end
   end
 

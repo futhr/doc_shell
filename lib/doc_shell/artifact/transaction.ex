@@ -20,6 +20,10 @@ defmodule DocShell.Artifact.Transaction do
   @doc """
   Writes JSON payloads in order, restoring earlier files on publication failure.
 
+  A payload is either a JSON term, staged as canonical JSON, or a
+  `DocShell.Artifact.Encoded` value, staged verbatim. Builds pass encoded bytes
+  so an artifact is encoded once even when its digest is also needed.
+
   The optional `:delete` list removes stale files in the same transaction.
   Deletions publish before writes, after every original has been backed up.
   Missing deletion targets are harmless. Targets must be distinct regular files

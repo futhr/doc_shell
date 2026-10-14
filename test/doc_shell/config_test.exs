@@ -60,6 +60,13 @@ defmodule DocShell.ConfigTest do
     assert hd(result.presentation.search).content =~ "new_generation_id/0"
   end
 
+  test "pretty output defaults off and requires an explicit boolean" do
+    assert Config.load()[:pretty] == false
+    assert {:ok, _} = Config.resolve(pretty: true)
+    assert {:ok, _} = Config.resolve(changelog_source: false)
+    assert {:error, {:invalid_option, :pretty, "yes"}} = Config.resolve(pretty: "yes")
+  end
+
   test "per-call overrides win over host config and defaults" do
     Application.put_env(:doc_shell, :title, "Host Title")
     assert Config.load(title: "Override")[:title] == "Override"

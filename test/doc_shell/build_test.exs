@@ -8,6 +8,7 @@ defmodule DocShell.BuildTest do
   alias DocShell.Artifact
   alias DocShell.Build
   alias DocShell.Generate.OpenApi.Adapters.RawJson
+  alias DocShell.Json.Canonical
 
   test "invalid UTF-8 files return source-tagged errors" do
     root = tmp_dir!()
@@ -384,5 +385,82 @@ defmodule DocShell.BuildTest do
              Path.wildcard(Path.join(root, "**/*"), match_dot: true),
              &String.ends_with?(&1, [".stage", ".backup", ".lock"])
            )
+  end
+
+  describe "artifact size and shape" do
+    test "artifacts are compact canonical JSON unless pretty output is requested" do
+      {public, private, root} = dirs("compact")
+      assert {:ok, _} = Build.run(base_opts(public, private))
+      paths = Path.wildcard(Path.join([root, "*", "*.json"]))
+      assert length(paths) == 10
+
+      for path <- paths do
+        bytes = File.read!(path)
+        assert {:ok, envelope} = Artifact.read_envelope(path)
+        assert {:ok, canonical} = Canonical.encode(envelope)
+        assert bytes == canonical <> "\n"
+      end
+
+      {pretty_public, pretty_private, _} = dirs("pretty")
+      assert {:ok, _} = Build.run(base_opts(pretty_public, pretty_private) ++ [pretty: true])
+      pretty = File.read!(Path.join(pretty_public, "modules.json"))
+      compact = File.read!(Path.join(public, "modules.json"))
+
+      assert pretty =~ "\n  \"data\": ["
+      assert byte_size(pretty) > byte_size(compact)
+      assert {:ok, data} = Artifact.read(Path.join(public, "modules.json"))
+      assert {:ok, ^data} = Artifact.read(Path.join(pretty_public, "modules.json"))
+    end
+
+    test "collection digests cover the canonical data that was written" do
+      for pretty <- [false, true] do
+        {public, private, _} = dirs("digests")
+        descriptor = collection_descriptor(public)
+
+        opts =
+          base_opts(public, private) ++ [collection: descriptor, pretty: pretty]
+
+        assert {:ok, _} = Build.run(opts)
+        assert {:ok, loaded} = DocShell.Generate.Collection.load(descriptor)
+        {:ok, collection} = Artifact.read(Path.join(public, "collection.json"))
+
+        for {name, digest} <- collection["artifacts"] do
+          assert {:ok, ^digest} = Canonical.digest(loaded.artifacts[name])
+        end
+      end
+    end
+  end
+
+  test "an artifact that cannot be encoded is reported with its path before staging" do
+    {public, private, root} = dirs("tree-error")
+
+    result = %{
+      modules: [%{"id" => "M", "pid" => self()}],
+      guides: [],
+      livebooks: [],
+      changelog: [],
+      openapi: %{},
+      presentation: %{navigation: [], search: [], content: %{}}
+    }
+
+    path = Path.join(public, "modules.json")
+
+    assert {:error, {^path, _}} =
+             DocShell.Build.Tree.write([public_dir: public, private_dir: private], result)
+
+    assert File.ls!(root) == []
+  end
+
+  defp collection_descriptor(artifact_dir) do
+    %{
+      id: "build_fixture",
+      title: "Build fixture",
+      version: "1.0.0",
+      revision: String.duplicate("a", 40),
+      tree_digest: "sha256:" <> String.duplicate("b", 64),
+      artifact_dir: artifact_dir,
+      source_url: "https://example.invalid/build_fixture",
+      edit_base_url: "https://example.invalid/build_fixture/edit/revision"
+    }
   end
 end

@@ -210,8 +210,10 @@ defmodule DocShell.MixProject do
         Core: [
           DocShell,
           DocShell.Build,
+          DocShell.Build.Tree,
           DocShell.Config,
           DocShell.Artifact,
+          DocShell.Artifact.Encoded,
           DocShell.Artifact.Transaction
         ],
         Extraction: [
