@@ -181,6 +181,9 @@ defmodule DocShell.MixProject do
       extras: [
         "README.md": [title: "Overview"],
         "docs/specs/DSH.01-documentation-sites.md": [title: "Collection and site specification"],
+        "docs/specs/portable-artifact-capabilities.md": [
+          title: "Portable artifact capability draft"
+        ],
         "docs/plans/documentation-sites.md": [title: "Implementation status"],
         "CHANGELOG.md": [title: "Changelog"],
         "notebooks/build-pipeline.livemd": [title: "The Build Pipeline"],

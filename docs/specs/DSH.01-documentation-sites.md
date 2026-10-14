@@ -666,3 +666,12 @@ DSH-V01 through DSH-V13 run in the owning repository or in named independent
 renderer consumers. A renderer's visual tests cannot close core collection or
 export requirements. Core tests cannot claim a renderer meets the browser and
 accessibility contract.
+
+## Planned portable artifact extension
+
+The [portable artifact capability draft](portable-artifact-capabilities.md)
+defines typed external-artifact blocks, per-call producer profiles,
+state-specific runtime admission, exact semantic anchors and preview/export
+conformance. It is planned under DSH-P11–P14 and is not part of the implemented
+v0.4.0 baseline or the completion claim above. Existing v1 AST, site, renderer
+capability and fallback-digest semantics remain unchanged.

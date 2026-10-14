@@ -10,6 +10,14 @@ This notebook builds that path end to end. It uses a deliberately small HTML
 renderer so the DocShell boundaries remain visible. A real renderer can live in
 another package and implement the same behaviour.
 
+External illustrations and other typed artifact blocks have an
+[unreleased static implementation](../docs/specs/portable-artifact-capabilities.md).
+This notebook continues to exercise the unchanged v1 path. The executable
+artifact tests separately exercise verified fallback, unknown optional profiles,
+per-state runtime selection and the same static exporter. A host passes
+`:artifact_options` explicitly; it never starts an artifact producer implicitly.
+Independent reader and human target qualification remain open.
+
 ## Setup
 
 Run the notebook from Livebook's default standalone runtime. The release task

@@ -20,6 +20,7 @@ defmodule DocShell.Presentation.StaticExporter do
   alias DocShell.Json.Canonical
 
   alias DocShell.Presentation.{
+    ArtifactExport,
     Asset,
     Limits,
     Page,
@@ -32,7 +33,7 @@ defmodule DocShell.Presentation.StaticExporter do
   alias DocShell.Presentation.StaticExport.Publisher
 
   @allowed_options ~w(site renderer destination asset_options search_adapter search_options
-                      limits canonical_origin generated_at)a
+                      limits canonical_origin generated_at artifact_options)a
   @machine_media %{
     "404.html" => "text/html; charset=utf-8",
     "index.html" => "text/html; charset=utf-8",
@@ -64,6 +65,8 @@ defmodule DocShell.Presentation.StaticExporter do
     with :ok <- validate_options(opts),
          %Site{} = site <- Keyword.get(opts, :site),
          :ok <- validate_site(site),
+         {:ok, site, artifact_assets, presentation_binding} <-
+           ArtifactExport.project(site, Keyword.get(opts, :artifact_options)),
          :ok <- validate_origin(Keyword.get(opts, :canonical_origin)),
          {:ok, limits} <- Limits.normalize(Keyword.get(opts, :limits, [])),
          {:ok, renderer} <- renderer(Keyword.get(opts, :renderer)),
@@ -71,20 +74,24 @@ defmodule DocShell.Presentation.StaticExporter do
          :ok <- Renderer.Capabilities.validate(capabilities),
          true <- :static in capabilities.output_modes,
          :ok <- admit_pages(site.pages, capabilities),
-         {:ok, renderer_assets, asset_paths} <- renderer_assets(renderer, site, opts),
+         {:ok, renderer_assets, asset_paths} <-
+           renderer_assets(renderer, site, opts, artifact_assets),
+         {:ok, presentation_entries} <- ArtifactExport.entry(presentation_binding, asset_paths),
          {:ok, search_output} <- search_output(site, opts),
          {:ok, search_assets, search_contract} <- search_assets(search_output, site.base_path),
          {:ok, entries} <-
            render_entries(%{
              site: site,
              renderer: renderer,
-             renderer_assets: renderer_assets,
+             renderer_assets: renderer_assets ++ presentation_entries,
              asset_paths: asset_paths,
              search_assets: search_assets,
              search_contract: search_contract,
              opts: opts
            }),
          :ok <- validate_html(entries, site, asset_paths, search_contract),
+         :ok <- ArtifactExport.validate_output(entries, presentation_binding),
+         {:ok, entries} <- ArtifactExport.reader_entries(entries, site, presentation_binding),
          {:ok, entries} <- add_manifest(entries, site, capabilities, search_contract, opts),
          :ok <- validate_entries(entries, limits),
          :ok <- Publisher.publish(Keyword.get(opts, :destination), entries),
@@ -181,15 +188,22 @@ defmodule DocShell.Presentation.StaticExporter do
     end)
   end
 
-  defp renderer_assets(renderer, site, opts) do
+  defp renderer_assets(renderer, site, opts, artifact_assets) do
     asset_options = Keyword.get(opts, :asset_options, [])
 
     if is_list(asset_options) and Keyword.keyword?(asset_options) do
       case invoke(renderer, :assets, [site, asset_options]) do
-        {:ok, assets} when is_list(assets) -> hash_assets(assets, site.base_path)
-        {:ok, value} -> {:error, {:invalid_renderer_assets, value}}
-        {:error, _} = error -> error
-        value -> {:error, {:invalid_renderer_assets_result, value}}
+        {:ok, assets} when is_list(assets) ->
+          hash_assets(assets ++ artifact_assets, site.base_path)
+
+        {:ok, value} ->
+          {:error, {:invalid_renderer_assets, value}}
+
+        {:error, _} = error ->
+          error
+
+        value ->
+          {:error, {:invalid_renderer_assets_result, value}}
       end
     else
       {:error, {:invalid_renderer_asset_options, asset_options}}
@@ -560,6 +574,11 @@ defmodule DocShell.Presentation.StaticExporter do
       |> MapSet.union(MapSet.new(Map.keys(site.routes)))
       |> MapSet.union(MapSet.new(Map.keys(site.redirects)))
       |> MapSet.put("/")
+      |> then(fn paths ->
+        if Enum.any?(entries, &(&1.kind == :presentation_manifest)),
+          do: MapSet.put(paths, "/presentation-manifest.json"),
+          else: paths
+      end)
 
     entries
     |> Enum.filter(&String.starts_with?(&1.media_type, "text/html"))

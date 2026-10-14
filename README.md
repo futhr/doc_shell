@@ -384,6 +384,19 @@ DocShell ships the contract and conformance fixture, not a visual renderer. That
 keeps Phoenix, LiveView, Svelte, Node, CSS systems, and product branding out of
 the package dependency graph.
 
+The [portable artifact capability contract](docs/specs/portable-artifact-capabilities.md)
+has an unreleased static implementation: `ArtifactProfile`, `ArtifactBlock` and
+`ArtifactAdmission` validate explicit profiles, exact semantic anchors, local
+variants and complete fallback. Pass `:artifact_options` to `StaticExporter`
+with profiles, original manifests, checked projections, assets, v2 capabilities
+and caller constraints. Each presentation has its own runtime requirements.
+Explicit `%{"reader_mode" => "file"}` in the constraints selects local
+file-relative assets; the default web mode preserves existing site URLs.
+Artifact generation and interaction remain producer/host-owned. The
+[delivery plan](docs/plans/documentation-sites.md#portable-artifact-delivery)
+records implemented checks and remaining reader/target qualification; this does
+not advertise the extension in an already released package.
+
 ### Static export
 
 Pass the validated site to a renderer implementation:

@@ -17,6 +17,10 @@ own fixtures pass.
 | DSH-P08 | in progress | DSH-P06/P07 | Hosted/static semantic parity and live-capability degradation tool | Core comparison is complete; DSH-V11 still requires two independent renderer implementations |
 | DSH-P09 | complete | DSH-P01–P08 | Documentation, Livebooks, benchmarks, compatibility and packaged-consumer qualification | DSH-V12 and the core release evidence recorded below |
 | DSH-P10 | planned | DSH-P03/P06 | Preserve the hosted graph/source-cohort boundary and validate a host publication/OpenAPI pair before renderer invocation | DSH-V13; hosted projection needs no synthetic per-repository collection; cross-surface and mixed-generation pairs fail |
+| DSH-P11 | in progress | DSH-P03/P06/P07 | Freeze portable artifact block/profile/receipt schemas and v2 state-specific capability fixtures | Static records and tests implemented; complete schema/limit and compatibility matrix remains open |
+| DSH-P12 | in progress | DSH-P11 | Add explicit per-call profile adapters, block validation and requirement/admission projection | Chart/drawing fixtures, runtime selection, callback containment, concurrent isolation and three-seed model checks pass |
+| DSH-P13 | in progress | DSH-P12/P07 | Join verified local variants, search/text fallback and atomic export | Selected closure, original-byte checks, prior-tree preservation, emitted-script refusal and root/subpath file export tests pass |
+| DSH-P14 | in progress | DSH-P13; actual producer and independent readers | Qualify document previews, renderer/native semantic parity and fresh package consumers | First producer's installed archive/static document join and full package gate pass; native/browser/manual target evidence remains open |
 
 P10 is outside the core site qualification record below. The existing
 `generation_id` joins artifacts written by one `DocShell.Build` run; it does not
@@ -160,6 +164,47 @@ validation, following `DocShell.Presentation.GraphProjector`.
    schema decision with a migration fixture.
 
 ## Required quality evidence
+
+### Portable artifact delivery
+
+The [unreleased extension](../specs/portable-artifact-capabilities.md) supplies
+generic document capabilities. P11–P14 are in progress: the static implementation
+and its tests exist, while the complete compatibility and reader qualification
+matrix remains open. The new API and schema IDs apply to this implementation;
+they do not alter v1 meaning or describe an already released package.
+
+P11 fixes original block bytes, descriptor/schema digests, semantic subjects,
+all variant bytes and expected refusal/admission outcomes. Freeze a technical
+illustration and an unrelated chart fixture before writing core adapters.
+Include mixed static/JS/live variants, no-JS policy, duplicate descriptors,
+unknown optional/essential profiles and altered block/fallback bindings.
+
+P12 extends the existing AST and site projection owners; it adds no global
+plugin registry, remote discovery, producer dependency or rendering process.
+Compare admission with an independent small model at three fixed seeds and
+exercise two differently configured callers concurrently. Every callback fault
+returns a located error rather than partial publication.
+
+P13 passes prepared local bytes through the existing asset/export owner. A
+script-free variant must survive actual offline/JS-disabled presentation;
+declaring `runtime: []` is not a passing result. Asset source disclosure also
+applies to thumbnails, descriptions, search and fallbacks. Corrupt or absent
+required assets preserve the previous complete output tree.
+
+P14 supplies a local review page from the exact projected data, including
+artifact/variant IDs, anchors, selected capability, limitations, fallback and
+generated SVG/PNG. The artifact producer supplies reference/candidate/difference
+images; DocShell does not calculate geometry or approve baselines. Test `/` and
+subpath exports, print, dark/monochrome/high zoom and reader restart. An HTML
+reader and a native artifact consumer record the same semantic observations;
+native paint and human assistive tasks require their own target evidence.
+
+Run the full package gate and current CI compatibility matrix when implementing
+these rows. Ship the new fixture/schema documents in the fresh package archive.
+The current v1 renderer pair and hosted publication/OpenAPI obligations remain
+open independently; artifact previews cannot close them.
+
+### Existing site quality evidence
 
 - Unit tests cover every structured error and public default.
 - StreamData covers route normalization, anchor uniqueness, input ordering,

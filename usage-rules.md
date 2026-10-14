@@ -249,6 +249,15 @@ custom `path_builder` when IDs intentionally represent a path hierarchy.
 
 ## Renderers and static publication
 
+- Portable external-artifact blocks and v2 per-state capability selection are
+  implemented as an unreleased static subset in `ArtifactProfile`,
+  `ArtifactBlock` and `ArtifactAdmission`; `StaticExporter` accepts explicit
+  `:artifact_options`. DSH-P11–P14 retain complete qualification obligations.
+  Preserve v1 behavior, verify original manifests and all advertised bytes,
+  and require exact profile/digest/subject/variant bindings. Caller constraints
+  choose `web` or explicit `file` reader mode. The core remains renderer-neutral
+  and producer-free; a published package version alone cannot establish this capability.
+
 - Implement `DocShell.Presentation.Renderer` in a renderer package or host. A
   renderer receives only `Site`, `Page`, and inert `Renderer.Context` values; it
   does not choose routes, authorize users, fetch sources, or write output files.
