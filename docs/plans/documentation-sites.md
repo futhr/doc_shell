@@ -7,7 +7,7 @@ own fixtures pass.
 
 | Package | Status | Requires | Deliverable | Acceptance |
 | --- | --- | --- | --- | --- |
-| DSH-P01 | complete | Existing `doc-shell/v1` reader | Additive `collection.json`, `DocShell.Generate.Collection` and collection descriptor | DSH-V01/V02 plus collection integrity requirements below; no network or process startup |
+| DSH-P01 | complete | Existing `doc-shell/v2` reader | Additive `collection.json`, `DocShell.Generate.Collection` and collection descriptor | DSH-V01/V02 plus collection integrity requirements below; no network or process startup |
 | DSH-P02 | complete | DSH-P01 | `DocShell.Generate.Cohort`, canonical payload digest, normalized source provenance | DSH-V03; digest excludes time, random IDs, and absolute workspace paths |
 | DSH-P03 | complete | DSH-P01/P02 | `Site`, `Page`, navigation/link types and `SiteSource` validation | DSH-V04–V06; all public structs/functions documented and typed |
 | DSH-P04 | complete | DSH-P03 | Heading/anchor, reading-order, locale/audience/version, canonical/source/edit and redirect projection | DSH-V04–V06 with property tests for route and anchor normalization |
@@ -28,7 +28,7 @@ bind independently supplied hosted graph and OpenAPI inputs. The build invokes
 the OpenAPI adapter and presentation source separately, then creates that ID
 when writing artifacts. Define an additive pair contract and its admission
 point before implementing validation, without changing existing
-`doc-shell/v1` artifact fields or putting host authorization policy in DocShell.
+`doc-shell/v2` artifact fields or putting host authorization policy in DocShell.
 The pair contract needs comparable context on both sides: an opaque binding
 alone cannot detect a token reused across source views, graph positions,
 locales, releases, or disclosure surfaces. The host authenticates the claims;
@@ -156,12 +156,16 @@ validation, following `DocShell.Presentation.GraphProjector`.
 ## Compatibility sequence
 
 1. Add collection and site contracts without changing existing
-   `doc-shell/v1` files.
+   `doc-shell/v2` files.
 2. Generate `doc-shell-site/v1` only when a caller invokes the site builder.
 3. Publish conformance fixtures before renderer packages claim support.
 4. Qualify the existing Svelte renderer and one independent HTML renderer.
-5. Treat any required change to an existing `doc-shell/v1` field as a separate
+5. Treat any required change to an existing `doc-shell/v2` field as a separate
    schema decision with a migration fixture.
+6. `doc-shell/v2` is such a decision: module navigation items carry member
+   references instead of member records, members carry `doc_state`, member
+   metadata defaults to an allow-list, and files are compact canonical JSON.
+   `test/fixtures/presentation-v2.json` is its fixture; v1 files are rejected.
 
 ## Required quality evidence
 

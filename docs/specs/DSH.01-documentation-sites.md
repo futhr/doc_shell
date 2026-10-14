@@ -19,14 +19,14 @@ route and link validation, search records, deterministic manifests, and the
 static-export protocol. It does not own a framework, visual brand, deployment
 provider, source repository list, or host authorization policy.
 
-`doc-shell/v1` remains the extraction artifact contract. Site publication is a
+`doc-shell/v2` remains the extraction artifact contract. Site publication is a
 separate `doc-shell-site/v1` contract built from one or more validated
-`doc-shell/v1` corpora. A site renderer consumes the site contract and does not
+`doc-shell/v2` corpora. A site renderer consumes the site contract and does not
 need to know whether content came from BEAM documentation, Markdown, Livebook,
 OpenAPI, or a graph projector.
 
-A site-ready `doc-shell/v1` corpus adds `collection.json` to its public
-manifest. This is an additive source artifact permitted by the v1 contract.
+A site-ready `doc-shell/v2` corpus adds `collection.json` to its public
+manifest. This is an additive source artifact permitted by the v2 contract.
 Existing generic consumers ignore it; a DSH.01 collection importer requires it.
 
 ## Existing foundation
@@ -34,7 +34,7 @@ Existing generic consumers ignore it; a DSH.01 collection importer requires it.
 The following behavior is implemented before this specification:
 
 - `DocShell.Build` extracts module documentation, Markdown guides, Livebooks,
-  release notes, and OpenAPI into one generation of `doc-shell/v1` artifacts.
+  release notes, and OpenAPI into one generation of `doc-shell/v2` artifacts.
 - `DocShell.Presentation.Source` projects navigation, search, and content.
 - `DocShell.Artifact.Transaction` publishes a generation through staged writes
   and rollback.
@@ -80,10 +80,10 @@ result. A host that needs public and internal sites constructs two independently
 authorized projections; it must not pass an internal projection to DocShell and
 expect the renderer to hide private content.
 
-The hosted `doc-shell/v1` path and the portable collection/site path are related
+The hosted `doc-shell/v2` path and the portable collection/site path are related
 but distinct:
 
-- a hosted graph-backed application may serve one validated `doc-shell/v1`
+- a hosted graph-backed application may serve one validated `doc-shell/v2`
   presentation directly from its own store;
 - `DocShell.Generate.Collection` represents one portable extracted corpus; and
 - `DocShell.Generate.Cohort` and the `doc-shell-site/v1` contract combine
@@ -119,7 +119,7 @@ bindings before renderer consumption. Both sides must also declare comparable
 source-view, graph-position, locale, release, and disclosure-surface values;
 equality of an opaque binding alone cannot detect a token reused for the wrong
 view. The binding's location and input shape must be defined as an additive
-API, without changing existing `doc-shell/v1` fields. DocShell validates the
+API, without changing existing `doc-shell/v2` fields. DocShell validates the
 declared pair consistency; the host authenticates those declarations and owns
 the login session, organization, disclosure capability, and graph query.
 
@@ -629,7 +629,7 @@ or presented as unavailable rather than mocked as successful.
 
 | ID | Requirement |
 | --- | --- |
-| DSH-S01 | Emit and import each site-ready `doc-shell/v1` collection without network access or application startup and bind it to exact source and artifact identities through `collection.json`. |
+| DSH-S01 | Emit and import each site-ready `doc-shell/v2` collection without network access or application startup and bind it to exact source and artifact identities through `collection.json`. |
 | DSH-S02 | Namespace document identities and reject corpus, route, path, locale, and navigation ambiguity. |
 | DSH-S03 | Produce deterministic `Site` and `Page` values with headings, provenance, reading flow, visibility, and content digests. |
 | DSH-S04 | Produce one renderer-neutral search corpus with page/section records and public filters. |
@@ -638,7 +638,7 @@ or presented as unavailable rather than mocked as successful.
 | DSH-S07 | Validate internal links, anchors, canonical URLs, source/edit URLs, redirects, generated files, and output limits before publication. |
 | DSH-S08 | Supply shared conformance fixtures for navigation, accessibility semantics, content directives, OpenAPI, localization, responsive behavior, progressive enhancement states, and unsafe input. |
 | DSH-S09 | Prove hosted/static parity and honest live-capability degradation from the same site generation without requiring byte-identical framework markup. |
-| DSH-S10 | Preserve `doc-shell/v1` compatibility and keep framework adapters outside the core dependency closure. |
+| DSH-S10 | Preserve `doc-shell/v2` compatibility and keep framework adapters outside the core dependency closure. |
 | DSH-S11 | For hosted graph-backed API documentation, validate one host-admitted presentation/OpenAPI pair with a common immutable publication binding while leaving session and disclosure policy in the host. |
 
 ## Executable vectors

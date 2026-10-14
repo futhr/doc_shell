@@ -6,6 +6,6 @@ defmodule DocShellTest do
   doctest DocShell
 
   test "schema_version/0 is the versioned artifact contract identifier" do
-    assert DocShell.schema_version() == "doc-shell/v1"
+    assert DocShell.schema_version() == "doc-shell/v2"
   end
 end

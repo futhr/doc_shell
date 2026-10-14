@@ -388,6 +388,38 @@ defmodule DocShell.BuildTest do
   end
 
   describe "artifact size and shape" do
+    @member_doc "Creates the destination directory if needed"
+
+    test "member documentation is written once, in modules.json" do
+      {public, private, _} = dirs("member-docs")
+      assert {:ok, _} = Build.run(Keyword.put(base_opts(public, private), :modules, [Artifact]))
+
+      bytes =
+        Map.new(Path.wildcard(Path.join(public, "*.json")), &{Path.basename(&1), File.read!(&1)})
+
+      counts =
+        Map.new(bytes, fn {name, json} -> {name, length(String.split(json, @member_doc)) - 1} end)
+
+      assert counts["modules.json"] == 1
+      assert counts |> Map.delete("modules.json") |> Map.values() |> Enum.all?(&(&1 == 0))
+
+      {:ok, navigation} = Artifact.read(Path.join(public, "navigation.json"))
+      item = Enum.find(navigation, &(&1["id"] == "DocShell.Artifact"))
+      refs = Map.new(item["meta"]["members"], &{&1["id"], &1})
+
+      assert refs["function:write/3"] == %{
+               "id" => "function:write/3",
+               "title" => "write/3",
+               "anchor" => "write/3",
+               "kind" => "function"
+             }
+
+      assert Enum.all?(
+               Map.values(refs),
+               &(Enum.sort(Map.keys(&1)) == ~w(anchor id kind title))
+             )
+    end
+
     test "artifacts are compact canonical JSON unless pretty output is requested" do
       {public, private, root} = dirs("compact")
       assert {:ok, _} = Build.run(base_opts(public, private))

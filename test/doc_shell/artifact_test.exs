@@ -131,6 +131,22 @@ defmodule DocShell.ArtifactTest do
   end
 
   describe "read/1 rejects invalid artifacts" do
+    test "rejects artifacts written under the previous doc-shell/v1 contract" do
+      path = Path.join(tmp_dir!(), "v1.json")
+
+      File.write!(
+        path,
+        Jason.encode!(%{
+          "schema_version" => "doc-shell/v1",
+          "generated_at" => "2026-07-23T10:20:30Z",
+          "generation_id" => "g",
+          "data" => []
+        })
+      )
+
+      assert {:error, :unsupported_schema_version} = Artifact.read(path)
+    end
+
     test "rejects an unsupported schema version" do
       path = Path.join(tmp_dir!(), "a.json")
 

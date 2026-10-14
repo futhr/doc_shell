@@ -131,6 +131,7 @@ config :doc_shell,
   changelog_options: [],
   changelog_path: "CHANGELOG.md",
   livebook_base: "notebooks",
+  member_metadata: ~w(since deprecated defaults delegate_to guard group equiv source_annos),
   collection: %{
     id: "my_app",
     title: "My App",
@@ -165,6 +166,12 @@ config :doc_shell,
 Artifacts are written as compact canonical JSON. Set `pretty: true` to indent
 them while debugging; decoded values and collection digests are identical either
 way.
+
+Module member metadata is limited to the keys ExDoc renders (`since`,
+`deprecated`, `defaults`, `delegate_to`, `guard`, `group`, `equiv`,
+`source_annos`). Some libraries attach far more: Spark stores every Ash code
+interface's option schema under `spark_opts`. Set `member_metadata: :all` to
+keep every key, or pass your own list of key names.
 
 Set `search_members: true` to include module member names/arities, signatures and
 parsed documentation in the containing page's search text. It defaults to false,
@@ -294,7 +301,7 @@ Every file is wrapped in a versioned envelope:
 
 ```json
 {
-  "schema_version": "doc-shell/v1",
+  "schema_version": "doc-shell/v2",
   "generated_at": "2026-08-05T09:12:44.000000Z",
   "generation_id": "Lve95gjOVATpfV8EL5X4nx",
   "data": {}
@@ -321,7 +328,10 @@ Files are compact canonical JSON (sorted keys, no insignificant whitespace)
 unless the build sets `pretty: true`.
 
 `navigation.json`, `search-index.json`, and `content.json` are the three files a
-renderer actually reads. `modules.json`, `guides.json`, `livebooks.json`, and
+renderer actually reads. A module's navigation item lists its documented members
+as `{"id", "title", "anchor", "kind"}` references; their documentation, signatures
+and metadata are only in `modules.json`, where each member also carries a
+`doc_state` of `"present"`, `"hidden"`, or `"none"`. `modules.json`, `guides.json`, `livebooks.json`, and
 `changelog.json` are per-source indexes for hosts that ingest documentation
 rather than display it — including the entries the presentation filtered out, so
 they double as a coverage report. A document's parsed body is stored once, in
@@ -332,7 +342,11 @@ repositories on their own release cadence, so a schema-version bump is a
 coordinated change across all of them, not a local refactor. The
 [notebook](notebooks/artifact-contract.livemd) documents every file and field.
 
-Within `doc-shell/v1`, the source catalogue is additive: a producer may add a
+`doc-shell/v2` replaced `doc-shell/v1` when navigation stopped embedding module
+members and member metadata became an allow-list. Readers reject v1 files, so
+rebuild artifacts after upgrading.
+
+Within `doc-shell/v2`, the source catalogue is additive: a producer may add a
 new per-source index file to the manifest, and `kind` is an open string carried
 through navigation and search. Generic consumers must ignore unrecognised
 manifest entries and kinds; selective consumers may continue reading only the
@@ -343,7 +357,7 @@ or retyping an existing field, still requires a schema-version change.
 
 ## Portable sites
 
-A `doc-shell/v1` collection answers “what documentation came from this source?”
+A `doc-shell/v2` collection answers “what documentation came from this source?”
 A `doc-shell-site/v1` value answers “what should this site expose, and where?”
 Keeping those questions separate lets several packages share a site without
 moving product taxonomy or routes into their extraction builds.

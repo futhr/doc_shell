@@ -215,7 +215,7 @@ decision without deleting historical identities implicitly.
 
 ## Compatibility and bounds
 
-**DSH-A09 — Reader compatibility.** `doc-shell/v1` and `doc-shell-site/v1`
+**DSH-A09 — Reader compatibility.** `doc-shell/v2` and `doc-shell-site/v1`
 retain their current fields and meaning. Older readers see a safe unknown
 directive's child content. A profile requiring verified artifact semantics
 requires the new reader explicitly; old fallback display does not qualify it.

@@ -61,7 +61,9 @@ defmodule DocShell.Build do
   What is written is leaner than what is returned. The per-source artifacts —
   `modules.json` and friends — carry an entry's identity and metadata but not
   its parsed body, which lives once in `content.json` under the same id.
-  Writing the AST in both places doubled the tree for no reader.
+  Writing the AST in both places doubled the tree for no reader. Likewise,
+  module member documentation is written once, in `modules.json`; navigation
+  carries only member references.
 
   Every artifact is encoded once, as compact canonical JSON. When a collection
   is configured, its artifact digests are computed from those same bytes
@@ -102,7 +104,8 @@ defmodule DocShell.Build do
   end
 
   defp extract(config) do
-    with {:ok, modules} <- ExDoc.extract(config[:modules] || []),
+    with {:ok, modules} <-
+           ExDoc.extract(config[:modules] || [], member_metadata: config[:member_metadata]),
          {:ok, guides} <- Guides.extract(config[:guide_bases] || []),
          {:ok, livebooks} <- Livebooks.extract(config[:livebook_base] || "notebooks"),
          {:ok, changelog} <- Changelog.extract(config),

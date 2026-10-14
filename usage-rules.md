@@ -50,6 +50,12 @@ when the host uses the corresponding optional integration.
   Member search defaults off. Enable it to append module member names/arities,
   signatures and parsed docs to page search text, without changing content or
   overriding `skip_empty`; malformed member Markdown fails with the module ID.
+- Read module member documentation from `modules.json`. Navigation items carry
+  only `id`, `title`, `anchor` and `kind` references for members that are not
+  `@doc false`.
+- Member metadata defaults to the keys ExDoc renders. Set
+  `member_metadata: :all` or a list of key names only when a renderer needs
+  more; libraries such as Spark attach very large metadata values.
 - Artifacts are compact canonical JSON. Use `pretty: true` only for debugging,
   and never compare or hash the formatted bytes.
 - Set `:openapi_spec_path` when external tooling needs a bare OpenAPI file.
@@ -123,9 +129,9 @@ symlinks spelled with a trailing slash or `/.`. Ancestors of the existing workin
 and system temporary directories are trusted aliases; other symlink components
 are rejected. Duplicate JSON object keys also fail before digest validation.
 
-- Treat `DocShell.schema_version/0` and the `doc-shell/v1` shapes as public API.
+- Treat `DocShell.schema_version/0` and the `doc-shell/v2` shapes as public API.
   Never invent fields or change a field's type in place.
-- Treat the v1 source catalogue as additive. A manifest may list a new
+- Treat the v2 source catalogue as additive. A manifest may list a new
   per-source artifact and `kind` is an open string; generic consumers ignore
   unknown files and kinds, while selective consumers may read only their
   allow-listed artifacts. Removing an existing file or changing an existing
@@ -139,7 +145,7 @@ are rejected. Duplicate JSON object keys also fail before digest validation.
   differences, and digest mismatches before qualifying IDs as
   `collection_id:document_id`.
 - Read the version from `DocShell.schema_version/0` rather than writing the
-  literal `"doc-shell/v1"`.
+  literal `"doc-shell/v2"`.
 - Read and write artifacts through `DocShell.Artifact`. Do not bypass the
   envelope or encode artifact JSON by hand.
 - Treat `generation_id` as an opaque snapshot identity. Every artifact and the
@@ -164,7 +170,7 @@ are rejected. Duplicate JSON object keys also fail before digest validation.
 - Do not manufacture per-package or per-repository collections merely to feed a
   hosted graph projection. Collections/cohorts are the portable site path, not
   the hosted authorization boundary.
-- Changing a `doc-shell/v1` shape is a breaking change to every producer and
+- Changing a `doc-shell/v2` shape is a breaking change to every producer and
   renderer at once. Adding an optional field is usually safe; renaming,
   removing, or retyping one is not.
 

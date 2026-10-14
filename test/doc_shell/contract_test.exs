@@ -6,8 +6,8 @@ defmodule DocShell.ContractTest do
   alias DocShell.Build
   alias DocShell.Presentation.StaticGenerator
 
-  test "presentation serialization matches the consumer v1 fixture" do
-    fixture = Jason.decode!(File.read!("test/fixtures/presentation-v1.json"))
+  test "presentation serialization matches the consumer v2 fixture" do
+    fixture = Jason.decode!(File.read!("test/fixtures/presentation-v2.json"))
     {:ok, ast} = DocShell.Ast.from_markdown("# Intro\n\nun**break**able")
 
     entry = %{
@@ -18,7 +18,47 @@ defmodule DocShell.ContractTest do
       "meta" => %{"flag" => false, "count" => 2}
     }
 
-    {:ok, presentation} = StaticGenerator.project(entries: [entry])
+    module = %{
+      "id" => "Example",
+      "title" => "Example",
+      "kind" => "module",
+      "ast" => ast,
+      "meta" => %{
+        "module" => "Example",
+        "moduledoc" => "present",
+        "members" => [
+          %{
+            "kind" => "function",
+            "name" => "run",
+            "arity" => 1,
+            "signatures" => ["run(input)"],
+            "doc" => "Runs the example.",
+            "doc_state" => "present",
+            "metadata" => %{"since" => "1.0.0"}
+          },
+          %{
+            "kind" => "type",
+            "name" => "t",
+            "arity" => 0,
+            "signatures" => ["t()"],
+            "doc" => "",
+            "doc_state" => "none",
+            "metadata" => %{}
+          },
+          %{
+            "kind" => "function",
+            "name" => "__internal__",
+            "arity" => 0,
+            "signatures" => ["__internal__()"],
+            "doc" => "",
+            "doc_state" => "hidden",
+            "metadata" => %{}
+          }
+        ]
+      }
+    }
+
+    {:ok, presentation} = StaticGenerator.project(entries: [entry, module])
     assert presentation |> Jason.encode!() |> Jason.decode!() == fixture
   end
 

@@ -60,11 +60,23 @@ defmodule DocShell.ConfigTest do
     assert hd(result.presentation.search).content =~ "new_generation_id/0"
   end
 
-  test "pretty output defaults off and requires an explicit boolean" do
-    assert Config.load()[:pretty] == false
+  test "artifact formatting and member metadata options are validated" do
+    config = Config.load()
+    assert config[:pretty] == false
+    assert config[:member_metadata] == DocShell.Generate.ExDoc.default_member_metadata()
+
+    for value <- [:all, ["since", :deprecated], []] do
+      assert {:ok, _} = Config.resolve(member_metadata: value)
+    end
+
     assert {:ok, _} = Config.resolve(pretty: true)
     assert {:ok, _} = Config.resolve(changelog_source: false)
     assert {:error, {:invalid_option, :pretty, "yes"}} = Config.resolve(pretty: "yes")
+
+    for value <- [:some, "since", [1], [<<255>>]] do
+      assert {:error, {:invalid_option, :member_metadata, ^value}} =
+               Config.resolve(member_metadata: value)
+    end
   end
 
   test "per-call overrides win over host config and defaults" do

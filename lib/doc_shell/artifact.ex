@@ -6,7 +6,7 @@ defmodule DocShell.Artifact do
   produced it or when. Every artifact is therefore wrapped:
 
       {
-        "schema_version": "doc-shell/v1",
+        "schema_version": "doc-shell/v2",
         "generated_at": "2026-08-05T09:12:44.000000Z",
         "generation_id": "Lve95gjOVATpfV8EL5X4nx",
         "data": { ... }
@@ -72,7 +72,7 @@ defmodule DocShell.Artifact do
       ...>   "example-generation"
       ...> )
       %{
-        "schema_version" => "doc-shell/v1",
+        "schema_version" => "doc-shell/v2",
         "generated_at" => "2026-08-05T09:12:44Z",
         "generation_id" => "example-generation",
         "data" => %{"id" => "intro"}

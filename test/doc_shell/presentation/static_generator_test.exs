@@ -181,6 +181,100 @@ defmodule DocShell.Presentation.StaticGeneratorTest do
              StaticGenerator.project(entries: [Map.delete(entry, "meta")], search_members: true)
   end
 
+  describe "module navigation" do
+    defp module_entry(members) do
+      %{
+        "id" => "Example",
+        "title" => "Example",
+        "kind" => "module",
+        "ast" => body(),
+        "meta" => %{"moduledoc" => "present", "members" => members}
+      }
+    end
+
+    defp member(kind, name, arity, extra \\ %{}) do
+      Map.merge(
+        %{
+          "kind" => kind,
+          "name" => name,
+          "arity" => arity,
+          "signatures" => ["#{name}()"],
+          "doc" => String.duplicate("long member documentation ", 50),
+          "doc_state" => "present",
+          "metadata" => %{"since" => "1.0.0"}
+        },
+        extra
+      )
+    end
+
+    test "references members by id, title and anchor without their documentation" do
+      members = [
+        member("function", "run", 1),
+        member("type", "t", 0),
+        member("callback", "init", 1),
+        member("macrocallback", "using", 1),
+        member("macro", "defthing", 2),
+        member("function", "__hidden__", 0, %{"doc_state" => "hidden", "doc" => ""}),
+        Map.delete(member("function", "legacy", 0), "kind")
+      ]
+
+      assert {:ok, %{navigation: [item]}} =
+               StaticGenerator.project(entries: [module_entry(members)])
+
+      assert item.meta["moduledoc"] == "present"
+
+      assert item.meta["members"] == [
+               %{
+                 "id" => "function:run/1",
+                 "title" => "run/1",
+                 "anchor" => "run/1",
+                 "kind" => "function"
+               },
+               %{"id" => "type:t/0", "title" => "t/0", "anchor" => "t:t/0", "kind" => "type"},
+               %{
+                 "id" => "callback:init/1",
+                 "title" => "init/1",
+                 "anchor" => "c:init/1",
+                 "kind" => "callback"
+               },
+               %{
+                 "id" => "macrocallback:using/1",
+                 "title" => "using/1",
+                 "anchor" => "c:using/1",
+                 "kind" => "macrocallback"
+               },
+               %{
+                 "id" => "macro:defthing/2",
+                 "title" => "defthing/2",
+                 "anchor" => "defthing/2",
+                 "kind" => "macro"
+               },
+               %{"id" => "legacy/0", "title" => "legacy/0", "anchor" => "legacy/0", "kind" => nil}
+             ]
+
+      refute inspect(item) =~ "long member documentation"
+    end
+
+    test "only module entries have their members rewritten" do
+      entry = %{module_entry([%{"name" => "Ada"}]) | "kind" => "guide"}
+      assert {:ok, %{navigation: [item]}} = StaticGenerator.project(entries: [entry])
+      assert item.meta["members"] == [%{"name" => "Ada"}]
+    end
+
+    test "malformed members fail with the module id" do
+      for members <- [
+            42,
+            [42],
+            [%{"name" => "", "arity" => 0}],
+            [member("", "f", 0)],
+            [%{"name" => "f", "arity" => -1}]
+          ] do
+        assert {:error, {:invalid_navigation_member, "Example", _}} =
+                 StaticGenerator.project(entries: [module_entry(members)])
+      end
+    end
+  end
+
   test "invalid member documentation is tagged with the containing module" do
     entry = %{"id" => "Example", "title" => "Example", "kind" => "module", "ast" => body()}
     member = %{"name" => "f", "arity" => 0, "signatures" => ["f()"], "doc" => "docs"}

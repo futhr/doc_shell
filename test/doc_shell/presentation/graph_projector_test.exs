@@ -47,7 +47,7 @@ defmodule DocShell.Presentation.GraphProjectorTest do
     def project(_) do
       {:ok,
        %{
-         schema_version: "doc-shell/v1",
+         schema_version: "doc-shell/v2",
          navigation: [%{"id" => "a", "title" => "A", "path" => "/a", "children" => []}],
          search: [],
          content: %{}
@@ -61,7 +61,7 @@ defmodule DocShell.Presentation.GraphProjectorTest do
 
     @impl DocShell.Presentation.GraphProjector
     def project(_),
-      do: {:ok, %{schema_version: "doc-shell/v2", navigation: [], search: [], content: %{}}}
+      do: {:ok, %{schema_version: "doc-shell/v1", navigation: [], search: [], content: %{}}}
   end
 
   test "a graph source and the built-in generator share one presentation shape" do
@@ -101,7 +101,7 @@ defmodule DocShell.Presentation.GraphProjectorTest do
   describe "validate/1" do
     test "accepts a fully-formed presentation, backlinks included" do
       presentation = %{
-        schema_version: "doc-shell/v1",
+        schema_version: "doc-shell/v2",
         navigation: [%NavigationItem{id: "a", title: "A", path: "/a"}],
         search: [%SearchEntry{id: "a", title: "A", content: "body", path: "/a"}],
         content: %{"a" => []},
@@ -117,7 +117,7 @@ defmodule DocShell.Presentation.GraphProjectorTest do
     end
 
     test "rejects a presentation built for another schema version" do
-      assert {:error, {:invalid_presentation, {:unsupported_schema_version, "doc-shell/v2"}}} =
+      assert {:error, {:invalid_presentation, {:unsupported_schema_version, "doc-shell/v1"}}} =
                GraphProjector.project(VersionProjector, [])
     end
 
@@ -128,7 +128,7 @@ defmodule DocShell.Presentation.GraphProjectorTest do
 
     test "rejects typed entries whose fields violate the contract" do
       presentation = %{
-        schema_version: "doc-shell/v1",
+        schema_version: "doc-shell/v2",
         navigation: [%NavigationItem{id: nil, title: "A", path: "/a"}],
         search: [],
         content: %{}
@@ -140,7 +140,7 @@ defmodule DocShell.Presentation.GraphProjectorTest do
 
     test "rejects invalid search tokens" do
       presentation = %{
-        schema_version: "doc-shell/v1",
+        schema_version: "doc-shell/v2",
         navigation: [],
         search: [%SearchEntry{id: "a", title: "A", content: "", path: "/a", tokens: :all}],
         content: %{}
@@ -152,7 +152,7 @@ defmodule DocShell.Presentation.GraphProjectorTest do
 
     test "rejects backlinks that are not Backlink structs" do
       presentation = %{
-        schema_version: "doc-shell/v1",
+        schema_version: "doc-shell/v2",
         navigation: [],
         search: [],
         content: %{},
@@ -165,7 +165,7 @@ defmodule DocShell.Presentation.GraphProjectorTest do
 
     test "rejects backlinks whose fields violate the contract" do
       presentation = %{
-        schema_version: "doc-shell/v1",
+        schema_version: "doc-shell/v2",
         navigation: [],
         search: [],
         content: %{},
@@ -178,7 +178,7 @@ defmodule DocShell.Presentation.GraphProjectorTest do
 
     test "rejects backlinks that are not a map" do
       presentation = %{
-        schema_version: "doc-shell/v1",
+        schema_version: "doc-shell/v2",
         navigation: [],
         search: [],
         content: %{},
@@ -190,7 +190,7 @@ defmodule DocShell.Presentation.GraphProjectorTest do
     end
 
     test "rejects content that is not a map of id to nodes" do
-      base = %{schema_version: "doc-shell/v1", navigation: [], search: []}
+      base = %{schema_version: "doc-shell/v2", navigation: [], search: []}
 
       assert {:error, {:invalid_presentation, {:content, :expected_a_map}}} =
                GraphProjector.validate(Map.put(base, :content, []))
@@ -202,7 +202,7 @@ defmodule DocShell.Presentation.GraphProjectorTest do
     test "rejects a search list that is not a list" do
       assert {:error, {:invalid_presentation, {:search, :expected_a_list}}} =
                GraphProjector.validate(%{
-                 schema_version: "doc-shell/v1",
+                 schema_version: "doc-shell/v2",
                  navigation: [],
                  search: :nope,
                  content: %{}

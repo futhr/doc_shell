@@ -2,7 +2,7 @@ defmodule DocShell.Generate.Collection do
   @moduledoc """
   Describes, writes, and validates a portable documentation corpus.
 
-  A collection binds one `doc-shell/v1` artifact tree to an immutable source
+  A collection binds one `doc-shell/v2` artifact tree to an immutable source
   revision. The descriptor carries the identity supplied by the checkout
   owner; DocShell records it but does not invoke Git or fetch either URL.
 

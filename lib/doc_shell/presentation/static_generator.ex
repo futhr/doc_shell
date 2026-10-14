@@ -15,6 +15,20 @@ defmodule DocShell.Presentation.StaticGenerator do
     * **content** — a map from entry id to its AST nodes, so a renderer can
       load one page without parsing the whole set.
 
+  ## Module members
+
+  A module's navigation item does not carry its members' documentation, which
+  for a large application can be most of the documentation there is. Its
+  `meta["members"]` lists one reference per member that is not `@doc false`:
+
+      %{"id" => "function:run/1", "title" => "run/1", "anchor" => "run/1", "kind" => "function"}
+
+  `anchor` follows ExDoc's fragment convention (`t:` for types, `c:` for
+  callbacks), so a renderer can link to the member on the module's page. The
+  documentation itself is in `modules.json`. A module whose `members` value is
+  not a list of name/arity records fails projection with an error naming the
+  module. Other kinds keep their metadata unchanged.
+
   ## Deliberately flat
 
   Every navigation item comes back with no children. That is not an omission:
@@ -144,9 +158,10 @@ defmodule DocShell.Presentation.StaticGenerator do
   defp project_indexes([], _, pairs), do: {:ok, Enum.reverse(pairs)}
 
   defp project_indexes([entry | rest], settings, pairs) do
-    with {:ok, content} <- search_text(entry, settings.search_members) do
+    with {:ok, content} <- search_text(entry, settings.search_members),
+         {:ok, meta} <- navigation_meta(entry) do
       path = settings.path_builder.(entry)
-      pair = {navigation(entry, path), search(entry, path, content, settings)}
+      pair = {navigation(entry, path, meta), search(entry, path, content, settings)}
       project_indexes(rest, settings, [pair | pairs])
     end
   end
@@ -154,15 +169,57 @@ defmodule DocShell.Presentation.StaticGenerator do
   defp reject_empty(entries, false), do: entries
   defp reject_empty(entries, true), do: Enum.reject(entries, &(&1["ast"] in [nil, []]))
 
-  defp navigation(entry, path) do
+  defp navigation(entry, path, meta) do
     %NavigationItem{
       id: entry["id"],
       title: entry["title"],
       path: path,
       kind: entry["kind"],
-      meta: entry["meta"] || %{}
+      meta: meta
     }
   end
+
+  defp navigation_meta(%{"kind" => "module", "meta" => %{"members" => members} = meta} = entry) do
+    case member_refs(members, []) do
+      {:ok, refs} -> {:ok, Map.put(meta, "members", refs)}
+      {:error, reason} -> {:error, {:invalid_navigation_member, entry["id"], reason}}
+    end
+  end
+
+  defp navigation_meta(entry), do: {:ok, entry["meta"] || %{}}
+
+  defp member_refs([], refs), do: {:ok, Enum.reverse(refs)}
+  defp member_refs([%{"doc_state" => "hidden"} | rest], refs), do: member_refs(rest, refs)
+
+  defp member_refs([%{"name" => name, "arity" => arity} = member | rest], refs)
+       when is_binary(name) and name != "" and is_integer(arity) and arity >= 0 do
+    case Map.get(member, "kind") do
+      kind when is_nil(kind) or (is_binary(kind) and kind != "") ->
+        member_refs(rest, [member_ref(kind, "#{name}/#{arity}") | refs])
+
+      _ ->
+        {:error, {:invalid_member, member}}
+    end
+  end
+
+  defp member_refs([member | _], _), do: {:error, {:invalid_member, member}}
+  defp member_refs(_, _), do: {:error, :invalid_members}
+
+  defp member_ref(nil, title),
+    do: %{"id" => title, "title" => title, "anchor" => title, "kind" => nil}
+
+  defp member_ref(kind, title) do
+    %{
+      "id" => kind <> ":" <> title,
+      "title" => title,
+      "anchor" => anchor_prefix(kind) <> title,
+      "kind" => kind
+    }
+  end
+
+  defp anchor_prefix("type"), do: "t:"
+  defp anchor_prefix(kind) when kind in ["callback", "macrocallback"], do: "c:"
+  defp anchor_prefix(_), do: ""
 
   defp search(entry, path, content, settings) do
     meta = entry["meta"] || %{}

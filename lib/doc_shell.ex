@@ -49,12 +49,20 @@ defmodule DocShell do
 
   ## The contract
 
-  Every artifact carries `doc-shell/v1`, returned by `schema_version/0`
+  Every artifact carries `doc-shell/v2`, returned by `schema_version/0`
   and reachable from `DocShell.Presentation.Source`. Treat it as public API:
   the JSON shapes are consumed by renderers in other repositories, and a
   version bump is a coordinated change across all of them rather than a local
   refactor. The [artifact contract notebook](artifact-contract.html) documents
   every file and field.
+
+  `doc-shell/v2` replaced `doc-shell/v1` when navigation stopped embedding
+  module members. A module's navigation item now references each documented
+  member by `id`, `title`, `anchor` and `kind`; member documentation lives
+  only in `modules.json`. Module member metadata is limited to the keys ExDoc
+  renders unless the host asks for more, and members carry a `doc_state`.
+  Artifacts are written as compact canonical JSON. A reader of this version
+  rejects v1 files rather than misreading them.
 
   ## Serving
 
@@ -66,7 +74,7 @@ defmodule DocShell do
   `DocShell.Presentation.GraphProjector` instead.
   """
 
-  @schema_version "doc-shell/v1"
+  @schema_version "doc-shell/v2"
 
   @doc """
   Returns the artifact schema version every DocShell JSON file is stamped with.
@@ -75,7 +83,7 @@ defmodule DocShell do
   renderers that pin the literal instead will drift; read it from here.
 
       iex> DocShell.schema_version()
-      "doc-shell/v1"
+      "doc-shell/v2"
   """
   @spec schema_version() :: String.t()
   def schema_version, do: @schema_version

@@ -39,6 +39,7 @@ defmodule DocShell.Config do
   | `:skip_empty` | `true` | Drop entries with no content from the presentation. |
   | `:search_tokens` | `false` | Populate `SearchEntry.tokens`. |
   | `:search_members` | `false` | Include module member names, signatures and docs in page search text. |
+  | `:member_metadata` | ExDoc keys, see `DocShell.Generate.ExDoc` | Member metadata keys kept in `modules.json`; `:all` keeps every key. |
   | `:pretty` | `false` | Indent written artifacts for debugging. Artifacts are compact canonical JSON otherwise. |
   | `:write` | `true` | Write the artifact tree. `false` returns the data only. |
 
@@ -77,6 +78,7 @@ defmodule DocShell.Config do
     :skip_empty,
     :search_tokens,
     :search_members,
+    :member_metadata,
     :pretty,
     :write
   ]
@@ -98,6 +100,7 @@ defmodule DocShell.Config do
     skip_empty: true,
     search_tokens: false,
     search_members: false,
+    member_metadata: DocShell.Generate.ExDoc.default_member_metadata(),
     pretty: false,
     write: true
   ]
@@ -173,6 +176,10 @@ defmodule DocShell.Config do
     do: valid_list?(value, &(is_atom(&1) and &1 not in [nil, true, false]))
 
   defp valid_option?(:guide_bases, value), do: valid_list?(value, &is_binary/1)
+  defp valid_option?(:member_metadata, :all), do: true
+
+  defp valid_option?(:member_metadata, value),
+    do: valid_list?(value, &((is_binary(&1) and String.valid?(&1)) or is_atom(&1)))
 
   defp valid_option?(key, value) when key in [:changelog_options, :open_api_options],
     do: is_list(value) and Keyword.keyword?(value)

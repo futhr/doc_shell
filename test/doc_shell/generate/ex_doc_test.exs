@@ -74,9 +74,68 @@ defmodule DocShell.Generate.ExDocTest do
       )
 
     assert {:error, {:member_metadata, "sample", 0, {:duplicate_json_key, "enabled"}}} =
-             ExDoc.extract_module(mod)
+             ExDoc.extract_module(mod, member_metadata: :all)
 
-    assert {:error, {^mod, {:member_metadata, "sample", 0, _}}} = ExDoc.extract([mod])
+    assert {:error, {^mod, {:member_metadata, "sample", 0, _}}} =
+             ExDoc.extract([mod], member_metadata: ["custom"])
+  end
+
+  test "member metadata keeps ExDoc keys by default and everything on request", %{dir: dir} do
+    mod =
+      compile_beam(
+        dir,
+        """
+        defmodule ExDocFixtureMetadataFilter do
+          @moduledoc "A documented module."
+          @doc since: "1.2.0", spark_opts: [huge: [nested: :schema]]
+          def sample, do: :ok
+          @doc false
+          def hidden, do: :ok
+        end
+        """,
+        true
+      )
+
+    assert {:ok, entry} = ExDoc.extract_module(mod)
+    members = Map.new(entry["meta"]["members"], &{&1["name"], &1})
+    assert members["sample"]["metadata"]["since"] == "1.2.0"
+    refute Map.has_key?(members["sample"]["metadata"], "spark_opts")
+    assert members["sample"]["doc_state"] == "none"
+    assert members["hidden"]["doc_state"] == "hidden"
+
+    assert {:ok, [all]} = ExDoc.extract([mod], member_metadata: :all)
+    sample = Enum.find(all["meta"]["members"], &(&1["name"] == "sample"))
+    assert sample["metadata"]["spark_opts"] == [["huge", [["nested", "schema"]]]]
+
+    assert {:ok, [chosen]} = ExDoc.extract([mod], member_metadata: [:spark_opts])
+    sample = Enum.find(chosen["meta"]["members"], &(&1["name"] == "sample"))
+    assert Map.keys(sample["metadata"]) == ["spark_opts"]
+  end
+
+  test "member documentation state distinguishes present, hidden and absent", %{dir: dir} do
+    mod =
+      compile_beam(
+        dir,
+        """
+        defmodule ExDocFixtureDocState do
+          @moduledoc "States."
+          @doc "Shown."
+          def shown, do: :ok
+          @doc false
+          def hidden, do: :ok
+          def absent, do: :ok
+        end
+        """,
+        true
+      )
+
+    assert {:ok, entry} = ExDoc.extract_module(mod)
+
+    assert Map.new(entry["meta"]["members"], &{&1["name"], &1["doc_state"]}) == %{
+             "shown" => "present",
+             "hidden" => "hidden",
+             "absent" => "none"
+           }
   end
 
   test "the first failure in sorted order is reported", %{dir: dir} do
