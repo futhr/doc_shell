@@ -79,6 +79,13 @@ defmodule DocShell.Generate.ExDocTest do
     assert {:error, {^mod, {:member_metadata, "sample", 0, _}}} = ExDoc.extract([mod])
   end
 
+  test "the first failure in sorted order is reported", %{dir: dir} do
+    good = compile_beam(dir, ~s|defmodule ExDocFixtureGood do @moduledoc "ok" end|, true)
+
+    assert {:error, {DocShell.Nonexistent.A, _}} =
+             ExDoc.extract([DocShell.Nonexistent.B, good, DocShell.Nonexistent.A])
+  end
+
   test "returns a tagged error for an unloadable module" do
     assert {:error, {DocShell.Nonexistent.Module, _}} =
              ExDoc.extract([DocShell.Nonexistent.Module])

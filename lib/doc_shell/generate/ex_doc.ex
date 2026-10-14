@@ -54,7 +54,10 @@ defmodule DocShell.Generate.ExDoc do
   default so `mix doc_shell.build` does not fill a navigation tree with
   internal modules that opted out.
 
-  Modules are sorted by name so the artifact is stable across builds.
+  Modules are sorted by name so the artifact is stable across builds. Each
+  module is read independently, so extraction runs on every scheduler; results
+  are still returned in sorted order and the first failure in that order is
+  the one reported.
   """
 
   alias DocShell.Ast
@@ -71,13 +74,13 @@ defmodule DocShell.Generate.ExDoc do
   def extract(modules) when is_list(modules) do
     modules
     |> Enum.sort()
-    |> Collector.map_ok(fn module ->
-      case extract_module(module) do
-        {:error, reason} -> {:error, {module, reason}}
-        ok -> ok
-      end
-    end)
+    |> Task.async_stream(&tag_error(&1, extract_module(&1)), ordered: true, timeout: :infinity)
+    |> Stream.map(fn {:ok, result} -> result end)
+    |> Collector.map_ok(& &1)
   end
+
+  defp tag_error(module, {:error, reason}), do: {:error, {module, reason}}
+  defp tag_error(_, result), do: result
 
   @doc """
   Extracts one compiled module.
