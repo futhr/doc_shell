@@ -12,19 +12,19 @@ Benchmark suite executing on the following system:
     <td>macOS</td>
   </tr><tr>
     <th style="white-space: nowrap">CPU Information</th>
-    <td style="white-space: nowrap">Apple M5 Pro</td>
+    <td style="white-space: nowrap">Apple M2</td>
   </tr><tr>
     <th style="white-space: nowrap">Number of Available Cores</th>
-    <td style="white-space: nowrap">18</td>
+    <td style="white-space: nowrap">8</td>
   </tr><tr>
     <th style="white-space: nowrap">Available Memory</th>
-    <td style="white-space: nowrap">48 GB</td>
+    <td style="white-space: nowrap">8 GB</td>
   </tr><tr>
     <th style="white-space: nowrap">Elixir Version</th>
-    <td style="white-space: nowrap">1.18.4</td>
+    <td style="white-space: nowrap">1.20.4</td>
   </tr><tr>
     <th style="white-space: nowrap">Erlang Version</th>
-    <td style="white-space: nowrap">27.3.4.15</td>
+    <td style="white-space: nowrap">29.0.4</td>
   </tr>
 </table>
 
@@ -65,20 +65,20 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">Collection.prepare/2</td>
-    <td style="white-space: nowrap; text-align: right">394.19</td>
-    <td style="white-space: nowrap; text-align: right">2.54 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;6.27%</td>
-    <td style="white-space: nowrap; text-align: right">2.48 ms</td>
-    <td style="white-space: nowrap; text-align: right">2.96 ms</td>
+    <td style="white-space: nowrap; text-align: right">251.84</td>
+    <td style="white-space: nowrap; text-align: right">3.97 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;5.57%</td>
+    <td style="white-space: nowrap; text-align: right">3.86 ms</td>
+    <td style="white-space: nowrap; text-align: right">4.52 ms</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">Collection.load/1</td>
-    <td style="white-space: nowrap; text-align: right">50.30</td>
-    <td style="white-space: nowrap; text-align: right">19.88 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;1.86%</td>
-    <td style="white-space: nowrap; text-align: right">19.84 ms</td>
-    <td style="white-space: nowrap; text-align: right">21.64 ms</td>
+    <td style="white-space: nowrap; text-align: right">35.37</td>
+    <td style="white-space: nowrap; text-align: right">28.27 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;1.74%</td>
+    <td style="white-space: nowrap; text-align: right">28.15 ms</td>
+    <td style="white-space: nowrap; text-align: right">31.37 ms</td>
   </tr>
 
 </table>
@@ -93,14 +93,14 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">Collection.prepare/2</td>
-    <td style="white-space: nowrap;text-align: right">394.19</td>
+    <td style="white-space: nowrap;text-align: right">251.84</td>
     <td>&nbsp;</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">Collection.load/1</td>
-    <td style="white-space: nowrap; text-align: right">50.30</td>
-    <td style="white-space: nowrap; text-align: right">7.84x</td>
+    <td style="white-space: nowrap; text-align: right">35.37</td>
+    <td style="white-space: nowrap; text-align: right">7.12x</td>
   </tr>
 
 </table>
@@ -117,13 +117,13 @@ Memory Usage
   </tr>
   <tr>
     <td style="white-space: nowrap">Collection.prepare/2</td>
-    <td style="white-space: nowrap">6.75 MB</td>
+    <td style="white-space: nowrap">4.98 MB</td>
     <td>&nbsp;</td>
   </tr>
     <tr>
     <td style="white-space: nowrap">Collection.load/1</td>
-    <td style="white-space: nowrap">41.61 MB</td>
-    <td>6.17x</td>
+    <td style="white-space: nowrap">32.70 MB</td>
+    <td>6.57x</td>
   </tr>
 </table>
 
@@ -145,20 +145,20 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">Collection.prepare/2</td>
-    <td style="white-space: nowrap; text-align: right">16.32</td>
-    <td style="white-space: nowrap; text-align: right">61.28 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;1.20%</td>
-    <td style="white-space: nowrap; text-align: right">61.21 ms</td>
-    <td style="white-space: nowrap; text-align: right">64.83 ms</td>
+    <td style="white-space: nowrap; text-align: right">11.81</td>
+    <td style="white-space: nowrap; text-align: right">84.70 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;0.60%</td>
+    <td style="white-space: nowrap; text-align: right">84.65 ms</td>
+    <td style="white-space: nowrap; text-align: right">86.00 ms</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">Collection.load/1</td>
-    <td style="white-space: nowrap; text-align: right">1.43</td>
-    <td style="white-space: nowrap; text-align: right">697.78 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;7.72%</td>
-    <td style="white-space: nowrap; text-align: right">687.29 ms</td>
-    <td style="white-space: nowrap; text-align: right">778.24 ms</td>
+    <td style="white-space: nowrap; text-align: right">1.35</td>
+    <td style="white-space: nowrap; text-align: right">740.20 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;1.11%</td>
+    <td style="white-space: nowrap; text-align: right">737.94 ms</td>
+    <td style="white-space: nowrap; text-align: right">754.11 ms</td>
   </tr>
 
 </table>
@@ -173,14 +173,14 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">Collection.prepare/2</td>
-    <td style="white-space: nowrap;text-align: right">16.32</td>
+    <td style="white-space: nowrap;text-align: right">11.81</td>
     <td>&nbsp;</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">Collection.load/1</td>
-    <td style="white-space: nowrap; text-align: right">1.43</td>
-    <td style="white-space: nowrap; text-align: right">11.39x</td>
+    <td style="white-space: nowrap; text-align: right">1.35</td>
+    <td style="white-space: nowrap; text-align: right">8.74x</td>
   </tr>
 
 </table>
@@ -197,13 +197,13 @@ Memory Usage
   </tr>
   <tr>
     <td style="white-space: nowrap">Collection.prepare/2</td>
-    <td style="white-space: nowrap">109.82 MB</td>
+    <td style="white-space: nowrap">81.57 MB</td>
     <td>&nbsp;</td>
   </tr>
     <tr>
     <td style="white-space: nowrap">Collection.load/1</td>
-    <td style="white-space: nowrap">672.02 MB</td>
-    <td>6.12x</td>
+    <td style="white-space: nowrap">530.61 MB</td>
+    <td>6.51x</td>
   </tr>
 </table>
 
@@ -225,20 +225,20 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">Collection.prepare/2</td>
-    <td style="white-space: nowrap; text-align: right">96.21</td>
-    <td style="white-space: nowrap; text-align: right">10.39 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;1.75%</td>
-    <td style="white-space: nowrap; text-align: right">10.38 ms</td>
-    <td style="white-space: nowrap; text-align: right">11.01 ms</td>
+    <td style="white-space: nowrap; text-align: right">61.30</td>
+    <td style="white-space: nowrap; text-align: right">16.31 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;5.68%</td>
+    <td style="white-space: nowrap; text-align: right">16.17 ms</td>
+    <td style="white-space: nowrap; text-align: right">23.79 ms</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">Collection.load/1</td>
-    <td style="white-space: nowrap; text-align: right">7.69</td>
-    <td style="white-space: nowrap; text-align: right">130.01 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;2.41%</td>
-    <td style="white-space: nowrap; text-align: right">131.33 ms</td>
-    <td style="white-space: nowrap; text-align: right">135.35 ms</td>
+    <td style="white-space: nowrap; text-align: right">6.51</td>
+    <td style="white-space: nowrap; text-align: right">153.63 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;1.23%</td>
+    <td style="white-space: nowrap; text-align: right">153.14 ms</td>
+    <td style="white-space: nowrap; text-align: right">159.41 ms</td>
   </tr>
 
 </table>
@@ -253,14 +253,14 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">Collection.prepare/2</td>
-    <td style="white-space: nowrap;text-align: right">96.21</td>
+    <td style="white-space: nowrap;text-align: right">61.30</td>
     <td>&nbsp;</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">Collection.load/1</td>
-    <td style="white-space: nowrap; text-align: right">7.69</td>
-    <td style="white-space: nowrap; text-align: right">12.51x</td>
+    <td style="white-space: nowrap; text-align: right">6.51</td>
+    <td style="white-space: nowrap; text-align: right">9.42x</td>
   </tr>
 
 </table>
@@ -277,13 +277,13 @@ Memory Usage
   </tr>
   <tr>
     <td style="white-space: nowrap">Collection.prepare/2</td>
-    <td style="white-space: nowrap">27.13 MB</td>
+    <td style="white-space: nowrap">20.14 MB</td>
     <td>&nbsp;</td>
   </tr>
     <tr>
     <td style="white-space: nowrap">Collection.load/1</td>
-    <td style="white-space: nowrap">167.11 MB</td>
-    <td>6.16x</td>
+    <td style="white-space: nowrap">131.68 MB</td>
+    <td>6.54x</td>
   </tr>
 </table>
 
@@ -305,20 +305,20 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">Collection.prepare/2</td>
-    <td style="white-space: nowrap; text-align: right">43.56</td>
-    <td style="white-space: nowrap; text-align: right">22.96 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;2.36%</td>
-    <td style="white-space: nowrap; text-align: right">22.97 ms</td>
-    <td style="white-space: nowrap; text-align: right">25.47 ms</td>
+    <td style="white-space: nowrap; text-align: right">29.32</td>
+    <td style="white-space: nowrap; text-align: right">34.11 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;1.49%</td>
+    <td style="white-space: nowrap; text-align: right">34.19 ms</td>
+    <td style="white-space: nowrap; text-align: right">34.84 ms</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">Collection.load/1</td>
-    <td style="white-space: nowrap; text-align: right">3.71</td>
-    <td style="white-space: nowrap; text-align: right">269.22 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;1.01%</td>
-    <td style="white-space: nowrap; text-align: right">268.85 ms</td>
-    <td style="white-space: nowrap; text-align: right">276.30 ms</td>
+    <td style="white-space: nowrap; text-align: right">2.92</td>
+    <td style="white-space: nowrap; text-align: right">342.51 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;1.06%</td>
+    <td style="white-space: nowrap; text-align: right">341.53 ms</td>
+    <td style="white-space: nowrap; text-align: right">350.03 ms</td>
   </tr>
 
 </table>
@@ -333,14 +333,14 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">Collection.prepare/2</td>
-    <td style="white-space: nowrap;text-align: right">43.56</td>
+    <td style="white-space: nowrap;text-align: right">29.32</td>
     <td>&nbsp;</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">Collection.load/1</td>
-    <td style="white-space: nowrap; text-align: right">3.71</td>
-    <td style="white-space: nowrap; text-align: right">11.73x</td>
+    <td style="white-space: nowrap; text-align: right">2.92</td>
+    <td style="white-space: nowrap; text-align: right">10.04x</td>
   </tr>
 
 </table>
@@ -357,12 +357,12 @@ Memory Usage
   </tr>
   <tr>
     <td style="white-space: nowrap">Collection.prepare/2</td>
-    <td style="white-space: nowrap">54.64 MB</td>
+    <td style="white-space: nowrap">40.54 MB</td>
     <td>&nbsp;</td>
   </tr>
     <tr>
     <td style="white-space: nowrap">Collection.load/1</td>
-    <td style="white-space: nowrap">335.02 MB</td>
-    <td>6.13x</td>
+    <td style="white-space: nowrap">264.25 MB</td>
+    <td>6.52x</td>
   </tr>
 </table>
