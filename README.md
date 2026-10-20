@@ -6,48 +6,25 @@
 [![Coverage](https://codecov.io/gh/futhr/doc_shell/branch/main/graph/badge.svg)](https://codecov.io/gh/futhr/doc_shell)
 [![License](https://img.shields.io/hexpm/l/doc_shell.svg)](LICENSE.md)
 
-Portable documentation data for Elixir, without choosing your renderer.
+DocShell turns Elixir module docs, Markdown guides, Livebook notebooks, release
+notes, and OpenAPI documents into versioned JSON. Use the output in a
+documentation site, in-product help, a search index, or a knowledge graph.
+
+It also validates collections of those artifacts and assembles them into sites
+for hosted rendering or static export. You supply the renderer, site structure,
+and authorization policy.
 
 [Installation](#installation) |
 [Quick start](#quick-start) |
 [Configuration](#configuration) |
-[Try it interactively](#try-it-interactively) |
 [Artifacts](#what-comes-out) |
 [Portable sites](#portable-sites) |
-[Serving](#serving-it)
-
----
-
-## Try It Interactively
-
-The Livebook notebooks are executable tutorials, not extra API reference pages.
-Start with the build-pipeline notebook in a browser:
-
-[![Run in Livebook](https://livebook.dev/badge/v1/blue.svg)](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fbuild-pipeline.livemd)
-
-- **[The Build Pipeline](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fbuild-pipeline.livemd)** -
-  Follow one build from source files to generated artifacts.
-- **[Artifact Contract](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fartifact-contract.livemd)** -
-  Inspect the public JSON shapes, envelopes, manifests, and presentation indexes.
-- **[OpenAPI Adapters](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fopenapi-adapters.livemd)** -
-  Work through the default document, shipped adapters, custom adapters, and validation errors.
-- **[Serving Artifacts](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fserving-artifacts.livemd)** -
-  Walk through static serving, runtime caching, reloads, gates, and controller usage.
-- **[Publish a Portable Site](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fsite-publication.livemd)** -
-  Load a collection, project routes and navigation, then publish a static site.
-
----
-
-## Why
-
-DocShell reads module documentation, Markdown guides, Livebook notebooks,
-release notes, and OpenAPI documents into versioned JSON. Hosts can reuse
-those artifacts in a documentation site, in-product help, search index, or
-knowledge graph. Rendering, routing, and authorization belong to the host.
-
----
+[Serving](#serving-it) |
+[Tutorials](#try-it-interactively)
 
 ## Installation
+
+Add DocShell to `mix.exs`. Requires Elixir 1.17 or later.
 
 ```elixir
 def deps do
@@ -57,7 +34,8 @@ def deps do
 end
 ```
 
-Two integrations are optional and only needed if you use them:
+Add AshOaskit to generate OpenAPI from Ash domains, or Plug to serve artifacts
+over HTTP:
 
 ```elixir
 def deps do
@@ -71,10 +49,6 @@ def deps do
 end
 ```
 
-Requires Elixir 1.17 or later.
-
----
-
 ## Quick start
 
 Build the artifacts:
@@ -83,21 +57,18 @@ Build the artifacts:
 mix doc_shell.build
 ```
 
-That documents every module in the current application, picks up Markdown under
-`guides/` and notebooks under `notebooks/`, and writes JSON to
-`priv/doc_shell/`. It works with no configuration at all — a project that has
-set nothing still gets a complete, well-formed artifact tree.
+This documents every module in the current application, reads Markdown under
+`guides/` and notebooks under `notebooks/`, and writes JSON to `priv/doc_shell/`.
+No configuration is required.
 
-If the host application starts dev servers, sockets, or other side effects that
-are not needed for static docs generation, compile and load the app spec without
-starting the supervision tree:
+To build without starting the application's supervision tree, use `--no-start`.
+This compiles and loads the app spec without starting dev servers or sockets:
 
 ```sh
 mix doc_shell.build --no-start
 ```
 
-The same pipeline is available from code, which is what you want from a release
-task or when feeding a database rather than a directory:
+For release tasks or database ingestion, call the build from Elixir:
 
 ```elixir
 {:ok, result} =
@@ -110,17 +81,18 @@ task or when feeding a database rather than a directory:
 `result` holds `:modules`, `:guides`, `:livebooks`, `:changelog`, `:openapi`, and
 `:presentation`. Source entries retain their ASTs in memory; the per-source
 files omit those bodies, which are stored in `content.json` for entries included
-in the presentation. Optional projector backlinks remain in memory only.
+in the presentation.
 
-Extraction stops at the first error and names the module or file at fault. A
-guide with broken frontmatter returns an error naming its source file.
+Optional projector backlinks remain in memory only.
 
----
+Extraction stops at the first error and names the module or file at fault,
+including the source file of a guide with broken frontmatter.
 
 ## Configuration
 
-Everything lives under `:doc_shell`. Per-call options to `DocShell.Build.run/1`
-win over host config, which wins over the package defaults.
+Configure the `:doc_shell` application. Options passed to `DocShell.Build.run/1`
+override application config, which overrides package defaults. Every key is
+optional; the example below shows the available configuration groups.
 
 ```elixir
 config :doc_shell,
@@ -167,7 +139,9 @@ Artifacts are written as compact canonical JSON. Set `pretty: true` to indent
 them while debugging; decoded values and collection digests are identical either
 way.
 
-Module member metadata is limited to the keys ExDoc renders (`since`,
+### Member metadata and search
+
+Module member metadata defaults to the keys ExDoc renders (`since`,
 `deprecated`, `defaults`, `delegate_to`, `guard`, `group`, `equiv`,
 `source_annos`). Some libraries attach far more: Spark stores every Ash code
 interface's option schema under `spark_opts`. Set `member_metadata: :all` to
@@ -178,73 +152,16 @@ parsed documentation in the containing page's search text. It defaults to false,
 does not add member routes or change content ASTs, and does not override
 `skip_empty`. Malformed member Markdown returns a module-tagged error.
 
-Every key is optional, including the OpenAPI adapter — without one the build
-emits a valid empty OpenAPI 3.1 document, so `openapi.json` is always there and
-always parseable. `changelog_source` defaults to Markdown-file extraction, but a
-host can replace it with a graph, database, CMS, or service adapter and pass
-source-specific `changelog_options`. `changelog_path` is kept as the default
-Markdown-file shortcut. `DocShell.Config` documents each key and its default.
+### OpenAPI and changelog sources
 
-DocShell reads `:doc_shell` and nothing else. It will not look under your
-application's key, infer settings from `Mix.Project`, or reach into another
-library's environment.
+Without an OpenAPI adapter, the build emits a valid empty OpenAPI 3.1 document,
+so `openapi.json` is always present. `changelog_source` defaults to reading
+Markdown from `changelog_path`. A host can replace it with a graph, database,
+CMS, or service adapter and pass source-specific `changelog_options`.
+`DocShell.Config` documents each key and its default.
 
-### Site-ready collections
-
-Set `:collection` when another documentation site will import this build. The
-descriptor binds the generated corpus to a stable lowercase `id`, source
-revision, caller-verified tree digest, and inert source/edit URLs. DocShell
-does not invoke Git, fetch either URL, or infer the revision. Optional metadata
-includes package, license, locale, audience, source root, and status.
-
-With a collection descriptor, the public manifest includes an enveloped
-`collection.json`. Its `doc-shell-collection/v1` payload contains the portable
-descriptor, source provenance records, per-artifact SHA-256 digests, and a
-canonical aggregate `content_digest`. The local `artifact_dir` is omitted from
-the portable descriptor. `DocShell.Generate.Collection.load/1` validates the
-manifest, files, generation IDs, paths, and digests without starting an
-application or making a network request, then qualifies document IDs as
-`collection_id:document_id`.
-
-`Collection.load/2` and `load_many/2` accept finite import budgets:
-`max_file_bytes` (32 MiB), `max_total_bytes` (2 GiB including the manifest),
-`max_artifacts` (256), `max_sources` (100,000), `max_json_depth` (64), and
-`max_collections` (256 per call). Other budgets apply per collection. Limits
-are positive integers and may be explicitly raised or lowered. Byte and nesting
-checks precede decoding; duplicate JSON keys are rejected. Import requires a
-stable caller-owned directory, not a hostile-writer sandbox. Root symlinks,
-including `/` and `/.` suffix variants, are rejected. Existing ancestors of the
-working and system temporary directories are trusted; other symlink components
-and parent (`..`) traversal are rejected.
-
-Collection admission follows the integrity requirements in the
-[site specification](docs/specs/DSH.01-documentation-sites.md); acceptance status
-is tracked in the [implementation plan](docs/plans/documentation-sites.md).
-The contract distinguishes source files from document records (several releases
-can share one changelog), includes the synthetic `openapi` identity in uniqueness
-checks, and requires a collection build to round-trip through its loader.
-Custom collection projectors must preserve extracted bodies in `content.json`
-with exact JSON types (including integer versus float);
-filtered nonempty bodies must cause a build error before publication rather than
-being silently restored to public output. Checksums establish internal consistency;
-the caller still verifies source authenticity and owns the import directory.
-Loading validates complete provenance, unique identities, source-index shapes
-and recursive content. Unknown manifested source indexes referenced by provenance
-use the same generic entry contract; other extension artifacts remain opaque.
-Embedded index ASTs must agree with content; OpenAPI has no page AST.
-Several releases may share `CHANGELOG.md`, while independent guides or notebooks
-cannot claim the same source path. Dynamic sources should keep opaque locators
-in metadata such as `source_ref`; `source_path` in a collection is a relative
-filesystem path.
-
-For a guided walkthrough, start with
-[the build pipeline notebook](notebooks/build-pipeline.livemd). The
-[artifact contract notebook](notebooks/artifact-contract.livemd) documents every
-file DocShell writes, and the
-[OpenAPI adapters notebook](notebooks/openapi-adapters.livemd) covers adapter
-selection and implementation. Use the
-[serving artifacts notebook](notebooks/serving-artifacts.livemd) when wiring the
-runtime cache, Plug, or a host controller.
+DocShell reads configuration only from `:doc_shell`. It does not infer settings
+from `Mix.Project` or another application's environment.
 
 ### Default API identity
 
@@ -266,17 +183,21 @@ extraction or writes; use dedicated directories without symlink aliases.
 
 ### Failed builds and recovery
 
-Builds stage all JSON and back up existing files before publishing. Stale
-optional artifact deletion runs
-under the same locks and rollback as writes. `Artifact.Transaction.write/2`
-accepts `delete: [path]`; duplicate targets, directories and symlinks are rejected.
-Returned publication failures restore earlier files, including deleted artifacts;
-rollback failures report retained
-backup paths. Cooperating builds use `.doc-shell-build.lock` directories. After
-a process or machine crash, recover retained backups and remove stale locks
-before rebuilding. Files still publish individually, so cache reloads validate
-generation IDs and keep the last complete snapshot. Use dedicated output
-directories without external writers or symlink aliases.
+Builds stage JSON and back up existing files before publication.
+
+| Event | What happens |
+| --- | --- |
+| Publication fails | Rollback restores previous files, including deleted artifacts. |
+| Rollback fails | The error reports retained backup paths. |
+| Process or machine crashes | Recover retained backups and remove stale `.doc-shell-build.lock` directories before rebuilding. |
+
+Stale artifact removal shares the write transaction's locks and rollback.
+`Artifact.Transaction.write/2` accepts `delete: [path]` and rejects duplicate
+paths, directories, and symlinks.
+
+Files publish individually. Cache reloads validate generation IDs and keep the
+last complete snapshot. Use dedicated output directories without external
+writers or symlink aliases.
 
 ## What comes out
 
@@ -327,40 +248,82 @@ text for their output context before rendering untrusted documents.
 Files are compact canonical JSON (sorted keys, no insignificant whitespace)
 unless the build sets `pretty: true`.
 
-`navigation.json`, `search-index.json`, and `content.json` are the three files a
-renderer actually reads. A module's navigation item lists its documented members
-as `{"id", "title", "anchor", "kind"}` references; their documentation, signatures
-and metadata are only in `modules.json`, where each member also carries a
-`doc_state` of `"present"`, `"hidden"`, or `"none"`. `modules.json`, `guides.json`, `livebooks.json`, and
-`changelog.json` are per-source indexes for hosts that ingest documentation
-rather than display it — including the entries the presentation filtered out, so
-they double as a coverage report. A document's parsed body is stored once, in
-`content.json`, keyed by the same id.
+Read the files that match your use case:
 
-These shapes are public API. They are consumed by renderers in other
-repositories on their own release cadence, so a schema-version bump is a
-coordinated change across all of them, not a local refactor. The
-[notebook](notebooks/artifact-contract.livemd) documents every file and field.
+| File | Contains |
+| --- | --- |
+| `navigation.json` | Page links and module member references |
+| `search-index.json` | Search text and filters |
+| `content.json` | Parsed page bodies, keyed by document ID |
+| `modules.json` | Module metadata and member documentation |
+| `guides.json`, `livebooks.json`, `changelog.json` | Source identities and metadata |
 
-`doc-shell/v2` replaced `doc-shell/v1` when navigation stopped embedding module
-members and member metadata became an allow-list. Readers reject v1 files, so
-rebuild artifacts after upgrading.
+Source indexes include entries filtered out of presentation, so they can also
+support coverage reports. Module member references contain `id`, `title`,
+`anchor`, and `kind`. Their documentation, signatures, metadata, and `doc_state`
+(`"present"`, `"hidden"`, or `"none"`) live in `modules.json`.
 
-Within `doc-shell/v2`, the source catalogue is additive: a producer may add a
-new per-source index file to the manifest, and `kind` is an open string carried
-through navigation and search. Generic consumers must ignore unrecognised
-manifest entries and kinds; selective consumers may continue reading only the
-artifacts they support. Removing an existing artifact, or removing, renaming,
-or retyping an existing field, still requires a schema-version change.
+These shapes are public API. The
+[artifact contract notebook](notebooks/artifact-contract.livemd) covers every
+file and field.
 
----
+- **Upgrading from v1:** rebuild the artifacts. Readers reject `doc-shell/v1`.
+  Version 2 moved member documentation out of navigation and made member
+  metadata an allow-list by default.
+- **Adding sources:** v2 permits new source indexes and open `kind` strings.
+  Generic consumers must ignore unknown files and kinds; selective consumers
+  can read only their supported artifacts.
+- **Changing existing fields:** removing an artifact or removing, renaming, or
+  retyping a field requires a schema-version change and coordinated releases.
 
 ## Portable sites
 
-A `doc-shell/v2` collection answers “what documentation came from this source?”
-A `doc-shell-site/v1` value answers “what should this site expose, and where?”
-Keeping those questions separate lets several packages share a site without
-moving product taxonomy or routes into their extraction builds.
+A `doc-shell/v2` collection identifies documentation from one source. A
+`doc-shell-site/v1` value selects pages and gives them routes and navigation.
+This lets several packages share a site while the host controls its structure.
+
+### Site-ready collections
+
+Set `:collection` when another site will import this build. Supply a stable
+lowercase `id`, source revision, verified tree digest, and source/edit URLs.
+DocShell records these values without running Git or fetching URLs.
+
+The build adds `collection.json` to the public manifest. Its
+`doc-shell-collection/v1` payload contains the portable descriptor, source
+provenance, artifact SHA-256 digests, and aggregate `content_digest`. The local
+`artifact_dir` stays out of the portable descriptor.
+
+`Collection.load/1` validates the files and qualifies document IDs as
+`collection_id:document_id`. It starts no application and makes no network
+request.
+
+#### Import limits
+
+Override these defaults through `Collection.load/2` or `load_many/2`:
+
+| Option | Default | Applies to |
+| --- | --- | --- |
+| `max_file_bytes` | 32 MiB | Each file |
+| `max_total_bytes` | 2 GiB, including the manifest | Each collection |
+| `max_artifacts` | 256 | Each collection |
+| `max_sources` | 100,000 | Each collection |
+| `max_json_depth` | 64 | Each collection |
+| `max_collections` | 256 | Each call |
+
+Limits must be positive integers. Byte and nesting checks run before decoding;
+duplicate JSON keys are rejected.
+
+Import requires a stable caller-owned directory. Checksums verify internal
+consistency; the caller verifies source authenticity. Path checks reject
+symlink roots and `..` traversal but cannot protect against a concurrent hostile
+writer.
+
+For path rules, document identity, and custom projector requirements, see the
+[collection integrity contract](docs/specs/DSH.01-documentation-sites.md#collection-integrity-and-compatibility).
+Optional descriptor metadata is covered in the
+[collection descriptor reference](docs/specs/DSH.01-documentation-sites.md#collection-descriptor).
+
+### Project a site
 
 Load exact collection artifacts first:
 
@@ -382,42 +345,33 @@ Then project them through host policy:
   )
 ```
 
-`MyApp.Docs.SiteSource` implements one callback. It selects qualified document
-IDs and declares routes, navigation, redirects, locales, visibility, and any
-provider-specific source/edit links. It does not read collection directories or
-render content. DocShell validates that policy, resolves local links and heading
-anchors, derives breadcrumbs and reading order, builds search records, and binds
-the result to a deterministic cohort digest. It never invents forge URL shapes.
-`DocShell.Presentation.SiteSource.Default` provides flat routes when a host does
-not need custom taxonomy.
+`MyApp.Docs.SiteSource` implements one callback. The responsibilities are:
 
-The projected `Site` is the handoff to any hosted or static renderer. It carries
-no session, authorization callback, framework component, or deployment setting.
+| Component | Responsibility |
+| --- | --- |
+| Host site source | Select documents; declare routes, navigation, redirects, locales, visibility, and source/edit links. |
+| DocShell projector | Validate declarations; resolve links and anchors; derive breadcrumbs, reading order, search records, and cohort digest. |
+| Renderer | Turn the validated `Site` into output. |
+
+Use `DocShell.Presentation.SiteSource.Default` for flat routes. Source and edit
+URLs follow the host's declarations; DocShell does not invent forge URL shapes.
+The projected `Site` contains no session, authorization callback, framework
+component, or deployment setting.
 
 ### Renderer contract
 
 A renderer implements `DocShell.Presentation.Renderer`: render a page and the
-not-found page, return local assets, and declare capabilities. Capability values
-say whether a feature has a semantic fallback, browser enhancement, or connected
-live state. Static export rejects live-only requirements; unsupported optional
+not-found page, return local assets, and declare capabilities.
+
+Capability values say whether a feature has a semantic fallback, browser enhancement, or connected
+live state.
+
+Static export rejects live-only requirements; unsupported optional
 features are allowed only when the projected fallback digest still matches.
 
-DocShell ships the contract and conformance fixture, not a visual renderer. That
-keeps Phoenix, LiveView, Svelte, Node, CSS systems, and product branding out of
-the package dependency graph.
-
-The [portable artifact capability contract](docs/specs/portable-artifact-capabilities.md)
-has an unreleased static implementation: `ArtifactProfile`, `ArtifactBlock` and
-`ArtifactAdmission` validate explicit profiles, exact semantic anchors, local
-variants and complete fallback. Pass `:artifact_options` to `StaticExporter`
-with profiles, original manifests, checked projections, assets, v2 capabilities
-and caller constraints. Each presentation has its own runtime requirements.
-Explicit `%{"reader_mode" => "file"}` in the constraints selects local
-file-relative assets; the default web mode preserves existing site URLs.
-Artifact generation and interaction remain producer/host-owned. The
-[delivery plan](docs/plans/documentation-sites.md#portable-artifact-delivery)
-records implemented checks and remaining reader/target qualification; this does
-not advertise the extension in an already released package.
+The package includes the renderer contract and conformance fixture. Visual
+renderers live in separate packages, keeping their frameworks and styling
+dependencies out of DocShell's dependency graph.
 
 ### Static export
 
@@ -433,11 +387,15 @@ Pass the validated site to a renderer implementation:
   )
 ```
 
-The exporter validates capabilities and returned HTML, hashes local renderer
-assets, builds the JSON search index, checks links and finite byte/file limits,
-and stages the complete tree before replacing the destination. The result
-contains page routes, redirects, `404.html`, `site-manifest.json`, `sitemap.xml`,
-`robots.txt`, `llms.txt`, and `llms-full.txt`. It starts no host application,
+The exporter:
+
+1. Validates renderer capabilities and HTML, hashes local assets, and builds the
+   search index.
+2. Checks links and byte/file limits, then stages the complete tree.
+3. Replaces the destination with page routes, redirects, and supporting files.
+
+Supporting files include `404.html`, `site-manifest.json`, `sitemap.xml`,
+`robots.txt`, `llms.txt`, and `llms-full.txt`. Export starts no host application,
 runs no external build tool, and makes no network request.
 
 The built-in `DocShell.Presentation.SearchAdapter.JSON` emits deterministic local
@@ -447,87 +405,60 @@ build-time adapter can produce another local index from the same records.
 The [site publication notebook](notebooks/site-publication.livemd) is a complete
 executable example with a small host source and renderer.
 
----
+### External artifact blocks (unreleased)
+
+`ArtifactProfile`, `ArtifactBlock`, and `ArtifactAdmission` have an unreleased
+static implementation for typed external artifacts.
+
+- Pass `:artifact_options` explicitly with profiles, original manifests, checked
+  projections, assets, v2 capabilities, and caller constraints.
+- Each presentation declares its own runtime requirements. Setting
+  `%{"reader_mode" => "file"}` selects file-relative assets; web mode preserves
+  existing site URLs.
+- Artifact generation and interaction belong to the producer and host.
+  Independent reader and target qualification remain open.
+
+See the [capability contract](docs/specs/portable-artifact-capabilities.md) and
+[delivery plan](docs/plans/documentation-sites.md#portable-artifact-delivery).
+This development work does not establish support in an already released package.
 
 ## Artifact guarantees
 
-### Document identities
+| Area | Guarantee |
+| --- | --- |
+| Document IDs | Nonempty and unique across all sources, including filtered entries. Duplicate errors name both sources. |
+| Content | Recursive ASTs and string-keyed JSON metadata are validated before writes. Check node lists with `DocShell.Ast.valid?/1`. |
+| File writes | Random, exclusively created temporary files prevent collisions between BEAM instances. Rename publishes each complete file. |
+| Metadata | JSON scalars keep their types; converted-key collisions return errors. |
+| Source encoding | Invalid UTF-8 returns an error identifying the source file. |
+| Search text | Inline text stays joined; blocks add separators; image alt text is searchable. |
+| Paths | Calculated once for navigation and search. Default paths percent-encode kind and ID as URL segments. |
 
-Document IDs must be nonempty and unique across all sources, including entries
-filtered from presentation. Duplicate IDs return an error naming both sources.
-Overlapping guide directories extract each normalized path once.
+Use `DocShell.Json.Canonical.encode/1` and `digest/1` for checked serialization
+and hashing. `Collection.digest/1` raises `ArgumentError` for invalid input.
+Fixtures ship in `priv/contracts/canonical-json-v1.json`.
 
-### Recursive content validation
-
-Host projectors and changelog sources must provide complete recursive AST nodes
-and JSON metadata with string keys. Invalid nested content fails validation
-before output is written. `DocShell.Ast.valid?/1` checks node lists.
-
-### Legacy envelope compatibility
-
-`Artifact.read/1` and `read_envelope/1` accept legacy v1 envelopes without
-`generation_id`. A present ID must be a nonempty string. Runtime caches require
-an ID on every artifact and manifest to verify that they form one generation.
-
-### Concurrent artifact writers
-
-Individual artifact writes use exclusively created random temporary files in
-the destination directory, so independent BEAM instances cannot share a
-temporary file. A rename publishes each complete file.
-
-### JSON metadata normalization
-
-For checked serialization and hashing, use `DocShell.Json.Canonical.encode/1`
-and `digest/1`. They reject duplicate encoded keys and return tagged errors.
-`Collection.digest/1` remains a string-returning convenience for encodable input;
-invalid input raises `ArgumentError`. Portable fixtures ship in
-`priv/contracts/canonical-json-v1.json`. Invalid UTF-8 source files return
-`:invalid_utf8` errors tagged with the file by the extractors/build.
-Artifact writes also contain host encoder exceptions and reject malformed or
-duplicate-key JSON fragments before replacing existing files. Source extension
-fields must remain native JSON even when no collection is requested.
-ExDoc member metadata uses checked normalization too: colliding converted keys
-return a member-tagged error instead of silently dropping a value.
-
-Metadata preserves JSON scalars and uses UTF-8 string keys. Unsupported terms
-become inspected text; improper list tails become a final array value.
-`DocShell.Json.normalize/1` rejects converted-key collisions. The legacy
-`stringify/1` keeps string keys when a collision occurs. Guides use `normalize/1`.
-
-### Search text
-
-Search content preserves adjacent inline text, including words split by
-formatting. Block elements and line breaks add separators; image alt text is
-searchable. Token generation uses this same text.
-
-### Document paths
-
-Each document path is calculated once and reused by navigation and search.
-Default paths percent-encode kind and ID as individual URL segments. Use a
-custom `path_builder` when IDs intentionally represent a path hierarchy.
+The [artifact contract notebook](notebooks/artifact-contract.livemd) covers
+normalization, legacy envelopes, concurrent writers, and custom paths in detail.
+The [usage rules](usage-rules.md#json-metadata-normalization) explain checked
+normalization and legacy `stringify/1` behavior.
 
 ## Sources
 
-Five extractors, each usable on its own:
+Each extractor can be used on its own:
 
-- **`DocShell.Generate.ExDoc`** reads compiled modules through the BEAM docs
-  chunk used by IEx and ExDoc. It extracts English documentation and keeps
-  metadata indicating hidden or absent module documentation.
-- **`DocShell.Generate.Guides`** reads Markdown, with optional YAML frontmatter
-  for titles, audience, locale, and anything else you want carried through to
-  the renderer.
-- **`DocShell.Generate.Livebooks`** indexes `.livemd` notebooks, so runnable
-  onboarding docs stop being invisible to your documentation site.
-- **`DocShell.Generate.Changelog`** loads release notes through a source
-  adapter. The built-in Markdown source reads `CHANGELOG.md`; hosts can supply
-  graph-, database-, CMS-, or service-backed adapters without changing the
-  artifact contract. Its parser accepts git_ops parenthesised dates and Keep a
-  Changelog hyphenated dates, with inline, reference-style, or absent version
-  links and SemVer prereleases.
-- **`DocShell.Generate.OpenApi`** loads an API description through a pluggable
-  adapter.
+| Extractor | Reads |
+| --- | --- |
+| `DocShell.Generate.ExDoc` | English documentation from compiled BEAM docs, including hidden/absent documentation metadata. |
+| `DocShell.Generate.Guides` | Markdown with optional YAML frontmatter for titles, audience, locale, and renderer metadata. |
+| `DocShell.Generate.Livebooks` | `.livemd` notebooks. |
+| `DocShell.Generate.Changelog` | Release notes through a source adapter; defaults to `CHANGELOG.md`. |
+| `DocShell.Generate.OpenApi` | API descriptions through an OpenAPI adapter. |
 
----
+Changelog adapters can read from a graph, database, CMS, or service without
+changing the artifact contract. The Markdown parser supports git_ops and Keep a
+Changelog headings, parenthesised or hyphenated dates, inline/reference/absent
+version links, and SemVer prereleases.
 
 ### Guide line endings
 
@@ -539,9 +470,10 @@ YAML frontmatter accepts LF, CRLF, and CR line endings, including a closing
 Guide and notebook titles come from the first top-level parsed H1, including
 Setext headings. Inline formatting is flattened, and headings inside code
 examples are ignored. Explicit guide frontmatter titles still take precedence.
-Guides with explicit titles do no title-only parse. Otherwise guide/notebook
-titles reuse the body AST when there are no fences; fenced input retains the
-defensive title parse for permissive Markdown closing-fence behavior.
+
+Explicit titles avoid a separate title parse. Otherwise, unfenced guides and
+notebooks reuse the body AST. Fenced input gets a separate title parse so
+malformed closing fences cannot expose code comments as page headings.
 
 ### Changelog source validation
 
@@ -557,9 +489,8 @@ of the source return a source-tagged error.
 
 ## OpenAPI
 
-Where the OpenAPI document comes from varies too much to hard-code, so the
-build talks to an adapter and never to a spec library. Three ship with the
-package:
+Choose an adapter for your OpenAPI source. The build calls the adapter; each
+adapter handles its source library. Three are included:
 
 | Adapter | For |
 | --- | --- |
@@ -567,15 +498,16 @@ package:
 | `Adapters.OpenApiSpex` | An existing [OpenApiSpex](https://hexdocs.pm/open_api_spex) module |
 | `Adapters.RawJson` | A map, or a JSON file on disk |
 
-Both library-backed adapters resolve their dependency at runtime, so neither
-library is a dependency of DocShell. Writing your own means implementing one
-callback — see the [OpenAPI adapters notebook](notebooks/openapi-adapters.livemd).
+Both library-backed adapters resolve their dependency at runtime. Hosts install
+the library they use. A custom adapter implements one callback; see the
+[OpenAPI adapters notebook](notebooks/openapi-adapters.livemd).
 
 ### OpenAPI version support
 
 Raw and custom adapters accept OpenAPI 3.0, 3.1, and 3.2 documents without
-rewriting their fields. Validation checks the version and unambiguous JSON encoding; source
-libraries own schema validation. The default document remains OpenAPI 3.1.
+rewriting their fields. Validation checks the version and unambiguous JSON
+encoding; source libraries own schema validation. The default document remains
+OpenAPI 3.1.
 
 ### Optional integration dependencies
 
@@ -585,8 +517,8 @@ AshOaskit themselves. Core consumers do not resolve its dependency tree.
 
 ## Serving it
 
-The artifacts are plain JSON files; serving them statically is a perfectly good
-answer, and none of the following is required.
+Serve the JSON files with a static file handler, or use the optional runtime
+cache when you need authorization or updates without a redeploy.
 
 When documentation is not uniformly public, or should update without a
 redeploy, add the cache to your supervision tree:
@@ -605,20 +537,20 @@ forward "/docs/api",
   init_opts: [gate: &MyApp.Auth.allow_docs?/1]
 ```
 
-The `:gate` is where you decide who may read what — a unary function or an MFA
-tuple, returning `:ok` or `true` to allow the request. DocShell has no view on
-sessions, roles, or tenancy, and that callback is the whole extension point.
-Hosts that would rather keep their own pipeline can call
-`DocShell.Web.Controller.show/2` from an ordinary controller action instead.
-For private documentation, the gate must consume server-validated request state;
-a client route guard, audience query or possession of an unvalidated browser
-value is not authorization. Keep public and private artifact caches/routes
-separate unless the host can prove complete authorization partitioning.
+The `:gate` option accepts a unary function or an MFA tuple. Return `:ok` or
+`true` to allow a request. The host handles sessions, roles, and tenancy.
+
+For private documentation:
+
+- Base the gate on server-validated request state. Client route guards, audience
+  queries, and unvalidated browser values are not authorization.
+- Keep public and private caches/routes separate unless the host can prove
+  complete authorization partitioning.
+- To use an existing controller pipeline, call `DocShell.Web.Controller.show/2`
+  after the pipeline's authorization checks.
 
 The [serving artifacts notebook](notebooks/serving-artifacts.livemd) walks
 through static serving, runtime caching, reloads, gates, and controller usage.
-
----
 
 ### Supervising named caches
 
@@ -627,26 +559,35 @@ named caches can be listed directly in one supervision tree.
 
 ### Cache ownership
 
-Cache ETS tables permit direct concurrent reads, but only the cache process
-may write them. Individual fetches are consistent; separate fetches may cross a
-reload. Use `Cache.snapshot/2` for a caller-owned copy of all envelopes from one
-generation, including the manifest. It returns `{:ok, %{generation_id: id,
-artifacts: envelopes}}` and remains valid after reloads, at the cost of retaining
-that copy in caller memory. Snapshot calls queue behind reloads.
+Only the cache process writes to ETS; readers can fetch concurrently.
 
-`Cache.reload(server, timeout)` and `snapshot(server, timeout)` default to 5,000
-milliseconds. They follow `GenServer.call/3`: timeouts/unavailable processes exit
-the caller, and timing out does not cancel a queued or running reload.
-Reusing the active generation ID with changed envelopes returns
-`{:error, {:generation_id_reused, id}}` and preserves the previous snapshot.
-Identical envelopes are a safe no-op; a new build needs a new generation ID.
+| Operation | Behavior |
+| --- | --- |
+| Individual fetch | Consistent on its own. Separate fetches may cross a reload. |
+| `Cache.snapshot/2` | Caller-owned copy of one generation, including the manifest. Remains valid after reloads and retains that copy in caller memory. |
+| `Cache.reload/2` | Publishes a validated generation; failed reloads preserve the previous snapshot. |
+
+A snapshot returns `{:ok, %{generation_id: id, artifacts: envelopes}}`.
+Snapshot calls queue behind reloads.
+
+Both reload and snapshot default to a 5,000 ms timeout and follow
+`GenServer.call/3`: timeouts or unavailable processes exit the caller. Timing
+out does not cancel a reload.
+
+A new build needs a new generation ID. Reusing the active ID with changed
+envelopes returns `{:error, {:generation_id_reused, id}}`; identical envelopes
+are a no-op.
 
 ### HTTP response caching
 
-HTTP serving caches encoded JSON and an ETag per generation. GET and HEAD
-share headers; matching `If-None-Match` requests return 304 after authorization.
-Other methods return 405 with `Allow: GET, HEAD`. The host retains control of
-Cache-Control and Vary. Encoding happens during cache publication, not requests.
+Encoded JSON and ETags are prepared when the cache publishes a generation.
+
+| Request | Response |
+| --- | --- |
+| GET or HEAD | Shared headers; matching `If-None-Match` returns 304 after authorization. |
+| Other methods | 405 with `Allow: GET, HEAD`. |
+
+The host controls Cache-Control and Vary.
 
 ## Graph-backed hosts
 
@@ -664,38 +605,50 @@ To serve documentation back out of that store, implement
 config :doc_shell, presentation_source: MyApp.Docs.GraphProjector
 ```
 
-Presentation IDs are nonempty and unique within navigation (including children)
-and search. Shared IDs must have identical paths. Local leaves/search results
-need content; navigation groups with children and absolute HTTP(S) links may
-omit it. Content can be hidden from both indexes. Backlink targets need content;
-origins may live in a larger host graph but cannot contradict a known path.
-The default generator sorts by kind, title, then ID, including tied titles.
+DocShell validates the projector's types, content, metadata, and document
+references before writing. The
+[graph presentation contract](usage-rules.md#recursive-content-validation)
+covers ID uniqueness, shared paths, navigation groups, and backlinks.
 
-The pipeline validates the projector's field types, recursive AST content,
-and metadata before writing files. Hosts use the same presentation contract
-for extracted files and graph-backed content.
+The host must:
 
-A graph-backed host supplies one already-authorized projection. Its store may
-represent a monorepo or several exact repository revisions; DocShell neither
-discovers nor combines them. Public and internal documentation are separate
-host projections—renderer-side filtering is not an authorization boundary.
-Portable collection/cohort assembly is a separate site path for hosted or static
-renderers. A hosted graph does not need one collection per repository.
+- Supply one already-authorized projection with exact repository revisions.
+  DocShell does not discover repositories or combine graph stores.
+- Construct public and internal projections separately. Renderer-side filtering
+  is not an authorization boundary.
+- Pair API reference with the same admitted source view, graph position, locale,
+  release, and disclosure surface as the presentation. The host validates the
+  session, organization, and disclosure decision.
 
-If that surface includes API reference, the host must pair the presentation and
-OpenAPI document from the same admitted source view, graph position, locale,
-release, and disclosure surface before rendering or serving them. The host
-validates the session, organization, and disclosure decision. Never attach a
-process-global current OpenAPI document to an older or differently authorized
-graph presentation.
+A hosted graph needs no collection per repository. Collections and cohorts are
+used for the separate [portable site workflow](#portable-sites).
 
-Current APIs check the presentation and basic OpenAPI version/JSON shape
-separately. A normal `DocShell.Build.run/1` gives its written artifacts one
-`generation_id`, but that does not bind independently supplied hosted graph
-and OpenAPI inputs. DSH.01 proposes a hosted pair contract with an opaque
-publication binding and pre-render mismatch rejection; it is not implemented.
+**Current limitation:** presentation and OpenAPI validation run separately.
+A build's `generation_id` does not bind independently supplied hosted inputs.
+Never attach a process-global current OpenAPI document to an older or differently
+authorized presentation.
 
----
+A common publication binding and pre-render pair check are
+[planned](docs/specs/DSH.01-documentation-sites.md#hosted-api-pairing-current-boundary-and-planned-contract)
+and are not implemented.
+
+## Try it interactively
+
+Run the tutorials in Livebook to inspect real build output. Start with the
+build pipeline:
+
+[![Run in Livebook](https://livebook.dev/badge/v1/blue.svg)](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fbuild-pipeline.livemd)
+
+- [The Build Pipeline](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fbuild-pipeline.livemd):
+  Follow one build from source files to generated artifacts.
+- [Artifact Contract](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fartifact-contract.livemd):
+  Inspect the public JSON shapes, envelopes, manifests, and presentation indexes.
+- [OpenAPI Adapters](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fopenapi-adapters.livemd):
+  Work through the default document, shipped adapters, custom adapters, and validation errors.
+- [Serving Artifacts](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fserving-artifacts.livemd):
+  Walk through static serving, runtime caching, reloads, gates, and controller usage.
+- [Publish a Portable Site](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fsite-publication.livemd):
+  Load a collection, project routes and navigation, then publish a static site.
 
 ## Development
 
@@ -719,17 +672,25 @@ scripts/notebook_smoke.py # execute tutorial cells against this checkout
 scripts/consumer_smoke.sh # verify the built package in fresh consumers
 ```
 
+### Quality checks
+
 `mix check` runs formatting, `--warnings-as-errors` compilation, strict Credo,
 documentation and typespec coverage, tests with coverage, dependency
-advisories, Dialyzer, and a compile with the optional dependencies removed. CI also executes the notebooks and packaged consumer checks. CI
-runs tests and coverage across Elixir 1.17 through 1.20, with the remaining
-quality checks on Elixir 1.20.
+advisories, Dialyzer, and a compile with the optional dependencies removed.
+
+CI also executes the notebooks and packaged consumer checks. It runs tests and
+coverage across Elixir 1.17 through 1.20, with the remaining quality checks on
+Elixir 1.20.
 
 The local gate disables automatic retry-only mode: every `mix check` runs all
-configured checks unless you explicitly request a narrower run. Packaged consumer
-tests unpack a Hex archive into fresh projects and perform canonical-fixture,
-multi-release build/import and cache-snapshot checks for core, Plug and Ash hosts.
-They never change this repository's dependency lock or release refs.
+configured checks unless you explicitly request a narrower run.
+
+### Package consumer checks
+
+Packaged consumer tests unpack a Hex archive into fresh projects. They check
+canonical fixtures, multi-release build/import, and cache snapshots for core,
+Plug, and Ash hosts without changing this repository's dependency lock or
+release refs.
 
 ```sh
 scripts/consumer_smoke.sh # locked dependency set (the CI default)
@@ -737,19 +698,26 @@ DOC_SHELL_DEPENDENCIES=unlocked scripts/consumer_smoke.sh
 DOC_SHELL_DEPENDENCIES=minimum scripts/consumer_smoke.sh
 ```
 
-The selected minimum set uses EarmarkParser 1.4.8 (its earliest published 1.4
-release), YamlElixir 2.11.0 and Jason 1.4.0. The Ash host uses Jason 1.4.5 because
-its Decimal 3 dependency is incompatible with earlier Jason versions. Optional
-host/transitive dependencies are solver-selected, not forcibly overridden; this
-is not an exhaustive combination of every historical dependency version. The old
-EarmarkParser emits upstream deprecation warnings on modern Elixir; no warnings
-are suppressed and the library itself still compiles with warnings as errors.
+| Consumer | Selected minimum runtime dependencies |
+| --- | --- |
+| Core and Plug | EarmarkParser 1.4.8, YamlElixir 2.11.0, Jason 1.4.0 |
+| Ash | Same, except Jason 1.4.5 for compatibility with Decimal 3 |
+
+EarmarkParser 1.4.8 is its earliest published 1.4 release. Optional/transitive
+dependencies are solver-selected. This checks selected minima, not every
+historical dependency combination.
+
+Old EarmarkParser releases emit upstream deprecation warnings on modern Elixir.
+Those warnings are not suppressed; DocShell compiles with warnings as errors.
+
+### Documentation and benchmarks
 
 `mix docs` emits HTML, Markdown, and EPUB. The Markdown formatter is what
 produces `doc/llms.txt` and a `.md` file per module for machine readers.
 
 `mix bench` writes Markdown reports to `bench/output/`, which are published as
 the Performance section of the documentation.
+
 The collection suite measures 1,000–16,000 documents with preparation outside
 timed work and reports elapsed time and BEAM allocation (not peak RSS). Its CI
 smoke mode is console-only. Measurements are diagnostics, not timing assertions.
@@ -758,13 +726,12 @@ The site suite measures projection and full static replacement for 10–500 page
 including search serialization and output validation. Renderer work is a small
 fixed fixture; the numbers characterize the portable pipeline, not browser paint.
 
-Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, code standards, and the release
+process.
 
 AI coding tools working in this repository should read `AGENTS.md`. Package
 consumers can ingest [usage-rules.md](usage-rules.md) through the Hex
 `usage_rules` ecosystem.
-
----
 
 ## License
 

@@ -1,9 +1,8 @@
 # Artifact Contract
 
-DocShell writes JSON artifacts for renderers that may live in other
-repositories and release on their own cadence. Those JSON shapes are public API,
-not an internal data structure. This notebook walks through the contract using a
-real build so each field is tied to something you can inspect.
+DocShell's JSON artifacts are a public API. Renderers in other repositories
+consume them and release independently. This notebook builds a small set of
+artifacts so you can inspect each file and its fields.
 
 The examples write to a disposable temp directory. They do not modify
 `priv/doc_shell/`.
@@ -104,36 +103,42 @@ build_opts = [
 
 ## Site-ready collections
 
-Collection identity is per document, not per source file: a multi-release
-changelog has several document IDs pointing to one path. Every admitted record,
-including the synthetic `openapi` document, needs unique identity and matching
-provenance. Unknown source kinds retain the generic source-index contract.
-Canonical digesting must reject duplicate encoded object keys.
-Loading validates source-index entry shapes and exact provenance coverage before
-qualifying documents. The `openapi` ID is reserved in collection mode. Unknown
-referenced indexes retain their source kind and metadata; other extension
-artifacts remain available as opaque decoded payloads.
+Pass a `DocShell.Generate.Collection` descriptor when a host will publish this
+build alongside other documentation. The descriptor binds the artifact tree to
+an exact source checkout. The caller supplies and verifies the revision and tree
+digest; DocShell records them without running Git or making network requests.
 
-`DocShell.Json.Canonical.encode/1` and `digest/1` provide checked operations;
-`Collection.digest/1` is a convenience for encodable input and raises on invalid
-values. Portable canonical byte/digest fixtures ship in `priv/contracts/`.
-Canonical bytes distinguish integers from floats. Projection compatibility uses
-the same strict distinction; embedded index ASTs must agree with content, and the
-synthetic OpenAPI source has no page AST. Native JSON hashing avoids a redundant
-encode/decode pass while preserving the checked protocol path for other values.
-Artifact writes reject invalid protocol output and host encoder exceptions before
-replacement; source extension fields must be native JSON in ordinary builds too.
+Each document has a unique ID and matching provenance. Several releases from
+one changelog can share a source path, but each has its own document ID.
+The synthetic API document reserves the ID `openapi` in collection mode.
+
+Loading validates source-index entries and exact provenance coverage before
+qualifying IDs. Unknown source kinds follow the generic source-index contract
+and retain their kind and metadata. Other extension artifacts remain available
+as opaque decoded payloads.
+
+`DocShell.Json.Canonical.encode/1` and `digest/1` reject duplicate encoded object
+keys and return tagged errors. `Collection.digest/1` is a convenience
+for encodable input and raises on invalid values. Portable canonical byte/digest
+fixtures ship in `priv/contracts/`.
+
+The collection checks also cover content and serialization:
+
+- Canonical bytes distinguish integers from floats. Projection compatibility
+  uses the same strict distinction.
+- Embedded index ASTs must agree with content. The synthetic OpenAPI source
+  has no page AST.
+- Native JSON hashing avoids a redundant encode/decode pass. Other values use
+  the checked protocol path.
+- Artifact writes reject invalid protocol output and host encoder exceptions
+  before replacement. Source extension fields must be native JSON in ordinary
+  builds too.
 
 The collection integrity section of `docs/specs/DSH.01-documentation-sites.md`
 defines the required behavior; `docs/plans/documentation-sites.md` records the
 implementation's acceptance status. A custom projector may not discard or change
 nonempty source ASTs in collection mode. Such a build must fail before publishing;
 the library must not restore excluded public content implicitly.
-
-When a host publishes several documentation corpora together, pass a
-`DocShell.Generate.Collection` descriptor to bind this artifact tree to the
-exact source checkout. The caller supplies and verifies the revision and tree
-digest; DocShell records them but performs no Git or network operation.
 
 ```elixir
 collection = %{
@@ -162,14 +167,27 @@ artifact digests let an importer validate the complete generation, and
 `DocShell.Generate.Collection.load/1` qualifies document IDs as
 `doc_shell:document_id` without starting the host application.
 
-Import has finite per-corpus budgets: 32 MiB per file, 2 GiB total bytes including
-the manifest, 256 artifacts, 100,000 sources and JSON nesting depth 64.
-`load_many/2` also limits input to 256 collections. Override with positive keywords,
-for example `Collection.load(descriptor, max_file_bytes: 8 * 1_024 * 1_024)`.
-The directory must remain caller-owned and stable during import. Symlink roots
-(even with `/` or `/.` suffixes), untrusted symlink components and `..` traversal
-are rejected; ancestors of the existing working/system temporary directories are
-trusted platform aliases. Duplicate JSON keys fail rather than being overwritten.
+Import uses finite limits:
+
+| Limit | Default |
+| --- | --- |
+| One file | 32 MiB |
+| Total bytes per corpus, including the manifest | 2 GiB |
+| Artifacts per corpus | 256 |
+| Sources per corpus | 100,000 |
+| JSON nesting depth | 64 |
+| Collections per `load_many/2` call | 256 |
+
+Override limits with positive keywords, for example
+`Collection.load(descriptor, max_file_bytes: 8 * 1_024 * 1_024)`.
+
+The directory must remain caller-owned and stable during import:
+
+- Symlink roots (even with `/` or `/.` suffixes), untrusted symlink components,
+  and `..` traversal are rejected.
+- Ancestors of the existing working/system temporary directories are trusted
+  platform aliases.
+- Duplicate JSON keys fail rather than being overwritten.
 
 ## The artifact tree
 
@@ -257,8 +275,8 @@ private artifacts, so the list is empty.
 DocShell.Artifact.read(Path.join(private_dir, "manifest.json"))
 ```
 
-Each manifest describes its own directory. A shared manifest would lie about at
-least one side of a public/private split.
+Each manifest describes its own directory; public and private directories need
+separate manifests.
 
 ## navigation.json
 
@@ -283,9 +301,8 @@ navigation
 ```
 
 The default `DocShell.Presentation.StaticGenerator` sorts entries by kind then
-title and leaves `children` empty. Hierarchy belongs to the host: maybe modules
-group by namespace, guides group by product area, and notebooks group by team.
-DocShell cannot guess that correctly.
+title and leaves `children` empty. The host supplies any hierarchy, such as
+grouping modules by namespace or guides by product area.
 
 ## search-index.json
 
@@ -413,13 +430,12 @@ After reading from disk, the same artifact is JSON data with string keys.
 navigation |> List.first()
 ```
 
-Both are intentional. Application code gets typed structs while artifacts stay
-plain JSON.
+Application code uses typed structs; artifacts contain plain JSON.
 
 ## Graph-backed presentation
 
 Graph-backed hosts can provide their own presentation data through
-`DocShell.Presentation.GraphProjector`. The required shape is the same concept:
+`DocShell.Presentation.GraphProjector`. The required fields are
 schema version, navigation, search, and content. `backlinks` are optional.
 
 ```elixir
@@ -442,8 +458,7 @@ presentation = %{
 DocShell.Presentation.GraphProjector.validate(presentation)
 ```
 
-The validator exists because a projector may live in another repository. A shape
-mistake should fail at the boundary, not later as a renderer bug.
+The validator catches malformed projector output before a renderer receives it.
 
 ## Contract change checklist
 
@@ -457,8 +472,7 @@ Before changing any `doc-shell/v2` shape, answer these questions:
 | Does the schema version need to change? | Breaking changes require coordination |
 | Are README, usage rules, and tutorials updated? | The contract docs are part of the API |
 
-The safest rule is conservative: if a renderer could observe the change, treat
-it as public API work.
+If a renderer could observe the change, treat it as public API work.
 
 ## Rendering untrusted content
 

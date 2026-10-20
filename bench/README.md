@@ -10,8 +10,8 @@ mix bench.ast      # run one
 
 Most suites write Markdown reports to `bench/output/`, and those reports are
 published as the **Performance** section of the generated documentation. The
-files are committed, so `mix docs` works on a fresh clone — re-run the suites
-and commit the result when you change a hot path.
+files are committed so `mix docs` works on a fresh clone. Re-run the suites and
+commit the reports when you change a hot path.
 
 | Suite | Writes | Measures |
 | --- | --- | --- |
@@ -22,14 +22,14 @@ and commit the result when you change a hot path.
 | `site.exs` | `output/site.md` | Portable site projection and complete staged static export for 10–500 pages |
 | `serving.exs` | Console only | Cached response bytes versus per-request encoding |
 
-They exist to catch regressions in the hot paths. Report measurements with the
+Use the suites to investigate performance changes. Report measurements with the
 machine, Elixir/OTP versions, input size, and timed operation; do not treat a
 local measurement as a performance guarantee. A documentation build is a batch
 job, so compare complete runs at representative corpus sizes.
 
 Setting `CI=true` shortens every suite to a smoke run, which verifies the
-benchmarks still execute without spending minutes measuring. Real numbers move
-with machine, OTP version, and what else is running — compare like with like.
+benchmarks still execute without spending minutes measuring. Compare full runs
+on the same machine and OTP version, with similar system load.
 
 Collection setup/publication is outside timed work. Import measurements include
 bounded file reads, JSON decoding, canonical hashes and complete provenance

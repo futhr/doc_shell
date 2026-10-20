@@ -1,22 +1,13 @@
 # Publish a Portable Documentation Site
 
-DocShell separates three decisions that are easy to blur together:
+Publishing a site has three steps:
 
-1. a collection proves which source artifacts were loaded;
-2. a site source chooses routes, visibility, and navigation;
-3. a renderer turns the validated site into output.
+1. Load a collection and verify its source artifacts.
+2. Use a site source to choose routes, visibility, and navigation.
+3. Render the validated site.
 
-This notebook builds that path end to end. It uses a deliberately small HTML
-renderer so the DocShell boundaries remain visible. A real renderer can live in
-another package and implement the same behaviour.
-
-External illustrations and other typed artifact blocks have an
-[unreleased static implementation](../docs/specs/portable-artifact-capabilities.md).
-This notebook continues to exercise the unchanged v1 path. The executable
-artifact tests separately exercise verified fallback, unknown optional profiles,
-per-state runtime selection and the same static exporter. A host passes
-`:artifact_options` explicitly; it never starts an artifact producer implicitly.
-Independent reader and human target qualification remain open.
+This notebook follows those steps with a small HTML renderer. A production
+renderer can live in another package and implement the same behaviour.
 
 ## Setup
 
@@ -65,8 +56,8 @@ defmodule SitePublication.Source do
 end
 ```
 
-The slightly explicit map is the public policy boundary. Hosts can replace it
-with a database or graph projection, but the returned values remain inert JSON.
+The map declares the host's site policy. A database or graph projection can
+produce it too; the returned values must remain inert JSON.
 
 ## Define a small renderer
 
@@ -278,6 +269,19 @@ implementation. Other adapters consume the same records.
 
 Enum.map(matches, &{&1.id, &1.route})
 ```
+
+## External artifact blocks (unreleased)
+
+External illustrations and other typed artifact blocks have an
+[unreleased static implementation](../docs/specs/portable-artifact-capabilities.md).
+
+This notebook continues to exercise the unchanged v1 path. The executable
+artifact tests separately exercise verified fallback, unknown optional profiles,
+per-state runtime selection and the same static exporter.
+
+A host passes
+`:artifact_options` explicitly; it never starts an artifact producer implicitly.
+Independent reader and human target qualification remain open.
 
 ## Clean up
 

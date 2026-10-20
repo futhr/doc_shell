@@ -1,14 +1,7 @@
 # Serving Artifacts
 
-Each cache lookup is consistent on its own; separate lookups may cross a reload.
-Multi-artifact consumers use `Cache.snapshot/2` for one immutable generation.
-Reloads and snapshots accept a configurable timeout. A host
-continues to own authorization, caching policy, and the artifact directory.
-
-DocShell's primary job is generation: turn documentation sources into versioned
-JSON. Serving those JSON files is optional and belongs to the host application.
-
-This tutorial shows the three normal serving choices:
+After building the JSON artifacts, choose how to serve them. This tutorial
+covers three options:
 
 - serve the files statically
 - load them into `DocShell.Web.Cache` and serve from memory
@@ -85,8 +78,8 @@ Path.wildcard(Path.join(public_dir, "*.json"))
 
 ## Option 1: serve files statically
 
-The simplest answer is often correct: put `priv/doc_shell/public/` behind a
-static file handler, CDN, or frontend build step and let clients fetch JSON.
+Put `priv/doc_shell/public/` behind a static file handler, CDN, or frontend build
+step and let clients fetch JSON.
 
 The files are plain JSON, but every payload is wrapped in DocShell's envelope.
 
@@ -242,8 +235,8 @@ else
 end
 ```
 
-Omitting a gate serves everything to everyone. That is correct for public
-documentation and wrong for internal documentation. Decide deliberately.
+Omitting a gate serves everything to everyone. Internal documentation requires
+a host authorization gate based on server-validated request state.
 
 ## Run public and internal caches side by side
 
@@ -269,8 +262,8 @@ forward "/internal/docs",
   init_opts: [cache: :docs_internal, gate: &MyApp.Auth.employee?/1]
 ```
 
-DocShell does not decide which reader belongs in which audience. It only gives
-the host a clean place to enforce that decision.
+The host decides which readers may access each directory and enforces that
+decision through the gates.
 
 ## Serve from a host controller
 
@@ -321,8 +314,6 @@ cannot walk the filesystem.
 | Omitting a gate on internal docs | Add a host authorization function or use a host controller pipeline |
 | Sharing one cache name for two directories | Give each cache a distinct `:name` |
 
-Generation stays renderer-neutral. Serving stays host-controlled.
-
 ## Supervising named caches
 
 A cache child specification uses its registered name as its child ID. Multiple
@@ -330,16 +321,23 @@ named caches can be listed directly in one supervision tree.
 
 ## Cache ownership
 
-Cache ETS tables permit direct concurrent reads, but only the cache process
-may write them. Individual fetches are consistent; separate fetches may cross a
-reload. Use `Cache.snapshot/2` for a caller-owned copy of all envelopes from one
-generation, including the manifest. It returns `{:ok, %{generation_id: id,
-artifacts: envelopes}}` and remains valid after reloads, at the cost of retaining
-that copy in caller memory. Snapshot calls queue behind reloads.
+Only the cache process writes to ETS; readers may fetch concurrently.
+
+| Read operation | Consistency |
+| --- | --- |
+| Individual fetch | Consistent on its own. Separate fetches may cross a reload. |
+| `Cache.snapshot/2` | Caller-owned copy of all envelopes from one generation, including the manifest. |
+
+A snapshot returns `{:ok, %{generation_id: id, artifacts: envelopes}}`. It stays
+valid after reloads and retains that copy in caller memory. Snapshot calls
+queue behind reloads.
 
 `Cache.reload(server, timeout)` and `snapshot(server, timeout)` default to 5,000
-milliseconds. They follow `GenServer.call/3`: timeouts/unavailable processes exit
-the caller, and timing out does not cancel a queued or running reload.
+milliseconds. They follow `GenServer.call/3`:
+
+- Timeouts or unavailable processes exit the caller.
+- Timing out does not cancel a queued or running reload.
+
 New bytes require a new generation ID. Reusing the active ID with changed
 envelopes returns `{:error, {:generation_id_reused, id}}` and retains the old snapshot.
 

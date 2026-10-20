@@ -1,12 +1,9 @@
 # Contributing to DocShell
 
-Bug fixes, documentation improvements, and focused feature proposals are all
-welcome.
-
-One thing to know before you start: the JSON DocShell writes is consumed by
-renderers in other repositories. A change to an artifact shape is not a local
-refactor — it is a breaking change to a contract, and it needs to be treated
-that way. Everything else is ordinary library work.
+Bug fixes, documentation improvements, and focused feature proposals are
+welcome. Renderers in other repositories consume DocShell's JSON output, so
+check artifact changes for compatibility before starting. Renaming, removing,
+or retyping a field requires a schema-version bump and coordinated releases.
 
 ## Reporting bugs
 
@@ -17,15 +14,13 @@ then include:
 - minimal reproduction steps
 - the full error message and stacktrace
 
-For artifact problems, the offending JSON fragment is worth more than a
-description of it.
+For artifact problems, include the relevant JSON fragment.
 
 ## Suggesting features
 
-Open an issue describing the use case rather than the implementation. DocShell
-turns down proposals that pull renderer concerns, authorization policy, or
-host-specific taxonomy into the package, so leading with the problem tends to
-find a better answer than leading with a patch.
+Open an issue describing the use case and expected behavior. Keep visual
+rendering, authorization policy, and host-specific taxonomy in the host or a
+separate renderer package.
 
 ## Development setup
 
@@ -87,20 +82,19 @@ temporary projects, without changing the repository lock, workflows or refs.
 | `mix dialyzer` | Type inconsistencies |
 | `mix docs --warnings-as-errors` | HTML, Markdown, and EPUB all build cleanly |
 
-The no-optional-deps compile matters more than it looks. `DocShell.Web.Plug`
-and `DocShell.Web.Controller` are compiled conditionally, and the AshOaskit
-adapter resolves its library at runtime. Without that check, a compile-time
-reference slips in and breaks every project that does not install the optional
-dependency.
+The compile without optional dependencies catches references that would break
+hosts using only the core package. `DocShell.Web.Plug` and
+`DocShell.Web.Controller` compile conditionally; the AshOaskit adapter resolves
+its library at runtime.
 
 ## Code standards
 
 - Document every public module, function, callback, and struct. Moduledocs
   should explain what the module is for and why it works the way it does —
   a restatement of the module name is not documentation.
-- Leave the `mix docs` formatters alone. Pinning them to `["html"]` drops the
-  Markdown formatter, and with it `llms.txt` and the per-module `.md` files
-  that machine readers use.
+- Keep the HTML, Markdown, and EPUB formatters in `mix docs`. The Markdown
+  formatter produces `llms.txt` and the per-module `.md` files for machine
+  readers.
 - Give every public function a `@spec`.
 - Prefer pattern matching, guards, and small total functions. Credo caps
   conditional nesting at two levels.
@@ -125,9 +119,9 @@ A module whose documentation contains `iex>` examples must be covered by
 `doctest` in that test module, so the examples are executed rather than merely
 read.
 
-Group related property tests clearly, using [StreamData](https://hexdocs.pm/stream_data). They are the
-right tool for the normalization and round-trip code, where the interesting
-inputs are the ones nobody thinks to write by hand.
+Use [StreamData](https://hexdocs.pm/stream_data) for normalization and round-trip
+properties, and group related properties together. Include edge cases beyond
+the hand-written fixtures.
 
 ## Changing the artifact contract
 
@@ -183,6 +177,5 @@ For a subsequent release:
 
 ## Questions
 
-Open an issue. Questions about whether something belongs in DocShell at all are
-especially welcome — that boundary is the most useful thing about the package,
-and it is worth defending together.
+Open an issue for questions about using or contributing to DocShell, including
+whether a feature belongs in the core package or an integration.

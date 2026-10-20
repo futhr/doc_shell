@@ -10,9 +10,8 @@ the required behavior and does not treat core tests as renderer qualification.
 ## Purpose
 
 DocShell turns documentation sources into a versioned, renderer-neutral
-corpus. This specification extends that foundation with the portable semantics
-needed to assemble several corpora into one documentation site and publish the
-same site through an application route or static files.
+corpus. This specification defines how to combine several corpora into one
+documentation site and publish it through an application route or static files.
 
 The core package owns document identity, source provenance, site projection,
 route and link validation, search records, deterministic manifests, and the
@@ -31,7 +30,7 @@ Existing generic consumers ignore it; a DSH.01 collection importer requires it.
 
 ## Existing foundation
 
-The following behavior is implemented before this specification:
+The existing extraction pipeline provides:
 
 - `DocShell.Build` extracts module documentation, Markdown guides, Livebooks,
   release notes, and OpenAPI into one generation of `doc-shell/v2` artifacts.
@@ -41,10 +40,10 @@ The following behavior is implemented before this specification:
 - `DocShell.Web.Cache` can serve a validated generation without making the
   extraction pipeline a runtime requirement.
 
-This source is the input to the site contract. The implementation described
-below adds multi-corpus projection and static publication without changing the
-existing extraction format. Renderer parity still requires evidence from the
-independent packages that render the contract.
+These artifacts are inputs to the site contract. The implementation below adds
+multi-corpus projection and static publication without changing the extraction
+format. Renderer parity still requires evidence from independent renderer
+packages.
 
 ## Ownership boundaries
 
@@ -89,39 +88,47 @@ but distinct:
 - `DocShell.Generate.Cohort` and the `doc-shell-site/v1` contract combine
   portable collections for static or application-neutral publication.
 
-Using the hosted path does not require manufacturing one collection per
-repository or component. Using the portable site path does not make DocShell an
-authorization authority. In both cases, source authenticity and admission are
-established before rendering.
+The hosted path needs no collection per repository or component. For both
+paths, the host authenticates and admits sources before rendering; DocShell
+does not make authorization decisions.
 
 #### Hosted API pairing: current boundary and planned contract
 
 Today `GraphProjector.validate/1` checks one renderer-neutral presentation, and
 `DocShell.Generate.OpenApi.validate/1` checks the OpenAPI version and JSON
-encodability, not the complete OpenAPI schema. `DocShell.Build.run/1` gives
+encodability, not the complete OpenAPI schema.
+
+`DocShell.Build.run/1` gives
 artifacts written in one build the same `generation_id`; the runtime cache
-checks that identity across one loaded artifact directory. None of these APIs
+checks that identity across one loaded artifact directory.
+
+None of these APIs
 checks a separately supplied hosted graph presentation against an OpenAPI
 document, and the current presentation contract has no publication binding.
 
 Until a pair contract exists, a host serving graph-backed API reference must
 ensure both inputs come from the same admitted source view, graph position,
-locale, release, and disclosure surface. A public pair and an authenticated
-internal pair are independent inputs; matching operation IDs or API versions
-do not make their OpenAPI documents interchangeable. The host validates the
-session, organization, and disclosure decision before constructing and serving
-either input. A process-global current OpenAPI document must not be attached to
-an older or differently authorized graph-backed presentation.
+locale, release, and disclosure surface.
+
+- Public and authenticated internal pairs are independent inputs. Matching
+  operation IDs or API versions do not make their OpenAPI documents interchangeable.
+- The host validates the session, organization, and disclosure decision before
+  constructing and serving either input.
+- A process-global current OpenAPI document must not be attached to an older
+  or differently authorized graph-backed presentation.
 
 DSH-S11 requires a future DocShell contract to accept a host-declared pair with
 one opaque immutable publication binding and reject missing or mismatched
-bindings before renderer consumption. Both sides must also declare comparable
-source-view, graph-position, locale, release, and disclosure-surface values;
-equality of an opaque binding alone cannot detect a token reused for the wrong
-view. The binding's location and input shape must be defined as an additive
-API, without changing existing `doc-shell/v2` fields. DocShell validates the
-declared pair consistency; the host authenticates those declarations and owns
-the login session, organization, disclosure capability, and graph query.
+bindings before renderer consumption. That contract must:
+
+1. Require comparable source-view, graph-position, locale, release, and
+   disclosure-surface values on both sides. A matching opaque binding alone
+   cannot detect a token reused for the wrong view.
+2. Define the binding's location and input shape as an additive API, without
+   changing existing `doc-shell/v2` fields.
+3. Keep declaration authentication, login session, organization, disclosure
+   capability, and graph query in the host. DocShell validates declared pair
+   consistency.
 
 ## Source collection contract
 
@@ -152,7 +159,9 @@ repository-relative source root, and a host-defined status.
 `collection:` configuration. When present, it writes `collection.json` with
 the normalized identity, repository-relative paths and SHA-256 digests for
 every extracted source, canonical digests of every source index payload, and a
-canonical aggregate `content_digest`. Module entries identify the module and
+canonical aggregate `content_digest`.
+
+Module entries identify the module and
 digest of the extracted BEAM documentation record. DocShell records a supplied
 revision and tree digest but never invokes Git to discover or verify them; the
 caller that checks out source owns that verification.
@@ -160,6 +169,7 @@ caller that checks out source owns that verification.
 Site-ready collections store normalized relative source paths and reject paths
 outside the supplied source root, missing source identities, ambiguous source
 ownership, and a collection descriptor that differs from `collection.json`.
+
 Absolute input filenames inside the source root may be normalized during build;
 absolute paths in a portable artifact are rejected. A legacy v1 corpus
 without `collection.json` remains readable through the existing artifact APIs
@@ -179,10 +189,14 @@ Collection loading must:
 
 Document identity and file identity are different. Every source document ID is
 nonempty UTF-8 and unique across the entire corpus, including filtered entries
-and the synthetic OpenAPI document whose ID is `openapi`. A Markdown changelog
+and the synthetic OpenAPI document whose ID is `openapi`.
+
+A Markdown changelog
 produces several release records from one file: those distinct changelog IDs may
 share a normalized source path. Two independently extracted guide/notebook files
-must not claim the same normalized path. Provenance records correspond exactly
+must not claim the same normalized path.
+
+Provenance records correspond exactly
 to admitted source records; missing, repeated, or orphaned records are errors.
 
 The existing source indexes omit ASTs. A collection build may therefore use a
@@ -225,14 +239,18 @@ Projection/body equality is type-strict, including JSON integer versus float
 values. An embedded index AST, when supplied, must exactly match reconstructed
 content. The synthetic OpenAPI source never owns a document AST in `content.json`.
 
-Collection import rejects symlinked roots, including trailing-slash and `/.`
-spellings, symlinked components below a trusted existing parent, and symlinked
-artifact files. Existing ancestors of the current working directory and system
-temporary directory are trusted parents; their platform aliases (for example
-macOS `/var`) are allowed. Parent (`..`) traversal in an import root is rejected. Reads
-must be bounded before decoding. Import requires a stable directory owned by the
-caller: portable path-based filesystem APIs do not provide a sandbox against a
-hostile process that replaces directories concurrently.
+Collection import applies these filesystem rules:
+
+- Reject symlinked roots, including trailing-slash and `/.` spellings,
+  symlinked components below a trusted existing parent, and symlinked artifact files.
+- Trust existing ancestors of the current working directory and system temporary
+  directory, including platform aliases such as macOS `/var`.
+- Reject parent (`..`) traversal in an import root.
+- Bound reads before decoding.
+
+Import requires a stable directory owned by the caller. Portable path-based
+filesystem APIs do not provide a sandbox against a hostile process replacing
+directories concurrently.
 
 Stale optional artifact removal is a transaction operation. It uses the same
 directory locks, backup, publication, and rollback lifetime as writes. A returned
@@ -255,10 +273,13 @@ inconsistent document references while allowing explicit navigation groups and
 external links. Optional member-document search is explicit configuration.
 
 For the existing presentation contract, groups are navigation items with children
-(their path may be empty), and external links use absolute HTTP(S) URLs. Local
-navigation leaves and search results require a content key. Navigation and search
+(their path may be empty), and external links use absolute HTTP(S) URLs.
+
+Local navigation leaves and search results require a content key. Navigation and search
 each have unique IDs; a shared ID has the same path. Content may be absent from
-both indexes. Backlink targets require content; their origins may be outside this
+both indexes.
+
+Backlink targets require content; their origins may be outside this
 corpus, but known origin paths must agree. AST extension fields remain native JSON.
 
 Cache fetches are individually consistent. A caller that needs several artifacts
@@ -268,7 +289,9 @@ failed reloads. No host authorization or renderer policy moves into the library.
 
 Qualification includes multi-release changelogs, custom projectors, reserved IDs,
 unknown source artifacts, malformed JSON values, equal sort keys, path spellings,
-transactional deletion, and concurrent cache readers. Property generators must
+transactional deletion, and concurrent cache readers.
+
+Property generators must
 retain valid edge cases rather than exclude them to make invariants pass. Package
 consumer checks run meaningful artifact round trips and separately exercise
 locked, unlocked, and selected minimum dependency sets without modifying the
@@ -286,13 +309,21 @@ filtering is not a disclosure boundary.
 ## Resource limits
 
 Collection import accepts keyword limits through `Collection.load/2` and
-`load_many/2`, validated by `DocShell.Generate.Collection.Limits`. Defaults are
-32 MiB per file, 2 GiB total input bytes (including the manifest), 256 manifested
-artifacts, 100,000 source records, 256 collections per call and 64 levels of JSON
-container nesting. File bytes and nesting are checked before decoding. Byte,
-file and source budgets apply per collection, not to the aggregate retained
-memory of `load_many/2`. No unlimited sentinel is accepted. Duplicate JSON object
-keys fail rather than taking a parser-dependent first/last value.
+`load_many/2`, validated by `DocShell.Generate.Collection.Limits`:
+
+| Resource | Default maximum | Scope |
+| --- | ---: | --- |
+| File size | 32 MiB | Per file |
+| Total input bytes, including the manifest | 2 GiB | Per collection |
+| Manifested artifacts | 256 | Per collection |
+| Source records | 100,000 | Per collection |
+| Collections | 256 | Per call |
+| JSON container nesting | 64 | Per collection |
+
+File bytes and nesting are checked before decoding. Byte, file, and source
+budgets apply per collection; they do not bound aggregate retained memory in
+`load_many/2`. No unlimited sentinel is accepted. Duplicate JSON object keys fail
+rather than taking a parser-dependent first/last value.
 
 Site operations accept a `DocShell.Presentation.Limits` value. Defaults are
 large enough for an ecosystem site and finite:
@@ -358,7 +389,8 @@ payload bytes after envelope fields are removed.
 
 The projector accepts a host module implementing
 `DocShell.Presentation.SiteSource`. The host supplies taxonomy and route
-policy; DocShell validates the result and derives mechanical relationships.
+policy; DocShell validates the result and derives the relationships between
+pages.
 
 ### Page contract
 
@@ -374,7 +406,7 @@ Every `DocShell.Presentation.Page` has:
 - canonical, source, and edit URLs when the host can establish them;
 - source revision, source-relative path, package version, last-modified value,
   tags, status, and arbitrary JSON metadata;
-- search and navigation inclusion flags; and
+- search and navigation inclusion flags;
 - optional renderer-neutral banner and hero records; and
 - capability requirements derived from its AST and site profile.
 
@@ -460,7 +492,9 @@ session or authorization decision.
 contract version, supported directives, static-output support, browser
 enhancements, and whether a capability needs a live server transport. The
 capability value contains data, not executable callbacks or framework module
-names. A renderer must reject a page that requires an unsupported capability
+names.
+
+A renderer must reject a page that requires an unsupported capability
 or render the fixture's declared accessible fallback. It must not silently
 drop the content or emit a control that cannot operate in the selected output
 mode.
@@ -485,10 +519,13 @@ The public values have this normalized shape:
 
 Renderer and feature IDs match `[a-z0-9][a-z0-9._/-]*`; feature IDs include
 their contract revision and renderer versions use Semantic Versioning.
+
 `output_modes` and feature states are closed atoms.
 The states are `:fallback`, `:enhanced`, and `:connected`. Runtime values are
 `:browser_js` and `:live_transport`; an empty list means that the emitted
-output needs neither. Build tools do not appear as served runtime requirements:
+output needs neither.
+
+Build tools do not appear as served runtime requirements:
 a renderer may use Node while producing an asset, but a static result cannot
 require Node to serve or operate.
 
@@ -496,7 +533,9 @@ Each page carries normalized
 `DocShell.Presentation.Renderer.CapabilityRequirement` values with `feature_id`,
 `acceptable_states`, `essential?`, and an optional `fallback_digest`. The
 projector derives them from typed AST nodes and the selected site profile, not
-from arbitrary metadata. An essential requirement with no supported acceptable
+from arbitrary metadata.
+
+An essential requirement with no supported acceptable
 state fails rendering. A nonessential requirement may be omitted only when its
 declared fallback is present and its digest matches. A connected action is not
 equivalent to a fallback that merely resembles its successful result.
@@ -557,7 +596,9 @@ JavaScript fails.
 
 A hosted renderer may mount a client component inside an explicitly declared
 island boundary. The host and client renderer must not mutate the same DOM
-subtree. The page's article, ordinary links, provenance, navigation, headings,
+subtree.
+
+The page's article, ordinary links, provenance, navigation, headings,
 and search records remain present outside, or as the declared fallback of, any
 island. Live transport is an enhancement capability and cannot be required by
 a static export. DocShell defines these capability and fallback semantics but

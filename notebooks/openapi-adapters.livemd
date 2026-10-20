@@ -1,18 +1,11 @@
 # OpenAPI Adapters
 
-Adapter output must be JSON-encodable without duplicate encoded object keys.
-For collection builds, the synthetic API document uses the reserved ID `openapi`.
-Malformed adapter values must return a tagged build error in both ordinary and
-collection modes. The foundation hardening plan tracks these acceptance checks;
-full OpenAPI schema validation remains the source library's responsibility.
-
 DocShell includes `openapi.json` in every build, but it does not assume where
 the API description comes from. Some hosts derive OpenAPI from Ash domains, some
 already expose an OpenApiSpex module, and some receive a JSON file from another
 language's build pipeline.
 
-The boundary is one callback:
-`c:DocShell.Generate.OpenApi.Adapter.load/1`.
+Each source implements `c:DocShell.Generate.OpenApi.Adapter.load/1`.
 
 This tutorial shows the default behavior, the three shipped adapters, a custom
 adapter, and the shallow validation DocShell applies before accepting a
@@ -53,8 +46,7 @@ handled somewhere else and the renderer simply needs a parseable artifact.
 
 ## Raw JSON from a map
 
-`DocShell.Generate.OpenApi.Adapters.RawJson` is the escape hatch for anything
-that already has an OpenAPI map.
+Use `DocShell.Generate.OpenApi.Adapters.RawJson` for an existing OpenAPI map.
 
 ```elixir
 sample_spec = %{
@@ -115,9 +107,8 @@ File.write!(spec_path, Jason.encode!(sample_spec))
 raw_file_result.openapi["info"]
 ```
 
-If both `:spec` and `:path` are provided, `:spec` wins. That rule makes tests
-straightforward because they can pass an in-memory document even when production
-configuration points at a file.
+If both `:spec` and `:path` are provided, `:spec` wins. Tests can therefore pass
+an in-memory document while production configuration points at a file.
 
 ## Ash domains through AshOaskit
 
@@ -156,8 +147,7 @@ Map.take(ash_placeholder_result.openapi, ["openapi", "info", "components", "path
 ```
 
 If domains are configured but AshOaskit is not installed, the adapter returns
-`{:error, :ash_oaskit_not_available}` instead of pretending the API has no
-endpoints.
+`{:error, :ash_oaskit_not_available}`.
 
 Pass AshOaskit-specific options through `:open_api_options`:
 
@@ -281,10 +271,15 @@ OpenAPI 3.0, 3.1, and 3.2 with either string or atom `openapi` keys.
 }
 ```
 
-It is not full schema validation. The library or tool that produced the
-document should own that. DocShell's check catches common integration mistakes:
+The library or tool that produced the document owns full schema validation.
+DocShell's check catches common integration mistakes:
 returning config, an enveloped artifact, a struct that was never JSON-normalized,
 or a non-OpenAPI document.
+
+Adapter output must be JSON-encodable without duplicate encoded object keys.
+For collection builds, the synthetic API document uses the reserved ID `openapi`.
+Malformed adapter values must return a tagged build error in both ordinary and
+collection modes. The foundation hardening plan tracks these acceptance checks.
 
 ## Error vocabulary
 
@@ -337,8 +332,7 @@ defmodule DocShellLivebook.OptionalLibraryAdapter do
 end
 ```
 
-That pattern is what lets DocShell ship AshOaskit and OpenApiSpex adapters
-without forcing every host to depend on AshOaskit or OpenApiSpex.
+This lets hosts use the adapters without installing libraries they do not need.
 
 ## Choosing an adapter
 
@@ -349,9 +343,6 @@ without forcing every host to depend on AshOaskit or OpenApiSpex.
 | Existing OpenApiSpex `spec/0` module | `DocShell.Generate.OpenApi.Adapters.OpenApiSpex` |
 | Checked-in JSON or another toolchain's output | `DocShell.Generate.OpenApi.Adapters.RawJson` |
 | Anything else | a small custom `DocShell.Generate.OpenApi.Adapter` |
-
-The main design rule is that the build pipeline talks to adapters, not to host
-frameworks. That keeps DocShell renderer-neutral and integration-neutral.
 
 ## Default API identity
 

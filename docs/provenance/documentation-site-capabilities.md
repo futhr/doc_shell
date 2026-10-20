@@ -1,17 +1,21 @@
 # Documentation site capability survey
 
-This survey records the external behavior used to shape DSH.01. It is design
-input, not a dependency selection or a compatibility claim.
+This survey records the behavior that informed DSH.01. These references inform
+the design; they do not select dependencies or establish compatibility.
 
 ## Reference behavior
 
-Starlight provides a useful acceptance baseline for a static documentation
-site: hierarchical and collapsible sidebars, keyboard search, localization,
-SEO metadata, readable typography, code highlighting, dark mode, responsive
-navigation, page table of contents, edit links, last-updated data, previous and
-next navigation, draft/search visibility, and custom page layouts. Its default
-search uses Pagefind. These are user-facing capabilities; DSH.01 specifies them
-without adopting Astro's routing, content collection, or component model.
+Starlight's documentation features informed the acceptance baseline:
+
+| Area | Reference features |
+| --- | --- |
+| Navigation | Hierarchical and collapsible sidebars, responsive navigation, page table of contents, previous/next links. |
+| Search and visibility | Keyboard search using Pagefind by default; draft/search visibility. |
+| Reading | Readable typography, code highlighting, dark mode, custom page layouts. |
+| Publishing | Localization, SEO metadata, edit links, last-updated data. |
+
+DSH.01 specifies these user-facing capabilities without adopting Astro's routing,
+content collection, or component model.
 
 Pagefind demonstrates that a large static corpus can provide chunked,
 multilingual, filtered browser search without a hosted service. DSH.01 keeps

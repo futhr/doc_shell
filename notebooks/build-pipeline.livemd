@@ -1,15 +1,8 @@
 # The Build Pipeline
 
-The collection integrity requirements in `docs/specs/DSH.01-documentation-sites.md`
-cover multi-release changelogs, reserved identities, malformed input and exact
-build/load round trips. Foundation acceptance is tracked in the implementation
-plan. Publication includes stale-file deletion under the same locks and rollback
-as replacement; a failed build must preserve the previous generation or report
-retained recovery paths. Invalid source encoding must identify the source file.
-
-`DocShell.Build.run/1` is the top of DocShell's generation pipeline. It reads
-modules, Markdown guides, Livebook notebooks, release notes, and an OpenAPI
-document, then projects them into the JSON artifacts a renderer can consume.
+`DocShell.Build.run/1` reads modules, Markdown guides, Livebook notebooks, release
+notes, and an OpenAPI document, then projects them into JSON artifacts for a
+renderer.
 
 This tutorial follows one complete build from source files to artifacts. The
 examples create a disposable documentation set under your system temp directory,
@@ -40,8 +33,7 @@ Application.ensure_all_started(:doc_shell)
 
 ## Create a small documentation set
 
-A real host project already has modules, guides, and maybe notebooks. For a
-tutorial, a tiny generated fixture is easier to reason about. The fixture has:
+This tutorial creates a small documentation set:
 
 - one Markdown guide with YAML frontmatter
 - one `.livemd` notebook
@@ -103,8 +95,8 @@ System.system_time(:second)
 ## Run the build
 
 `DocShell.Build.run/1` accepts per-call options. These override host
-configuration, which overrides DocShell defaults. In tutorials and release tasks,
-explicit options make the example deterministic.
+configuration, which overrides DocShell defaults. This example uses explicit
+options so it runs independently of host configuration.
 
 ```elixir
 build_opts = [
@@ -190,10 +182,9 @@ module_entry["meta"]["members"]
 
 ## Inspect guide extraction
 
-Guides are Markdown files. Frontmatter is optional, but when it exists DocShell
-passes it through as metadata. `audience` and `locale` get a small amount of
-special treatment later because the search index exposes them as first-class
-filter fields.
+Guides are Markdown files with optional YAML frontmatter. DocShell passes
+frontmatter through as metadata and exposes `audience` and `locale` as search
+filters.
 
 ```elixir
 guide_entry = List.first(result.guides)
@@ -219,8 +210,7 @@ livebook_entry = List.first(result.livebooks)
 Map.take(livebook_entry, ["id", "title", "kind", "meta"])
 ```
 
-Code cells remain source text in the AST. DocShell is an extractor, not a
-notebook runner.
+Code cells remain source text in the AST. DocShell does not execute them.
 
 ```elixir
 livebook_entry["ast"]
@@ -278,6 +268,12 @@ than duplicated in the navigation and search indexes.
 Map.keys(result.presentation.content) |> Enum.sort()
 ```
 
+Presentation validation also checks relationships: nonempty IDs are unique in
+navigation (including descendants) and search, shared IDs have the same path,
+and local leaves/search records have content. Groups with children and absolute
+HTTP(S) links may omit content. Backlink targets are local; origins may belong to
+the host's wider graph. Default navigation/search order is kind, title, then ID.
+
 ## Inspect the written files
 
 Because `write` defaults to `true`, the build also wrote an artifact tree.
@@ -334,11 +330,10 @@ dry_opts =
 }
 ```
 
-## Fail loudly on invalid sources
+## Errors from invalid sources
 
 Extraction stops at the first configured source that cannot be read. The error
-names the module or file at fault. That is intentional: silently losing a page
-is worse than failing the build.
+names the module or file at fault; invalid sources are never silently skipped.
 
 ```elixir
 DocShell.Build.run(Keyword.put(build_opts, :modules, [Nonexistent.Module]))
@@ -382,9 +377,6 @@ When wiring DocShell into a host application, make these decisions explicitly:
 | Should search tokens be precomputed? | `search_tokens: true` if your search backend wants them |
 | Should module members be searchable? | `search_members: true` appends member names, signatures and parsed docs to page search text; default false, without overriding `skip_empty` |
 
-The important boundary is simple: DocShell owns extraction and artifact shapes.
-Routing, visual hierarchy, authorization, and rendering stay in the host.
-
 ## Changelog source validation
 
 Every changelog source entry must be a valid entry map; `nil` and other invalid
@@ -408,6 +400,9 @@ become inspected text; improper list tails become a final array value.
 `DocShell.Json.normalize/1` rejects converted-key collisions. The legacy
 `stringify/1` keeps string keys when a collision occurs. Guides use `normalize/1`.
 
+Custom ExDoc member metadata is checked during normalization: atom/string keys
+that become the same JSON key fail with the member name, rather than losing data.
+
 ## Configuration errors
 
 `Build.run/1` rejects malformed options and unknown per-call keys before
@@ -427,6 +422,10 @@ Guide and notebook titles come from the first top-level parsed H1, including
 Setext headings. Inline formatting is flattened, and headings inside code
 examples are ignored. Explicit guide frontmatter titles still take precedence.
 
+Guide title extraction avoids a second parse for explicit frontmatter titles or
+unfenced bodies. Fenced bodies retain a defensive title-only parse, so malformed
+closing fences cannot turn code comments into page headings.
+
 ## Changelog Markdown context
 
 Changelogs are parsed as complete Markdown documents before splitting on
@@ -434,26 +433,22 @@ top-level release headings. Code examples remain within their release, and
 reference links resolve across the whole document. Parse errors in any part
 of the source return a source-tagged error.
 
+## Collection builds
+
+The collection integrity requirements in `docs/specs/DSH.01-documentation-sites.md`
+cover multi-release changelogs, reserved identities, malformed input, and exact
+build/load round trips. The implementation plan records acceptance status.
+Invalid source encoding must produce an error identifying the source file.
+
 ## Failed builds and recovery
-
-Custom ExDoc member metadata is checked during normalization: atom/string keys
-that become the same JSON key fail with the member name, rather than losing data.
-
-Guide title extraction avoids a second parse for explicit frontmatter titles or
-unfenced bodies. Fenced bodies retain a defensive title-only parse, so malformed
-closing fences cannot turn code comments into page headings.
-
-Presentation validation also checks relationships: nonempty IDs are unique in
-navigation (including descendants) and search, shared IDs have the same path,
-and local leaves/search records have content. Groups with children and absolute
-HTTP(S) links may omit content. Backlink targets are local; origins may belong to
-the host's wider graph. Default navigation/search order is kind, title, then ID.
 
 Builds stage all JSON and back up existing files before publishing. Returned
 publication failures restore earlier files, including a stale `collection.json`
 removed by a non-collection build. `Artifact.Transaction.write/2` accepts a
-`delete: [path]` list covered by the same locks and backups. Rollback failures report retained
-backup paths. Cooperating builds use `.doc-shell-build.lock` directories. After
+`delete: [path]` list covered by the same locks and backups. Rollback failures
+report retained backup paths.
+
+Cooperating builds use `.doc-shell-build.lock` directories. After
 a process or machine crash, recover retained backups and remove stale locks
 before rebuilding. Files still publish individually, so cache reloads validate
 generation IDs and keep the last complete snapshot. Use dedicated output

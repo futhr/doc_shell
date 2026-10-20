@@ -1,9 +1,11 @@
 # Portable artifact capabilities
 
-**Status:** development static subset implemented, 2026-10-14; complete consumer
-and target qualification remain open under DSH-P11–P14 in the
+**Status:** static subset implemented in development, 2026-10-14. Complete
+consumer and target qualification remain open under DSH-P11–P14 in the
 [site plan](../plans/documentation-sites.md#portable-artifact-delivery).
+
 **Owner:** DocShell document bindings and presentation admission.
+
 This extends [DSH.01](DSH.01-documentation-sites.md); it does not change the
 accepted v0.4.0 behavior or advertise a capability in a released DocShell 0.5.0 package.
 
@@ -13,24 +15,28 @@ accepted v0.4.0 behavior or advertise a capability in a released DocShell 0.5.0 
 provide explicit per-call profile validation and v2 presentation selection.
 `StaticExporter.export/1` accepts `:artifact_options` containing `:profiles`,
 `:manifests`, `:projections`, `:assets`, `:capabilities` and `:constraints`.
+
 Manifests and checked projections are keyed by original manifest digest; assets
 use the existing `Asset` handoff. Producers retain their meaning and media checks.
 
 The exporter attaches checked receipts in page metadata, admits only selected
 variant assets and writes `presentation-manifest.json` separately from the
-existing v1 site identity. Constraint `reader_mode` is `web` by default;
+existing v1 site identity.
+
+Constraint `reader_mode` is `web` by default;
 explicit `file` mode rewrites validated local URLs to file-relative output paths.
 Legacy calls and v1 capability/digest behavior retain their original path.
+
 Native reader parity, complete schema/limit compatibility and human target
 qualification remain required; this development subset is not a release claim.
 
 ## Purpose and ownership
 
-A document needs to carry an external illustration, chart, or other bounded
-artifact with exact references, accessible content, and honest presentation
-choices. Adding a capability must not require another producer-specific branch
-in DocShell's AST walker. The first consumer is a technical illustration
-producer; a separate chart fixture proves that the boundary is generic.
+External illustrations, charts, and other bounded artifacts need exact
+references, accessible content, and presentation choices that reflect available
+runtimes. Adding a capability must not require a producer-specific branch in
+DocShell's AST walker. The first consumer is a technical illustration producer;
+a separate chart fixture tests the same contract with a second artifact type.
 
 | Concern | Owner |
 | --- | --- |
@@ -60,9 +66,9 @@ Source inspection on 2026-10-14 used DocShell
 - `Conformance.Surface` records document semantics, with no artifact-binding
   or per-block presentation observation.
 
-These are useful foundations, not evidence that this extension is implemented.
-The new block, admission result and renderer declarations require versioned
-fixtures; existing v1 declarations and digest rules remain unchanged.
+Those existing APIs alone do not establish support for the extension. The new
+block, admission result, and renderer declarations require versioned fixtures;
+existing v1 declarations and digest rules remain unchanged.
 
 ## Artifact block
 
@@ -118,10 +124,13 @@ tagged error. Callbacks contain no rendering or retrieval operation. The host
 supplies modules explicitly; portable artifacts contain no module names.
 
 The schema is producer-owned JSON Schema 2020-12 with a pinned supported
-subset. The adapter must refuse unsupported constructs rather than weaken
-validation. DocShell validates the generic envelope and the checked callback
-result. It does not grow a second producer validator or general schema engine.
-Exception, throw, exit and malformed callback results become located errors.
+subset:
+
+- The adapter must refuse unsupported constructs rather than weaken validation.
+- DocShell validates the generic envelope and checked callback result. It does
+  not add a second producer validator or general schema engine.
+- Exceptions, throws, exits, and malformed callback results become located errors.
+
 Use the [2020-12 core](https://json-schema.org/draft/2020-12/json-schema-core.html)
 and [validation](https://json-schema.org/draft/2020-12/json-schema-validation.html)
 vocabularies as the declared source; supporting a subset is not full-schema
@@ -130,7 +139,9 @@ conformance. Descriptor fixtures identify exactly which constructs are admitted.
 **DSH-A03 — Open feature namespace.** A new supported profile derives its
 requirements through the same artifact block. Adding the chart fixture MUST
 require only its descriptor, adapter and renderer support; no core tag switch,
-Conjunct reference or new DocShell service is allowed. Unknown optional profiles
+Conjunct reference or new DocShell service is allowed.
+
+Unknown optional profiles
 retain their opaque metadata and display verified safe fallback. Unknown
 essential profiles refuse before rendering. Unknown fields in this block's
 closed record fail; producer payload extensions use their own pinned schema.
@@ -156,7 +167,9 @@ an output mode. Admission intersects the exact supported profiles, acceptable
 states, available variants and runtime constraints. Choose the first admitted
 preference, then the lexically first admitted presentation ID if no preferred
 ID matches. The result names block, variant, profile, runtime, selected state
-and any limitation. Rendering consumes this result rather than renegotiating.
+and any limitation.
+
+Rendering consumes this result rather than renegotiating.
 
 An empty available-runtime set with `browser_js`, `live_transport` and
 `native_host` forbidden selects only script-free static output. `static`
@@ -195,7 +208,9 @@ readable; new artifact consumers require this additional binding before use.
 variant; resolve logical names through the existing asset handoff. Export
 contains only the admitted dependency closure. Missing or altered fallback
 bytes, ambiguous references, mixed source bindings and duplicate assets fail
-before replacing the prior complete output. A checksum is not source
+before replacing the prior complete output.
+
+A checksum is not source
 authentication. Host rights/disclosure decisions precede projection, including
 fallback text, descriptions, thumbnails and search entries.
 
@@ -206,10 +221,14 @@ alone is insufficient. Parsing/verification runs without network access; the
 producer and renderer own format-specific validation.
 
 **DSH-A08 — Failure and recovery.** Projection and export preserve the prior
-complete site on structural, integrity, callback or output failures. A native
+complete site on structural, integrity, callback or output failures.
+
+A native
 reader preserves the previous permitted visual with its original binding and
 shows the successor failure; it cannot relabel old bytes as the requested
-scene. An explicit optional unavailable result can display fallback. Revoked
+scene.
+
+An explicit optional unavailable result can display fallback. Revoked
 permission may prohibit displaying retained assets; the host enforces that
 decision without deleting historical identities implicitly.
 
@@ -219,17 +238,28 @@ decision without deleting historical identities implicitly.
 retain their current fields and meaning. Older readers see a safe unknown
 directive's child content. A profile requiring verified artifact semantics
 requires the new reader explicitly; old fallback display does not qualify it.
+
 V1 capability manifests and page-wide fallback digests retain v1 admission.
 New per-block requirements and selection receipts use separate versioned
 records; unknown versions refuse without implicit conversion.
 
-The initial extension ceilings are 256 blocks per page, 64 bindings and 16
-variants per block, 128 profile descriptors per invocation, 64 KiB per
-descriptor and 1 MiB per artifact manifest. Existing page AST, nesting, file,
-site and output limits also apply; the lower applicable bound wins. Asset
-references cannot authorize additional reads or relax producer limits. Limits
-are checked before callback dispatch or asset decoding. Overrides are explicit
-positive bounds; there is no unlimited value.
+The initial extension ceilings are:
+
+| Resource | Maximum | Scope |
+| --- | ---: | --- |
+| Blocks | 256 | Per page |
+| Bindings | 64 | Per block |
+| Variants | 16 | Per block |
+| Profile descriptors | 128 | Per invocation |
+| Descriptor bytes | 64 KiB | Per descriptor |
+| Manifest bytes | 1 MiB | Per artifact manifest |
+
+Existing page AST, nesting, file, site, and output limits also apply; the lower
+applicable bound wins. Asset references cannot authorize additional reads or
+relax producer limits.
+
+Limits are checked before callback dispatch or asset decoding. Overrides are
+explicit positive bounds; there is no unlimited value.
 
 ## Cross-platform preview and conformance
 

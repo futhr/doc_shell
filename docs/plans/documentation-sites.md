@@ -1,9 +1,9 @@
 # Portable documentation sites implementation plan
 
 This plan implements [DSH.01](../specs/DSH.01-documentation-sites.md) in
-dependency order. Each package ends with executable evidence. Later packages
-must not weaken an accepted error, bound, or compatibility rule to make their
-own fixtures pass.
+dependency order. Each work package requires executable evidence before it is
+complete. Later work must not weaken an accepted error, limit, or compatibility
+rule to make its fixtures pass.
 
 | Package | Status | Requires | Deliverable | Acceptance |
 | --- | --- | --- | --- | --- |
@@ -26,21 +26,25 @@ P10 is outside the core site qualification record below. The existing
 `generation_id` joins artifacts written by one `DocShell.Build` run; it does not
 bind independently supplied hosted graph and OpenAPI inputs. The build invokes
 the OpenAPI adapter and presentation source separately, then creates that ID
-when writing artifacts. Define an additive pair contract and its admission
-point before implementing validation, without changing existing
-`doc-shell/v2` artifact fields or putting host authorization policy in DocShell.
-The pair contract needs comparable context on both sides: an opaque binding
-alone cannot detect a token reused across source views, graph positions,
-locales, releases, or disclosure surfaces. The host authenticates the claims;
-DocShell checks their declared equality before renderer invocation.
+when writing artifacts.
+
+Before implementing validation:
+
+- Define an additive pair contract and its admission point. Preserve existing
+  `doc-shell/v2` fields and keep host authorization policy outside DocShell.
+- Require comparable context on both sides. An opaque binding alone cannot
+  detect a token reused across source views, graph positions, locales,
+  releases, or disclosure surfaces.
+- Keep claim authentication in the host. DocShell checks declared equality
+  before renderer invocation.
 
 ## Public API shape
 
 ### Foundation hardening before site work
 
-The following hardening work qualifies the current P01 implementation.
-These changes repair the existing extraction library; they do
-not advance P02–P09 or claim renderer/export conformance.
+This work qualifies the P01 collection implementation. It repairs the
+extraction library and does not advance P02–P09 or establish renderer/export
+conformance.
 
 | Work | Status | Required evidence |
 | --- | --- | --- |
@@ -90,9 +94,9 @@ metadata keys and changed bytes under a reused cache generation ID. Descriptor,
 filesystem, provenance and canonical JSON responsibilities have separate modules;
 the compatible collection facade remains.
 
-Import still requires a stable caller-owned directory, checksums are not source
-authentication, and publication is not power-loss atomic. These are documented
-boundaries, not claims of an OS sandbox or a full site renderer. No workflow,
+Import requires a stable caller-owned directory. Checksums establish internal
+consistency, not source authenticity, and publication is not power-loss atomic.
+The package provides neither an OS sandbox nor a visual renderer. No workflow,
 remote ref, release tag, repository visibility or dependency lock was changed.
 Do not change schemas, dependency ranges, workflow checks, release refs, or
 repository visibility merely to make a check pass.
@@ -118,8 +122,11 @@ not substitute for the two independent renderer results still required by P08.
 The 500-page local benchmark recorded a 204.50 ms median for projection and a
 338.92 ms median for full static replacement. Benchee reported 585.74 MB and
 311.04 MB of allocated memory respectively; these are allocation measurements,
-not peak resident memory or performance assertions. The minimum consumer set
-retains the dependency versions recorded in the earlier qualification section.
+not peak resident memory or performance assertions.
+
+The minimum consumer set retains the dependency versions recorded in the earlier
+qualification section.
+
 Old minimum EarmarkParser releases emit upstream deprecation warnings on modern
 Elixir, and Ash emits optional Igniter warnings when Igniter is absent; neither
 warning originates in DocShell.
@@ -197,8 +204,12 @@ required assets preserve the previous complete output tree.
 
 P14 supplies a local review page from the exact projected data, including
 artifact/variant IDs, anchors, selected capability, limitations, fallback and
-generated SVG/PNG. The artifact producer supplies reference/candidate/difference
-images; DocShell does not calculate geometry or approve baselines. Test `/` and
+generated SVG/PNG.
+
+The artifact producer supplies reference/candidate/difference
+images; DocShell does not calculate geometry or approve baselines.
+
+Test `/` and
 subpath exports, print, dark/monochrome/high zoom and reader restart. An HTML
 reader and a native artifact consumer record the same semantic observations;
 native paint and human assistive tasks require their own target evidence.
