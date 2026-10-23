@@ -1,6 +1,6 @@
 # Portable artifact capabilities
 
-**Status:** static subset implemented in development, 2026-10-14. Complete
+**Status:** experimental static subset implemented; audited 2026-10-23. Complete
 consumer and target qualification remain open under DSH-P11–P14 in the
 [site plan](../plans/documentation-sites.md#portable-artifact-delivery).
 
@@ -28,7 +28,7 @@ explicit `file` mode rewrites validated local URLs to file-relative output paths
 Legacy calls and v1 capability/digest behavior retain their original path.
 
 Native reader parity, complete schema/limit compatibility and human target
-qualification remain required; this development subset is not a release claim.
+qualification remain required; publication alone does not establish them.
 
 ## Purpose and ownership
 
@@ -171,6 +171,10 @@ and any limitation.
 
 Rendering consumes this result rather than renegotiating.
 
+Runtime requirement arrays represent sets. Reordering either a variant's or a
+capability's runtime list must not change selection; receipts preserve the
+original variant record.
+
 An empty available-runtime set with `browser_js`, `live_transport` and
 `native_host` forbidden selects only script-free static output. `static`
 always excludes connected output and live transport. A fallback does not
@@ -213,6 +217,12 @@ before replacing the prior complete output.
 A checksum is not source
 authentication. Host rights/disclosure decisions precede projection, including
 fallback text, descriptions, thumbnails and search entries.
+
+Script-free output checks MIME essences case-insensitively, excluding
+parameters. They reject the browser-recognized
+[JavaScript MIME aliases](https://mimesniff.spec.whatwg.org/#javascript-mime-type)
+and active HTML/CSS before publication. Invocation options are validated even
+when the site has no pages.
 
 Profiles accept only declared bounded media. SVG consumers apply a closed
 element/attribute/URL policy and prohibit scripts, event handlers, external

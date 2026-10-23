@@ -4,6 +4,12 @@ defmodule DocShell.Presentation.ArtifactExport do
   alias DocShell.Json.Canonical
   alias DocShell.Presentation.{ArtifactBlock, Asset, Site}
 
+  @javascript_types ~w(application/ecmascript application/javascript application/x-ecmascript
+                       application/x-javascript text/ecmascript text/javascript
+                       text/javascript1.0 text/javascript1.1 text/javascript1.2
+                       text/javascript1.3 text/javascript1.4 text/javascript1.5
+                       text/jscript text/livescript text/x-ecmascript text/x-javascript)
+
   @doc false
   @spec project(Site.t(), keyword() | nil) ::
           {:ok, Site.t(), [Asset.t()], map() | nil} | {:error, term()}
@@ -14,6 +20,14 @@ defmodule DocShell.Presentation.ArtifactExport do
   end
 
   def project(site, options) when is_list(options) do
+    with {:ok, _} <- ArtifactBlock.project([], options) do
+      project_pages(site, options)
+    end
+  end
+
+  def project(_, _), do: {:error, :invalid_artifact_options}
+
+  defp project_pages(site, options) do
     site.pages
     |> Enum.sort()
     |> Enum.reduce_while({:ok, %{}, %{}, MapSet.new()}, fn {id, page},
@@ -33,8 +47,6 @@ defmodule DocShell.Presentation.ArtifactExport do
     end)
     |> finish(site, options)
   end
-
-  def project(_, _), do: {:error, :invalid_artifact_options}
 
   defp finish({:ok, pages, receipts, names}, site, options) do
     assets = Enum.filter(options[:assets] || [], &MapSet.member?(names, &1.path))
@@ -83,17 +95,25 @@ defmodule DocShell.Presentation.ArtifactExport do
       else: :ok
   end
 
-  defp active?(%{media_type: "text/html" <> _, bytes: bytes}),
-    do:
-      Regex.match?(
-        ~r/<\s*(script|iframe|object|embed|foreignObject)\b|\bon[a-z]+\s*=|javascript\s*:|@import|url\s*\(/i,
-        bytes
-      )
+  defp active?(%{media_type: type, bytes: bytes}) do
+    case media_type(type) do
+      "text/html" ->
+        Regex.match?(
+          ~r/<\s*(script|iframe|object|embed|foreignObject)\b|\bon[a-z]+\s*=|javascript\s*:|@import|url\s*\(/i,
+          bytes
+        )
 
-  defp active?(%{media_type: "text/css" <> _, bytes: bytes}),
-    do: Regex.match?(~r/@import|url\s*\(/i, bytes)
+      "text/css" ->
+        Regex.match?(~r/@import|url\s*\(/i, bytes)
 
-  defp active?(%{media_type: type}), do: type in ["application/javascript", "text/javascript"]
+      type ->
+        type in @javascript_types
+    end
+  end
+
+  defp media_type(type) do
+    type |> String.split(";", parts: 2) |> hd() |> String.trim() |> String.downcase()
+  end
 
   @doc false
   @spec reader_entries([map()], Site.t(), map() | nil) :: {:ok, [map()]} | {:error, term()}

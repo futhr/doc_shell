@@ -142,6 +142,45 @@ defmodule DocShell.Presentation.ArtifactExportTest do
     assert {:ok, []} = ArtifactExport.reader_entries([], site, nil)
   end
 
+  test "empty sites validate artifact options before accepting a presentation binding" do
+    {site, options} = site("/")
+    empty = %{site | pages: %{}, routes: %{}}
+    assert {:ok, _, [], %{"pages" => %{}}} = ArtifactExport.project(empty, options)
+
+    for invalid <- [[unknown: true], [:bad], [assets: :bad], [profiles: :bad]] do
+      assert {:error, _} = ArtifactExport.project(empty, invalid)
+    end
+  end
+
+  test "script-free MIME checks include parameters, case and JavaScript aliases before publication" do
+    {site, options} = site("/")
+    destination = destination()
+    assert {:ok, _} = export(site, options, destination)
+    before = File.read!(Path.join(destination, "site-manifest.json"))
+
+    for {media_type, bytes} <- [
+          {"text/javascript; charset=utf-8", "unsafe()"},
+          {"Application/JavaScript", "unsafe()"},
+          {"application/ecmascript", "unsafe()"},
+          {"text/x-javascript", "unsafe()"},
+          {"Text/HTML; charset=UTF-8", "<script>unsafe()</script>"},
+          {"TEXT/CSS; charset=utf-8", "@import 'https://example.invalid/style.css';"}
+        ] do
+      asset = %Asset{path: "hidden.asset", media_type: media_type, bytes: bytes}
+
+      assert {:error, :script_free_artifact_output_violation} =
+               StaticExporter.export(
+                 site: site,
+                 renderer: DocShell.ArtifactStaticFixture,
+                 destination: destination,
+                 artifact_options: options,
+                 asset_options: [additional_assets: [asset]]
+               )
+
+      assert before == File.read!(Path.join(destination, "site-manifest.json"))
+    end
+  end
+
   test "web reader mode retains existing absolute URL behavior with separate presentation identity" do
     {site, options} = site("/review/")
     options = Keyword.update!(options, :constraints, &Map.put(&1, "reader_mode", "web"))

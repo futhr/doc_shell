@@ -178,11 +178,19 @@ validation, following `DocShell.Presentation.GraphProjector`.
 
 ### Portable artifact delivery
 
-The [unreleased extension](../specs/portable-artifact-capabilities.md) supplies
+The [experimental extension](../specs/portable-artifact-capabilities.md) supplies
 generic document capabilities. P11–P14 are in progress: the static implementation
 and its tests exist, while the complete compatibility and reader qualification
 matrix remains open. The new API and schema IDs apply to this implementation;
-they do not alter v1 meaning or describe an already released package.
+they do not alter v1 meaning or establish independent reader qualification.
+
+The October commit review retained regressions for three implementation
+defects: runtime-list order changing admission, script-free exports accepting
+JavaScript MIME parameters/aliases, and empty sites skipping artifact-option
+validation. All three first failed on their observable behavior and then
+passed after corrections in the admission/export owners. The focused portable
+artifact suites pass 18 tests. These results do not close the remaining
+schema/limit, independent reader, native, or human target qualifications.
 
 P11 fixes original block bytes, descriptor/schema digests, semantic subjects,
 all variant bytes and expected refusal/admission outcomes. Freeze a technical

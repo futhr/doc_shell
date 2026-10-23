@@ -361,7 +361,7 @@ custom `path_builder` when IDs intentionally represent a path hierarchy.
   `priv/contracts/site-conformance-v1.json` fixture to compare normalized hosted
   and static semantics. Do not compare framework-specific HTML bytes.
 
-### External artifact blocks (unreleased)
+### External artifact blocks (experimental)
 
 `ArtifactProfile`, `ArtifactBlock`, and `ArtifactAdmission` implement a static
 subset of portable artifact blocks and v2 per-state capability selection.
@@ -372,6 +372,13 @@ subset of portable artifact blocks and v2 per-state capability selection.
 - Require exact profile/digest/subject/variant bindings.
 
 - Use caller constraints to choose `web` or explicit `file` reader mode.
+
+- Treat runtime requirement lists as sets; their order does not change
+  presentation admission.
+
+- Script-free exports reject browser JavaScript MIME aliases, case variants
+  and MIME parameters before replacing output. Artifact options are validated
+  even when the site has no pages.
 
 - Keep the core renderer-neutral and producer-free.
 

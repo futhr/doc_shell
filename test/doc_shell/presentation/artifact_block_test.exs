@@ -71,6 +71,37 @@ defmodule DocShell.Presentation.ArtifactBlockTest do
              )
   end
 
+  test "runtime requirement ordering cannot change variant admission" do
+    runtimes = [["browser_js", "native_host"], ["native_host", "browser_js"]]
+
+    for variant_runtime <- runtimes, feature_runtime <- runtimes do
+      {node, options} = fixture(DocShell.ArtifactChartFixture)
+
+      node =
+        put_in(node, ["meta", "artifact", "variants", Access.at(1), "runtime"], variant_runtime)
+
+      capabilities =
+        put_in(options[:capabilities], ["features", Access.at(1), "runtime"], feature_runtime)
+
+      constraints =
+        Map.merge(options[:constraints], %{
+          "available_runtime" => ["browser_js", "native_host"],
+          "forbidden_runtime" => [],
+          "preferences" => ["enhanced"]
+        })
+
+      assert {:ok, receipt} =
+               ArtifactBlock.project(
+                 [node],
+                 Keyword.merge(options, capabilities: capabilities, constraints: constraints)
+               )
+
+      assert [selection] = receipt["blocks"]
+      assert selection["presentation_id"] == "enhanced"
+      assert selection["variant"]["runtime"] == variant_runtime
+    end
+  end
+
   test "unknown optional profiles preserve verified fallback and essential profiles refuse" do
     {node, options} = fixture(DocShell.ArtifactChartFixture)
 

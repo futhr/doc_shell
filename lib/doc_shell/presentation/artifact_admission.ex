@@ -73,7 +73,7 @@ defmodule DocShell.Presentation.ArtifactAdmission do
     |> Enum.filter(fn variant ->
       variant["state"] == feature["state"] and
         variant["media_type"] in feature["media_types"] and
-        variant["runtime"] == feature["runtime"]
+        Enum.sort(variant["runtime"]) == Enum.sort(feature["runtime"])
     end)
     |> Enum.map(&%{"presentation_id" => feature["id"], "variant" => &1})
   end

@@ -405,10 +405,10 @@ build-time adapter can produce another local index from the same records.
 The [site publication notebook](notebooks/site-publication.livemd) is a complete
 executable example with a small host source and renderer.
 
-### External artifact blocks (unreleased)
+### External artifact blocks (experimental)
 
-`ArtifactProfile`, `ArtifactBlock`, and `ArtifactAdmission` have an unreleased
-static implementation for typed external artifacts.
+`ArtifactProfile`, `ArtifactBlock`, and `ArtifactAdmission` provide an
+experimental static subset for typed external artifacts.
 
 - Pass `:artifact_options` explicitly with profiles, original manifests, checked
   projections, assets, v2 capabilities, and caller constraints.
@@ -417,10 +417,14 @@ static implementation for typed external artifacts.
   existing site URLs.
 - Artifact generation and interaction belong to the producer and host.
   Independent reader and target qualification remain open.
+- Runtime requirements are sets: reordering a variant or capability runtime
+  list does not change admission.
+- Script-free export checks MIME types without regard to case or parameters
+  and rejects browser-recognized JavaScript aliases before publication.
 
 See the [capability contract](docs/specs/portable-artifact-capabilities.md) and
 [delivery plan](docs/plans/documentation-sites.md#portable-artifact-delivery).
-This development work does not establish support in an already released package.
+This static subset does not establish independent reader or target conformance.
 
 ## Artifact guarantees
 

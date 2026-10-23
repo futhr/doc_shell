@@ -270,14 +270,18 @@ implementation. Other adapters consume the same records.
 Enum.map(matches, &{&1.id, &1.route})
 ```
 
-## External artifact blocks (unreleased)
+## External artifact blocks (experimental)
 
 External illustrations and other typed artifact blocks have an
-[unreleased static implementation](../docs/specs/portable-artifact-capabilities.md).
+[experimental static implementation](../docs/specs/portable-artifact-capabilities.md).
 
 This notebook continues to exercise the unchanged v1 path. The executable
 artifact tests separately exercise verified fallback, unknown optional profiles,
 per-state runtime selection and the same static exporter.
+
+Runtime requirement ordering does not change selection. Script-free export
+rejects browser JavaScript MIME aliases, case variants and MIME parameters
+before publication. Empty sites still validate their artifact options.
 
 A host passes
 `:artifact_options` explicitly; it never starts an artifact producer implicitly.
