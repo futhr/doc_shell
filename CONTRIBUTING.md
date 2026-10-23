@@ -87,6 +87,11 @@ hosts using only the core package. `DocShell.Web.Plug` and
 `DocShell.Web.Controller` compile conditionally; the AshOaskit adapter resolves
 its library at runtime.
 
+Dependency build and PLT caches, including restore prefixes, use the exact
+installed OTP and Elixir versions reported by `setup-beam`. Workflow regressions
+probe independent patch changes in either runtime. CI also tests the pinned
+Elixir 1.20/OTP 29 baseline alongside every previously supported matrix pair.
+
 ## Code standards
 
 - Document every public module, function, callback, and struct. Moduledocs
