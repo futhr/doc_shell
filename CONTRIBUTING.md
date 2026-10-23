@@ -175,10 +175,26 @@ the `--initial` release command no longer applies.
 
 For a subsequent release:
 
-1. `mix check`
-2. `mix release` — updates the changelog, bumps the version, commits, and tags
-3. `git push --follow-tags`
-4. `mix hex.publish`
+1. Complete the changes on `main` and run `mix check`.
+2. Run `mix release` to generate the changelog, version, and notebook updates.
+   Answer **no** to the commit-and-tag prompt so the release remains untagged
+   during validation. Do not hand-edit the generated changelog.
+3. Review the generated diff, run `mix check` again, and commit the release
+   updates on `main` with the generated release commit subject.
+4. The maintainer pushes `main` without tags and waits for CI to pass on that
+   exact release commit. Coding agents keep commits local; maintainers perform
+   every push manually.
+5. After CI passes, create an annotated `v<version>` tag on the validated
+   release commit using the generated release notes, then have the maintainer
+   push only that tag.
+
+The tag starts [Publish](.github/workflows/publish.yml), which checks the tag
+and version, reruns the canonical gate, and publishes the package and docs in
+the `hex-publish` environment using `HEX_API_KEY`. It then compares the
+registry archive with the validated package and attests the registry bytes.
+Monitor that workflow and verify the published package, docs, and attestation
+before cleanup. Keep publishing in this workflow to avoid concurrent manual
+and automated releases.
 
 ## Questions
 
