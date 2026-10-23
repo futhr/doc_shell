@@ -265,9 +265,10 @@ Default ordering is kind, title, then ID.
 
 ### Legacy envelope compatibility
 
-`Artifact.read/1` and `read_envelope/1` accept legacy v1 envelopes without
-`generation_id`. A present ID must be a nonempty string. Runtime caches require
-an ID on every artifact and manifest to verify that they form one generation.
+`Artifact.read/1` and `read_envelope/1` accept current-schema envelopes without
+`generation_id`. A present ID must be a nonempty string. Previous schema
+versions, including `doc-shell/v1`, are rejected and must be rebuilt. Runtime
+caches require an ID on every artifact and manifest to verify one generation.
 
 ### Concurrent artifact writers
 

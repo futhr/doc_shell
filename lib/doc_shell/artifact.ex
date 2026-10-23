@@ -233,9 +233,10 @@ defmodule DocShell.Artifact do
   @doc """
   Reads an artifact and returns the whole validated envelope.
 
-  Legacy v1 envelopes without `generation_id` remain readable. When present,
-  the ID must be a nonempty string. `DocShell.Web.Cache` requires the ID on
-  every file because a runtime snapshot needs a verifiable build identity.
+  Current-schema envelopes without `generation_id` remain readable. When
+  present, the ID must be a nonempty string. Previous schema versions,
+  including `doc-shell/v1`, are rejected. `DocShell.Web.Cache` requires the ID
+  on every file because a runtime snapshot needs a verifiable build identity.
 
   Use this over `read/1` when the envelope itself matters — serving an artifact
   has to report the `generated_at` of the build that produced it, and

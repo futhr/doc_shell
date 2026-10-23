@@ -171,9 +171,10 @@ outside the supplied source root, missing source identities, ambiguous source
 ownership, and a collection descriptor that differs from `collection.json`.
 
 Absolute input filenames inside the source root may be normalized during build;
-absolute paths in a portable artifact are rejected. A legacy v1 corpus
-without `collection.json` remains readable through the existing artifact APIs
-but cannot satisfy DSH-S01 provenance.
+absolute paths in a portable artifact are rejected. A current-schema corpus
+without `collection.json` remains readable through the artifact APIs but
+cannot satisfy DSH-S01 provenance. Previous `doc-shell/v1` envelopes must be
+rebuilt before a v2 reader can accept them.
 
 Collection loading must:
 

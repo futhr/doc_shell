@@ -12,7 +12,7 @@ work, also read `docs/specs/DSH.01-documentation-sites.md` and implement
 
 - Keep extraction under `DocShell.Generate`, presentation under
   `DocShell.Presentation`, and optional runtime serving under `DocShell.Web`.
-- Treat `doc-shell/v1` and every emitted JSON shape as public API.
+- Treat `DocShell.schema_version/0` and every emitted JSON shape as public API.
 - Keep `DocShell` renderer-neutral and free of host application references.
 - Keep authorization in the host-provided gate. Do not add product, tenant, or
   identity policy to this package.

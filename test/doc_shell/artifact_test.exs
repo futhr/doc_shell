@@ -370,7 +370,7 @@ defmodule DocShell.ArtifactTest do
     assert File.ls!(dir) == ["shared.json"]
   end
 
-  test "legacy envelopes remain readable but malformed generation IDs are rejected" do
+  test "current-schema envelopes without generation IDs remain readable but malformed IDs fail" do
     path = Path.join(tmp_dir!(), "legacy.json")
     legacy = Map.delete(Artifact.envelope(%{}), "generation_id")
     File.write!(path, Jason.encode!(legacy))
