@@ -5,6 +5,33 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v1.0.0](https://github.com/futhr/doc_shell/compare/v0.5.0...v1.0.0) (2026-10-23)
+### Breaking Changes:
+
+* artifacts: reference module members from navigation by futhr
+
+
+
+### Features:
+
+* presentation: admit portable artifact blocks by Tobias Bohwalli
+
+### Bug Fixes:
+
+* ci: isolate runtime caches and refresh pinned actions by Tobias Bohwalli
+
+* presentation: enforce portable artifact admission before export by Tobias Bohwalli
+
+* deps: update Decimal past security advisory by Tobias Bohwalli
+
+### Performance Improvements:
+
+* extraction: read module documentation concurrently by futhr
+
+* artifacts: write compact canonical artifacts encoded once by futhr
+
+* json: encode canonical json in a single pass by futhr
+
 ## [v0.5.0](https://github.com/futhr/doc_shell/compare/v0.4.0...v0.5.0) (2026-10-10)
 
 

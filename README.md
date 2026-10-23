@@ -29,7 +29,7 @@ Add DocShell to `mix.exs`. Requires Elixir 1.17 or later.
 ```elixir
 def deps do
   [
-    {:doc_shell, "~> 0.5.0"}
+    {:doc_shell, "~> 1.0.0"}
   ]
 end
 ```
@@ -40,7 +40,7 @@ over HTTP:
 ```elixir
 def deps do
   [
-    {:doc_shell, "~> 0.5.0"},
+    {:doc_shell, "~> 1.0.0"},
     # Derive the OpenAPI document from Ash domains
     {:ash_oaskit, "~> 0.4"},
     # Serve artifacts over HTTP
@@ -641,17 +641,17 @@ and are not implemented.
 Run the tutorials in Livebook to inspect real build output. Start with the
 build pipeline:
 
-[![Run in Livebook](https://livebook.dev/badge/v1/blue.svg)](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fbuild-pipeline.livemd)
+[![Run in Livebook](https://livebook.dev/badge/v1/blue.svg)](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv1.0.0%2Fnotebooks%2Fbuild-pipeline.livemd)
 
-- [The Build Pipeline](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fbuild-pipeline.livemd):
+- [The Build Pipeline](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv1.0.0%2Fnotebooks%2Fbuild-pipeline.livemd):
   Follow one build from source files to generated artifacts.
-- [Artifact Contract](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fartifact-contract.livemd):
+- [Artifact Contract](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv1.0.0%2Fnotebooks%2Fartifact-contract.livemd):
   Inspect the public JSON shapes, envelopes, manifests, and presentation indexes.
-- [OpenAPI Adapters](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fopenapi-adapters.livemd):
+- [OpenAPI Adapters](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv1.0.0%2Fnotebooks%2Fopenapi-adapters.livemd):
   Work through the default document, shipped adapters, custom adapters, and validation errors.
-- [Serving Artifacts](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fserving-artifacts.livemd):
+- [Serving Artifacts](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv1.0.0%2Fnotebooks%2Fserving-artifacts.livemd):
   Walk through static serving, runtime caching, reloads, gates, and controller usage.
-- [Publish a Portable Site](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv0.5.0%2Fnotebooks%2Fsite-publication.livemd):
+- [Publish a Portable Site](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv1.0.0%2Fnotebooks%2Fsite-publication.livemd):
   Load a collection, project routes and navigation, then publish a static site.
 
 ## Development
