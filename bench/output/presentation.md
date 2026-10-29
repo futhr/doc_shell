@@ -17,19 +17,19 @@ Benchmark suite executing on the following system:
     <td>macOS</td>
   </tr><tr>
     <th style="white-space: nowrap">CPU Information</th>
-    <td style="white-space: nowrap">Apple M5 Pro</td>
+    <td style="white-space: nowrap">Apple M4 Max</td>
   </tr><tr>
     <th style="white-space: nowrap">Number of Available Cores</th>
-    <td style="white-space: nowrap">18</td>
+    <td style="white-space: nowrap">16</td>
   </tr><tr>
     <th style="white-space: nowrap">Available Memory</th>
-    <td style="white-space: nowrap">48 GB</td>
+    <td style="white-space: nowrap">128 GB</td>
   </tr><tr>
     <th style="white-space: nowrap">Elixir Version</th>
-    <td style="white-space: nowrap">1.18.4</td>
+    <td style="white-space: nowrap">1.20.4</td>
   </tr><tr>
     <th style="white-space: nowrap">Erlang Version</th>
-    <td style="white-space: nowrap">27.3.4.15</td>
+    <td style="white-space: nowrap">29.0.4</td>
   </tr>
 </table>
 
@@ -70,20 +70,20 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">StaticGenerator.project/1</td>
-    <td style="white-space: nowrap; text-align: right">9.78 K</td>
-    <td style="white-space: nowrap; text-align: right">0.102 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;8.55%</td>
-    <td style="white-space: nowrap; text-align: right">0.103 ms</td>
-    <td style="white-space: nowrap; text-align: right">0.127 ms</td>
+    <td style="white-space: nowrap; text-align: right">7.20 K</td>
+    <td style="white-space: nowrap; text-align: right">0.139 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;7.64%</td>
+    <td style="white-space: nowrap; text-align: right">0.139 ms</td>
+    <td style="white-space: nowrap; text-align: right">0.175 ms</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">GraphProjector.validate/1</td>
-    <td style="white-space: nowrap; text-align: right">0.91 K</td>
-    <td style="white-space: nowrap; text-align: right">1.10 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;3.32%</td>
-    <td style="white-space: nowrap; text-align: right">1.10 ms</td>
-    <td style="white-space: nowrap; text-align: right">1.19 ms</td>
+    <td style="white-space: nowrap; text-align: right">0.72 K</td>
+    <td style="white-space: nowrap; text-align: right">1.39 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;2.33%</td>
+    <td style="white-space: nowrap; text-align: right">1.38 ms</td>
+    <td style="white-space: nowrap; text-align: right">1.48 ms</td>
   </tr>
 
 </table>
@@ -98,14 +98,14 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">StaticGenerator.project/1</td>
-    <td style="white-space: nowrap;text-align: right">9.78 K</td>
+    <td style="white-space: nowrap;text-align: right">7.20 K</td>
     <td>&nbsp;</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">GraphProjector.validate/1</td>
-    <td style="white-space: nowrap; text-align: right">0.91 K</td>
-    <td style="white-space: nowrap; text-align: right">10.74x</td>
+    <td style="white-space: nowrap; text-align: right">0.72 K</td>
+    <td style="white-space: nowrap; text-align: right">9.99x</td>
   </tr>
 
 </table>
@@ -122,13 +122,13 @@ Memory Usage
   </tr>
   <tr>
     <td style="white-space: nowrap">StaticGenerator.project/1</td>
-    <td style="white-space: nowrap">0.0717 MB</td>
+    <td style="white-space: nowrap">0.0683 MB</td>
     <td>&nbsp;</td>
   </tr>
     <tr>
     <td style="white-space: nowrap">GraphProjector.validate/1</td>
-    <td style="white-space: nowrap">2.38 MB</td>
-    <td>33.18x</td>
+    <td style="white-space: nowrap">2.27 MB</td>
+    <td>33.24x</td>
   </tr>
 </table>
 
@@ -149,21 +149,21 @@ Run Time
   </tr>
 
   <tr>
-    <td style="white-space: nowrap">StaticGenerator.project/1</td>
-    <td style="white-space: nowrap; text-align: right">944.59</td>
-    <td style="white-space: nowrap; text-align: right">1.06 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;5.79%</td>
-    <td style="white-space: nowrap; text-align: right">1.04 ms</td>
-    <td style="white-space: nowrap; text-align: right">1.34 ms</td>
+    <td style="white-space: nowrap">GraphProjector.validate/1</td>
+    <td style="white-space: nowrap; text-align: right">721.85</td>
+    <td style="white-space: nowrap; text-align: right">1.39 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;2.74%</td>
+    <td style="white-space: nowrap; text-align: right">1.38 ms</td>
+    <td style="white-space: nowrap; text-align: right">1.48 ms</td>
   </tr>
 
   <tr>
-    <td style="white-space: nowrap">GraphProjector.validate/1</td>
-    <td style="white-space: nowrap; text-align: right">904.26</td>
-    <td style="white-space: nowrap; text-align: right">1.11 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;2.68%</td>
-    <td style="white-space: nowrap; text-align: right">1.10 ms</td>
-    <td style="white-space: nowrap; text-align: right">1.19 ms</td>
+    <td style="white-space: nowrap">StaticGenerator.project/1</td>
+    <td style="white-space: nowrap; text-align: right">705.41</td>
+    <td style="white-space: nowrap; text-align: right">1.42 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;5.09%</td>
+    <td style="white-space: nowrap; text-align: right">1.40 ms</td>
+    <td style="white-space: nowrap; text-align: right">1.68 ms</td>
   </tr>
 
 </table>
@@ -177,15 +177,15 @@ Run Time Comparison
     <th style="text-align: right">IPS</th>
     <th style="text-align: right">Slower</th>
   <tr>
-    <td style="white-space: nowrap">StaticGenerator.project/1</td>
-    <td style="white-space: nowrap;text-align: right">944.59</td>
+    <td style="white-space: nowrap">GraphProjector.validate/1</td>
+    <td style="white-space: nowrap;text-align: right">721.85</td>
     <td>&nbsp;</td>
   </tr>
 
   <tr>
-    <td style="white-space: nowrap">GraphProjector.validate/1</td>
-    <td style="white-space: nowrap; text-align: right">904.26</td>
-    <td style="white-space: nowrap; text-align: right">1.04x</td>
+    <td style="white-space: nowrap">StaticGenerator.project/1</td>
+    <td style="white-space: nowrap; text-align: right">705.41</td>
+    <td style="white-space: nowrap; text-align: right">1.02x</td>
   </tr>
 
 </table>
@@ -201,14 +201,14 @@ Memory Usage
     <th style="text-align: right">Factor</th>
   </tr>
   <tr>
-    <td style="white-space: nowrap">StaticGenerator.project/1</td>
-    <td style="white-space: nowrap">0.73 MB</td>
+    <td style="white-space: nowrap">GraphProjector.validate/1</td>
+    <td style="white-space: nowrap">2.27 MB</td>
     <td>&nbsp;</td>
   </tr>
     <tr>
-    <td style="white-space: nowrap">GraphProjector.validate/1</td>
-    <td style="white-space: nowrap">2.38 MB</td>
-    <td>3.25x</td>
+    <td style="white-space: nowrap">StaticGenerator.project/1</td>
+    <td style="white-space: nowrap">0.70 MB</td>
+    <td>0.31x</td>
   </tr>
 </table>
 
@@ -230,20 +230,20 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">GraphProjector.validate/1</td>
-    <td style="white-space: nowrap; text-align: right">897.61</td>
-    <td style="white-space: nowrap; text-align: right">1.11 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;2.95%</td>
-    <td style="white-space: nowrap; text-align: right">1.11 ms</td>
-    <td style="white-space: nowrap; text-align: right">1.20 ms</td>
+    <td style="white-space: nowrap; text-align: right">723.32</td>
+    <td style="white-space: nowrap; text-align: right">1.38 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;4.09%</td>
+    <td style="white-space: nowrap; text-align: right">1.38 ms</td>
+    <td style="white-space: nowrap; text-align: right">1.50 ms</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">StaticGenerator.project/1</td>
-    <td style="white-space: nowrap; text-align: right">159.61</td>
-    <td style="white-space: nowrap; text-align: right">6.27 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;13.74%</td>
-    <td style="white-space: nowrap; text-align: right">6.28 ms</td>
-    <td style="white-space: nowrap; text-align: right">7.67 ms</td>
+    <td style="white-space: nowrap; text-align: right">114.32</td>
+    <td style="white-space: nowrap; text-align: right">8.75 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;14.26%</td>
+    <td style="white-space: nowrap; text-align: right">8.16 ms</td>
+    <td style="white-space: nowrap; text-align: right">10.38 ms</td>
   </tr>
 
 </table>
@@ -258,14 +258,14 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">GraphProjector.validate/1</td>
-    <td style="white-space: nowrap;text-align: right">897.61</td>
+    <td style="white-space: nowrap;text-align: right">723.32</td>
     <td>&nbsp;</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">StaticGenerator.project/1</td>
-    <td style="white-space: nowrap; text-align: right">159.61</td>
-    <td style="white-space: nowrap; text-align: right">5.62x</td>
+    <td style="white-space: nowrap; text-align: right">114.32</td>
+    <td style="white-space: nowrap; text-align: right">6.33x</td>
   </tr>
 
 </table>
@@ -282,12 +282,12 @@ Memory Usage
   </tr>
   <tr>
     <td style="white-space: nowrap">GraphProjector.validate/1</td>
-    <td style="white-space: nowrap">2.38 MB</td>
+    <td style="white-space: nowrap">2.27 MB</td>
     <td>&nbsp;</td>
   </tr>
     <tr>
     <td style="white-space: nowrap">StaticGenerator.project/1</td>
-    <td style="white-space: nowrap">3.69 MB</td>
+    <td style="white-space: nowrap">3.53 MB</td>
     <td>1.55x</td>
   </tr>
 </table>

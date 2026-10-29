@@ -15,13 +15,13 @@ Benchmark suite executing on the following system:
     <td>macOS</td>
   </tr><tr>
     <th style="white-space: nowrap">CPU Information</th>
-    <td style="white-space: nowrap">Apple M2</td>
+    <td style="white-space: nowrap">Apple M4 Max</td>
   </tr><tr>
     <th style="white-space: nowrap">Number of Available Cores</th>
-    <td style="white-space: nowrap">8</td>
+    <td style="white-space: nowrap">16</td>
   </tr><tr>
     <th style="white-space: nowrap">Available Memory</th>
-    <td style="white-space: nowrap">8 GB</td>
+    <td style="white-space: nowrap">128 GB</td>
   </tr><tr>
     <th style="white-space: nowrap">Elixir Version</th>
     <td style="white-space: nowrap">1.20.4</td>
@@ -66,29 +66,29 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">Artifact.envelope/1</td>
-    <td style="white-space: nowrap; text-align: right">1092716.44</td>
-    <td style="white-space: nowrap; text-align: right">0.00092 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;878.06%</td>
-    <td style="white-space: nowrap; text-align: right">0.00079 ms</td>
-    <td style="white-space: nowrap; text-align: right">0.00138 ms</td>
+    <td style="white-space: nowrap; text-align: right">1579796.72</td>
+    <td style="white-space: nowrap; text-align: right">0.00063 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;960.23%</td>
+    <td style="white-space: nowrap; text-align: right">0.00054 ms</td>
+    <td style="white-space: nowrap; text-align: right">0.00088 ms</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">Artifact.read/1</td>
-    <td style="white-space: nowrap; text-align: right">196.79</td>
-    <td style="white-space: nowrap; text-align: right">5.08 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;7.86%</td>
-    <td style="white-space: nowrap; text-align: right">5.08 ms</td>
-    <td style="white-space: nowrap; text-align: right">6.20 ms</td>
+    <td style="white-space: nowrap; text-align: right">268.48</td>
+    <td style="white-space: nowrap; text-align: right">3.72 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;8.85%</td>
+    <td style="white-space: nowrap; text-align: right">3.73 ms</td>
+    <td style="white-space: nowrap; text-align: right">4.55 ms</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">Artifact.write/2</td>
-    <td style="white-space: nowrap; text-align: right">147.07</td>
-    <td style="white-space: nowrap; text-align: right">6.80 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;9.48%</td>
-    <td style="white-space: nowrap; text-align: right">6.87 ms</td>
-    <td style="white-space: nowrap; text-align: right">8.51 ms</td>
+    <td style="white-space: nowrap; text-align: right">195.81</td>
+    <td style="white-space: nowrap; text-align: right">5.11 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;10.27%</td>
+    <td style="white-space: nowrap; text-align: right">5.10 ms</td>
+    <td style="white-space: nowrap; text-align: right">6.50 ms</td>
   </tr>
 
 </table>
@@ -103,20 +103,20 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">Artifact.envelope/1</td>
-    <td style="white-space: nowrap;text-align: right">1092716.44</td>
+    <td style="white-space: nowrap;text-align: right">1579796.72</td>
     <td>&nbsp;</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">Artifact.read/1</td>
-    <td style="white-space: nowrap; text-align: right">196.79</td>
-    <td style="white-space: nowrap; text-align: right">5552.63x</td>
+    <td style="white-space: nowrap; text-align: right">268.48</td>
+    <td style="white-space: nowrap; text-align: right">5884.17x</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">Artifact.write/2</td>
-    <td style="white-space: nowrap; text-align: right">147.07</td>
-    <td style="white-space: nowrap; text-align: right">7430.07x</td>
+    <td style="white-space: nowrap; text-align: right">195.81</td>
+    <td style="white-space: nowrap; text-align: right">8068.04x</td>
   </tr>
 
 </table>
@@ -133,17 +133,17 @@ Memory Usage
   </tr>
   <tr>
     <td style="white-space: nowrap">Artifact.envelope/1</td>
-    <td style="white-space: nowrap">0.00099 MB</td>
+    <td style="white-space: nowrap">0.00100 MB</td>
     <td>&nbsp;</td>
   </tr>
     <tr>
     <td style="white-space: nowrap">Artifact.read/1</td>
     <td style="white-space: nowrap">7.30 MB</td>
-    <td>7347.31x</td>
+    <td>7311.31x</td>
   </tr>
     <tr>
     <td style="white-space: nowrap">Artifact.write/2</td>
     <td style="white-space: nowrap">7.40 MB</td>
-    <td>7447.82x</td>
+    <td>7411.32x</td>
   </tr>
 </table>

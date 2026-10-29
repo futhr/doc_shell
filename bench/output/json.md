@@ -15,13 +15,13 @@ Benchmark suite executing on the following system:
     <td>macOS</td>
   </tr><tr>
     <th style="white-space: nowrap">CPU Information</th>
-    <td style="white-space: nowrap">Apple M2</td>
+    <td style="white-space: nowrap">Apple M4 Max</td>
   </tr><tr>
     <th style="white-space: nowrap">Number of Available Cores</th>
-    <td style="white-space: nowrap">8</td>
+    <td style="white-space: nowrap">16</td>
   </tr><tr>
     <th style="white-space: nowrap">Available Memory</th>
-    <td style="white-space: nowrap">8 GB</td>
+    <td style="white-space: nowrap">128 GB</td>
   </tr><tr>
     <th style="white-space: nowrap">Elixir Version</th>
     <td style="white-space: nowrap">1.20.4</td>
@@ -68,11 +68,11 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">Json.stringify/1</td>
-    <td style="white-space: nowrap; text-align: right">5.72 K</td>
-    <td style="white-space: nowrap; text-align: right">174.95 &micro;s</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;17.87%</td>
-    <td style="white-space: nowrap; text-align: right">167.79 &micro;s</td>
-    <td style="white-space: nowrap; text-align: right">314.41 &micro;s</td>
+    <td style="white-space: nowrap; text-align: right">7.82 K</td>
+    <td style="white-space: nowrap; text-align: right">127.81 &micro;s</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;32.41%</td>
+    <td style="white-space: nowrap; text-align: right">112.33 &micro;s</td>
+    <td style="white-space: nowrap; text-align: right">278.83 &micro;s</td>
   </tr>
 
 </table>
@@ -87,7 +87,7 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">Json.stringify/1</td>
-    <td style="white-space: nowrap;text-align: right">5.72 K</td>
+    <td style="white-space: nowrap;text-align: right">7.82 K</td>
     <td>&nbsp;</td>
   </tr>
 
@@ -128,11 +128,11 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">Json.stringify/1</td>
-    <td style="white-space: nowrap; text-align: right">58.29 K</td>
-    <td style="white-space: nowrap; text-align: right">17.16 &micro;s</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;15.69%</td>
-    <td style="white-space: nowrap; text-align: right">16.75 &micro;s</td>
-    <td style="white-space: nowrap; text-align: right">20.96 &micro;s</td>
+    <td style="white-space: nowrap; text-align: right">86.21 K</td>
+    <td style="white-space: nowrap; text-align: right">11.60 &micro;s</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;35.27%</td>
+    <td style="white-space: nowrap; text-align: right">11.29 &micro;s</td>
+    <td style="white-space: nowrap; text-align: right">14.63 &micro;s</td>
   </tr>
 
 </table>
@@ -147,7 +147,7 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">Json.stringify/1</td>
-    <td style="white-space: nowrap;text-align: right">58.29 K</td>
+    <td style="white-space: nowrap;text-align: right">86.21 K</td>
     <td>&nbsp;</td>
   </tr>
 
@@ -188,11 +188,11 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">Json.stringify/1</td>
-    <td style="white-space: nowrap; text-align: right">1.19 M</td>
-    <td style="white-space: nowrap; text-align: right">840.25 ns</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;693.15%</td>
-    <td style="white-space: nowrap; text-align: right">792 ns</td>
-    <td style="white-space: nowrap; text-align: right">1083 ns</td>
+    <td style="white-space: nowrap; text-align: right">1.77 M</td>
+    <td style="white-space: nowrap; text-align: right">565.89 ns</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;742.26%</td>
+    <td style="white-space: nowrap; text-align: right">500 ns</td>
+    <td style="white-space: nowrap; text-align: right">750 ns</td>
   </tr>
 
 </table>
@@ -207,7 +207,7 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">Json.stringify/1</td>
-    <td style="white-space: nowrap;text-align: right">1.19 M</td>
+    <td style="white-space: nowrap;text-align: right">1.77 M</td>
     <td>&nbsp;</td>
   </tr>
 
