@@ -20,7 +20,7 @@ rule to make its fixtures pass.
 | DSH-P11 | structural schemas and synthetic vectors implemented; compatibility qualification pending | DSH-P03/P06/P07 | Freeze portable artifact block/profile/receipt schemas and v2 state-specific capability fixtures | Packaged schemas and independent canonical chart/drawing vectors; runtime byte/reference checks and external producer/reader evidence remain separate |
 | DSH-P12 | in progress | DSH-P11 | Add explicit per-call profile adapters, block validation and requirement/admission projection | Chart/drawing fixtures, runtime selection, callback containment, concurrent isolation and three-seed model checks pass |
 | DSH-P13 | in progress | DSH-P12/P07 | Join verified local variants, search/text fallback and atomic export | Selected closure, original-byte checks, prior-tree preservation, emitted-script refusal and root/subpath file export tests pass |
-| DSH-P14 | in progress | DSH-P13; actual producer and independent readers | Qualify document previews, renderer/native semantic parity and fresh package consumers | First producer's installed archive/static document join and full package gate pass; native/browser/manual target evidence remains open |
+| DSH-P14 | renderer receipt views implemented; expanded target/archive qualification pending | DSH-P13; actual producer and independent readers | Qualify document previews, renderer/native semantic parity and fresh package consumers | First producer's installed archive/static document join and full package gate pass; native/browser/manual target evidence remains open |
 | DSH-P15 | source implemented; coordinated qualification pending | DSH-P03/P06/P07 | Define additive inert presentation settings and propagate validated choices through hosted/static renderer context | Defaults and legacy fixtures unchanged; invalid links/settings refuse; hosts own brand, labels, locale/release destinations and robots policy |
 | DSH-P16 | projection and renderer adoption implemented; coordinated qualification pending | DSH-P04/P15 | Complete locale/audience/section reading-flow boundaries and validate navigation/page presentation metadata | Automatic flow stays within its declared view; explicit host relationships remain possible; badges, collapse defaults, hero/banner and metadata have valid/refusal fixtures |
 | DSH-P17 | planned; new receipts required | DSH-P08/P10–P16 and the selected renderer packages | Qualify the coordinated source/package/runtime cohort and reconcile documentation | Full gates, runtime matrix, notebooks, consumers, relevant benchmarks and immutable renderer evidence; external target checks retain their own status |
@@ -470,3 +470,31 @@ The full current-runtime gate passes: 439 checks (16 doctests, 35 properties,
 388 tests), 95.6% line coverage, strict lint, docs/spec coverage, Dialyzer,
 audits and no-optional compilation. Renderer adoption and fresh target/archive
 qualification remain separate work.
+
+
+### Passive renderer adoption
+
+Phoenix Assets `7c54e5f` consumes producer-admitted receipts through the current
+callback-free verifier, checks original SVG/PNG bytes and renders the complete
+fallback with captions, descriptions, locale and semantic anchors. Svelte uses
+the same frozen chart/drawing corpus and retained canonical byte witnesses;
+HEEx and static pages use `artifact_assets` and the checked local URL map.
+The diagnostic preview exposes receipt/constraint/projection data in four visual
+modes without adding producer meaning, geometry, discovery or approval state.
+Passive shells omit browser modules and enhancement-only controls, retain native
+navigation and disclose unavailable search.
+
+Its full current-runtime gate passes 505 backend checks at 87.5% coverage,
+555 frontend tests (322 DocShell), all 25 required checks and 17 release-script
+tests. Against this producer at `a055500`, 37 native integration/projection/
+conformance checks pass, including 11 artifact checks. Ordinary legacy pages and
+explicit refusal on older receipt APIs are checked separately. These are source
+results; root/subpath file/print/browser/native target observations, producer
+comparison images and fresh coordinated archives remain open under P14/P17.
+
+GitHub still reports successful CI for the previous remote heads recorded above.
+The Phoenix Assets job log confirms three Codecov uploads failed with
+`Repository not found` despite the successful job; upload failure is tolerated
+by that workflow. Repository activation/app access/credential configuration needs
+maintainer verification. No new local commit has remote CI evidence until the
+maintainer pushes it; neither repository was pushed or had its visibility changed.
