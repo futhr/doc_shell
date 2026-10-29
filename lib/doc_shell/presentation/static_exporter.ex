@@ -26,6 +26,7 @@ defmodule DocShell.Presentation.StaticExporter do
     Page,
     Renderer,
     SearchAdapter,
+    Settings,
     Site
   }
 
@@ -65,6 +66,7 @@ defmodule DocShell.Presentation.StaticExporter do
     with :ok <- validate_options(opts),
          %Site{} = site <- Keyword.get(opts, :site),
          :ok <- validate_site(site),
+         :ok <- Settings.validate(site.presentation),
          {:ok, site, artifact_assets, presentation_binding} <-
            ArtifactExport.project(site, Keyword.get(opts, :artifact_options)),
          :ok <- validate_origin(Keyword.get(opts, :canonical_origin)),
@@ -398,7 +400,8 @@ defmodule DocShell.Presentation.StaticExporter do
       navigation: build.site.navigation,
       search: %{"contract" => build.search_contract, "records" => build.site.search},
       assets: build.asset_paths,
-      canonical_origin: Keyword.get(build.opts, :canonical_origin)
+      canonical_origin: Keyword.get(build.opts, :canonical_origin),
+      presentation: build.site.presentation
     }
   end
 
@@ -740,7 +743,14 @@ defmodule DocShell.Presentation.StaticExporter do
         do: "Sitemap: #{String.trim_trailing(origin, "/")}/sitemap.xml\n",
         else: ""
 
-    "User-agent: *\nAllow: #{site.base_path}\n" <> sitemap
+    rules = Map.get(site.presentation, "robots", %{"allow" => [site.base_path]})
+
+    directives =
+      for {key, name} <- [{"allow", "Allow"}, {"disallow", "Disallow"}],
+          path <- Map.get(rules, key, []),
+          do: "#{name}: #{path}\n"
+
+    "User-agent: *\n" <> Enum.join(directives) <> sitemap
   end
 
   defp llms(site) do

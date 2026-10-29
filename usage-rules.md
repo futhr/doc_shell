@@ -11,12 +11,20 @@ when the host uses the corresponding optional integration.
 
 The [coordinated completion checklist](https://github.com/futhr/doc_shell/blob/main/docs/plans/documentation-sites.md#coordinated-completion)
 separates planned shared contracts from current APIs and renderer/consumer work.
-Do not invent presentation-settings or publication-pair options before those
-contracts are implemented. Core validates inert host inputs; Phoenix Assets
+Use the implemented `presentation` site-source field for shared settings;
+publication pairing remains planned. Core validates inert host inputs; Phoenix Assets
 owns visual controls/previews. Host source selection, authentication, disclosure,
 brand content, route choices, producer semantics and native readers stay at
 their owners. A matching publication binding will prove declared consistency,
 not permission to disclose either input.
+
+For current-checkout site settings, use `DocShell.Presentation.Settings.validate/1`.
+Only `brand`, `footer`, `labels`, `locales`, `releases`, `metadata` and `robots`
+are accepted. Keep values inert; pass framework slots/snippets to the renderer
+directly. Locale/release entries declare exact destinations rather than asking
+DocShell to infer routes. Static export forwards settings through
+`Renderer.Context.presentation` and applies the explicit robots.txt rules.
+These additive APIs are not in the published 1.0.0 archive yet.
 
 For the AshOaskit adapter, current host guidance selects `{:ash_oaskit, "~> 0.4.5"}`.
 Hex has released 0.4.5 and this checkout already locks it for development/tests.

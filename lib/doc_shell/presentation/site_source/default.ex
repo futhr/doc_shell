@@ -32,7 +32,8 @@ defmodule DocShell.Presentation.SiteSource.Default do
        "locales" => Keyword.get(opts, :locales, [Keyword.get(opts, :default_locale, "en")]),
        "pages" => pages,
        "redirects" => %{},
-       "metadata" => %{}
+       "metadata" => %{},
+       "presentation" => Keyword.get(opts, :presentation, %{})
      }}
   end
 

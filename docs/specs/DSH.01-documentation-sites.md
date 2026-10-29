@@ -407,6 +407,21 @@ pages.
 
 ### Page contract
 
+The optional site `presentation` object is validated by
+`DocShell.Presentation.Settings.validate/1` and copied to renderer context.
+Its closed top-level keys are `brand`, `footer`, `labels`, `locales`, `releases`,
+`metadata`, and `robots`. Brand and footer links carry `label` and `href`;
+locale/release entries add `id` and optional boolean `current`. At most one
+entry in each selector is current, and identities are unique. A brand logo
+names a local logical `asset` plus `alt` text. Lists have at most 64 entries;
+labels have at most 128 keys; strings have at most 4096 UTF-8 bytes.
+
+Metadata carries optional `description`, `image` URL and indexing `robots`
+tokens. The separate `robots` object supplies `allow`/`disallow` absolute-path
+lists for robots.txt. Unsupported keys, unsafe destinations, conflicting tokens
+and executable inputs refuse. Empty settings preserve existing defaults. No
+renderer callback, HTML, authorization or product layout policy belongs here.
+
 Every `DocShell.Presentation.Page` has:
 
 - qualified `id`, `collection_id`, source `document_id`, and `kind`;

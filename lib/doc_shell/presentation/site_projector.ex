@@ -16,13 +16,13 @@ defmodule DocShell.Presentation.SiteProjector do
   """
 
   alias DocShell.Generate.Cohort
-  alias DocShell.Presentation.{Limits, Site}
+  alias DocShell.Presentation.{Limits, Settings, Site}
   alias DocShell.Presentation.SiteProjection.{Links, Navigation, Pages, Paths, Search}
   alias DocShell.Presentation.SiteSource.Default
 
   @allowed_options ~w(collections source source_options profile limits generation_id
                       canonical_origin)a
-  @source_keys ~w(title base_path default_locale locales pages navigation redirects metadata)
+  @source_keys ~w(title base_path default_locale locales pages navigation redirects metadata presentation)
 
   @doc """
   Projects loaded collections through a host site source.
@@ -47,6 +47,7 @@ defmodule DocShell.Presentation.SiteProjector do
          {:ok, cohort} <- Cohort.new(collections, profile),
          {:ok, declaration} <- source_projection(collections, opts),
          :ok <- validate_declaration(declaration),
+         :ok <- Settings.validate(Map.get(declaration, "presentation", %{})),
          {:ok, site} <- build_site(cohort, declaration, opts, limits) do
       {:ok, site}
     else
@@ -146,7 +147,8 @@ defmodule DocShell.Presentation.SiteProjector do
          navigation: navigation,
          search: Search.records(pages),
          redirects: redirects,
-         metadata: Map.get(declaration, "metadata", %{})
+         metadata: Map.get(declaration, "metadata", %{}),
+         presentation: Map.get(declaration, "presentation", %{})
        }}
     else
       false -> {:error, :invalid_site_generation_id}

@@ -21,7 +21,7 @@ defmodule DocShell.Presentation.Renderer.Context do
     :search,
     :assets
   ]
-  defstruct @enforce_keys ++ [:canonical_origin]
+  defstruct @enforce_keys ++ [:canonical_origin, presentation: %{}]
 
   @typedoc "Renderer context without session, policy or executable callbacks."
   @type t :: %__MODULE__{
@@ -33,7 +33,8 @@ defmodule DocShell.Presentation.Renderer.Context do
           navigation: [NavigationItem.t()],
           search: map(),
           assets: %{String.t() => String.t()},
-          canonical_origin: String.t() | nil
+          canonical_origin: String.t() | nil,
+          presentation: DocShell.Presentation.Settings.t()
         }
 end
 

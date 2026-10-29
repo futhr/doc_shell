@@ -11,11 +11,12 @@ renderer can live in another package and implement the same behaviour.
 
 This example covers the existing core export path. The
 [coordinated completion checklist](https://github.com/futhr/doc_shell/blob/main/docs/plans/documentation-sites.md#coordinated-completion)
-tracks future presentation settings, hosted API pairing and complete artifact
+tracks renderer adoption of presentation settings, hosted API pairing and complete artifact
 preview/reader qualification. They are not options exercised by this notebook.
 The host supplies source policy and brand content; renderer packages own the
 visual controls and preview, while native readers and producer algorithms stay
-with their respective consumers/producers.
+with their respective consumers/producers. The settings section below describes
+the checkout's additive contract, which is not in the pinned 1.0.0 archive yet.
 
 ## Setup
 
@@ -66,6 +67,28 @@ end
 
 The map declares the host's site policy. A database or graph projection can
 produce it too; the returned values must remain inert JSON.
+
+### Presentation settings in the current checkout
+
+The source may also return a `presentation` object. For example:
+
+```json
+{
+  "brand": {"label": "Example", "href": "/docs/start/"},
+  "labels": {"search": "Search examples"},
+  "locales": [{"id": "en", "label": "English", "href": "/docs/start/", "current": true}],
+  "footer": {"text": "Example documentation", "links": []},
+  "metadata": {"description": "Example documentation", "robots": ["index", "follow"]},
+  "robots": {"allow": ["/docs/"]}
+}
+```
+
+`DocShell.Presentation.Settings.validate/1` checks this inert data before
+projection. The exporter forwards it as `context.presentation` for both pages
+and not-found output, and uses the explicit robots.txt rules. A renderer
+implements its own controls and recognizes its own label keys; the source
+supplies translations, destinations and brand content. The runnable baseline
+below uses no settings, so it also works with the pinned release.
 
 ## Define a small renderer
 

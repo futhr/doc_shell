@@ -27,7 +27,7 @@ defmodule DocShell.Presentation.Site do
     :redirects,
     :metadata
   ]
-  defstruct @enforce_keys
+  defstruct @enforce_keys ++ [presentation: %{}]
 
   @typedoc "A portable site generation with one coherent source cohort."
   @type t :: %__MODULE__{
@@ -44,7 +44,8 @@ defmodule DocShell.Presentation.Site do
           navigation: [NavigationItem.t()],
           search: [SiteSearchEntry.t()],
           redirects: %{String.t() => String.t()},
-          metadata: map()
+          metadata: map(),
+          presentation: DocShell.Presentation.Settings.t()
         }
 
   @doc "Returns the portable site schema identifier."

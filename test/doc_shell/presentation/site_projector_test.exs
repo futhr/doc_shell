@@ -78,6 +78,25 @@ defmodule DocShell.Presentation.SiteProjectorTest do
     defdelegate render_not_found(site, context), to: HtmlRenderer
   end
 
+  defmodule ContextRenderer do
+    @behaviour Renderer
+    @impl true
+    defdelegate capabilities(), to: HtmlRenderer
+    @impl true
+    defdelegate assets(site, opts), to: HtmlRenderer
+    @impl true
+    def render_page(page, context) do
+      send(self(), {:page_context, context})
+      HtmlRenderer.render_page(page, context)
+    end
+
+    @impl true
+    def render_not_found(site, context) do
+      send(self(), {:not_found_context, context})
+      HtmlRenderer.render_not_found(site, context)
+    end
+  end
+
   defmodule ExternalAssetRenderer do
     @behaviour Renderer
 
@@ -249,6 +268,41 @@ defmodule DocShell.Presentation.SiteProjectorTest do
   end
 
   describe "cohort and projection" do
+    test "validates presentation settings before projecting or publishing" do
+      settings = %{
+        "brand" => %{"label" => "Example", "href" => "/docs/start/"},
+        "labels" => %{"search" => "Search examples"},
+        "robots" => %{"disallow" => ["/"]}
+      }
+
+      assert {:ok, site} = project(Map.put(declaration(), "presentation", settings))
+      assert site.presentation == settings
+      assert Jason.decode!(Jason.encode!(site))["presentation"] == settings
+      destination = Path.join(tmp_dir!("presentation-export"), "site")
+      assert {:ok, _} = export(site, ContextRenderer, destination: destination)
+      assert_receive {:page_context, %{presentation: ^settings}}
+      assert_receive {:not_found_context, %{presentation: ^settings}}
+      assert File.read!(Path.join(destination, "robots.txt")) == "User-agent: *\nDisallow: /\n"
+
+      assert {:ok, default_site} =
+               project(declaration(), collections(),
+                 source: DocShell.Presentation.SiteSource.Default,
+                 source_options: [presentation: settings]
+               )
+
+      assert default_site.presentation == settings
+
+      assert {:error, {:invalid_presentation_settings, _}} =
+               project(
+                 Map.put(declaration(), "presentation", %{
+                   "brand" => %{"href" => "javascript:bad"}
+                 })
+               )
+
+      assert {:error, {:invalid_presentation_settings, _}} =
+               export(%{site | presentation: %{"unknown" => true}}, HtmlRenderer)
+    end
+
     test "cohort identity excludes local paths and generation ids" do
       first = loaded("alpha", [document("alpha", "intro", "Intro", heading("Hello"))], "/tmp/one")
 

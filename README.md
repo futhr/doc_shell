@@ -15,10 +15,11 @@ for hosted rendering or static export. You supply the renderer, site structure,
 and authorization policy.
 
 The [coordinated completion checklist](docs/plans/documentation-sites.md#coordinated-completion)
-tracks the remaining work with Phoenix Assets: presentation settings, hosted
+tracks the remaining work with Phoenix Assets: presentation controls, hosted
 presentation/OpenAPI pairing, projection follow-ups, portable-artifact contracts,
 renderer/preview support and package/target qualification. These are planned
-additions to the implemented baseline. DocShell owns portable validation;
+additions to the implemented baseline. Validated inert presentation settings
+are available in this checkout. DocShell owns portable validation;
 Phoenix Assets owns framework/browser rendering; consumers retain source,
 branding, authorization, deployment and native-reader responsibilities.
 
@@ -371,6 +372,33 @@ Use `DocShell.Presentation.SiteSource.Default` for flat routes. Source and edit
 URLs follow the host's declarations; DocShell does not invent forge URL shapes.
 The projected `Site` contains no session, authorization callback, framework
 component, or deployment setting.
+
+### Shared presentation data
+
+A site source may return an optional `"presentation"` object. The default source
+accepts the same object through `source_options: [presentation: settings]`.
+`DocShell.Presentation.Settings.validate/1` validates brand/footer text and links,
+control labels, locale/release destinations, SEO metadata, and robots.txt rules.
+The projector preserves these choices in `site.presentation`; static export
+passes them unchanged as `context.presentation` to page and not-found renderers.
+
+```elixir
+settings = %{
+  "brand" => %{"label" => "Example", "href" => "/docs/"},
+  "labels" => %{"search" => "Search examples"},
+  "locales" => [%{"id" => "en", "label" => "English", "href" => "/docs/", "current" => true}],
+  "metadata" => %{"description" => "Example documentation", "robots" => ["index", "follow"]},
+  "robots" => %{"allow" => ["/docs/"], "disallow" => ["/drafts/"]}
+}
+
+:ok = DocShell.Presentation.Settings.validate(settings)
+```
+
+These settings are additive checkout APIs awaiting release. Empty settings
+preserve defaults. Destinations must be root-relative or HTTP(S) URLs; invalid
+structures, conflicting indexing tokens, duplicate selectors and oversized
+values fail before renderer invocation. Hosts supply translations and release
+routes. Renderers choose which labels they recognize and own their visual controls.
 
 ### Renderer contract
 
