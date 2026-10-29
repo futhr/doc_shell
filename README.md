@@ -517,6 +517,8 @@ This static subset does not establish independent reader or target conformance.
 Use `DocShell.Json.Canonical.encode/1` and `digest/1` for checked serialization
 and hashing. `Collection.digest/1` raises `ArgumentError` for invalid input.
 Fixtures ship in `priv/contracts/canonical-json-v1.json`.
+`DocShell.Json.Depth.check/2` bounds container nesting in original JSON bytes
+before decoding; it is a depth check rather than syntax validation.
 
 The [artifact contract notebook](notebooks/artifact-contract.livemd) covers
 normalization, legacy envelopes, concurrent writers, and custom paths in detail.

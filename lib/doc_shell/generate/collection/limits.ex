@@ -9,6 +9,8 @@ defmodule DocShell.Generate.Collection.Limits do
   lower any positive limit; unlimited sentinel values are not accepted.
   """
 
+  alias DocShell.Json.Depth
+
   @defaults %{
     max_file_bytes: 32 * 1_024 * 1_024,
     max_total_bytes: 2 * 1_024 * 1_024 * 1_024,
@@ -44,17 +46,16 @@ defmodule DocShell.Generate.Collection.Limits do
   @doc "Checks JSON container nesting without allocating the decoded tree."
   @spec check_depth(binary(), t()) :: :ok | {:error, term()}
   def check_depth(json, limits) do
-    # Search only syntax bytes in the original binary. Walking every byte with
-    # recursive sub-binaries needlessly allocates for long documentation strings.
-    context = %{
-      json: json,
-      size: byte_size(json),
-      maximum: limits.max_json_depth,
-      containers: :binary.compile_pattern(["{", "}", "[", "]", <<34>>]),
-      quotes: :binary.compile_pattern([<<34>>, <<92>>])
-    }
+    case Depth.check(json, limits.max_json_depth) do
+      :ok ->
+        :ok
 
-    scan(context, 0, 0)
+      {:error, {:json_depth_limit, observed, maximum}} ->
+        {:error, {:collection_limit, :max_json_depth, observed, maximum}}
+
+      {:error, _} = error ->
+        error
+    end
   end
 
   defp validate_options(opts) do
@@ -64,35 +65,6 @@ defmodule DocShell.Generate.Collection.Limits do
          end) do
       nil -> {:ok, Map.merge(@defaults, Map.new(opts))}
       invalid -> {:error, {:invalid_collection_limit, invalid}}
-    end
-  end
-
-  defp scan(context, _, depth) when depth > context.maximum,
-    do: {:error, {:collection_limit, :max_json_depth, depth, context.maximum}}
-
-  defp scan(context, offset, depth) do
-    case next(context, context.containers, offset) do
-      :nomatch -> :ok
-      {34, position} -> scan_string(context, position + 1, depth)
-      {byte, position} when byte in [123, 91] -> scan(context, position + 1, depth + 1)
-      {_, position} -> scan(context, position + 1, depth - 1)
-    end
-  end
-
-  defp scan_string(context, offset, depth) do
-    case next(context, context.quotes, offset) do
-      :nomatch -> :ok
-      {92, position} -> scan_string(context, position + 2, depth)
-      {34, position} -> scan(context, position + 1, depth)
-    end
-  end
-
-  defp next(context, _, offset) when offset >= context.size, do: :nomatch
-
-  defp next(context, pattern, offset) do
-    case :binary.match(context.json, pattern, scope: {offset, context.size - offset}) do
-      :nomatch -> :nomatch
-      {position, 1} -> {:binary.at(context.json, position), position}
     end
   end
 end

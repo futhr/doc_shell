@@ -281,7 +281,8 @@ defmodule DocShell.MixProject do
           DocShell.Web.Response
         ],
         Support: [
-          DocShell.Json
+          DocShell.Json,
+          DocShell.Json.Depth
         ]
       ],
       source_ref: "v#{@version}",

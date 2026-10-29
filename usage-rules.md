@@ -587,3 +587,9 @@ Keep records closed and text plain. Use `metadata["seo"]` for the shared
 metadata shape. Site source callbacks must return JSON-encodable declarations;
 callbacks inside data fail rather than becoming inspected text. The full page
 record and projected relationships count toward `max_page_bytes`.
+
+Use `DocShell.Json.Depth.check(json, maximum)` when an integration must enforce
+a positive container-depth ceiling before decoding. It skips quoted syntax and
+escapes without allocating a decoded tree. A passing depth check does not
+validate JSON syntax, duplicate keys or source authenticity; still decode with
+`DocShell.Json.decode/1`. Collection loading retains its existing limit errors.
