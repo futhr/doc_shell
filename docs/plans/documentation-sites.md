@@ -10,17 +10,109 @@ rule to make its fixtures pass.
 | DSH-P01 | complete | Existing `doc-shell/v2` reader | Additive `collection.json`, `DocShell.Generate.Collection` and collection descriptor | DSH-V01/V02 plus collection integrity requirements below; no network or process startup |
 | DSH-P02 | complete | DSH-P01 | `DocShell.Generate.Cohort`, canonical payload digest, normalized source provenance | DSH-V03; digest excludes time, random IDs, and absolute workspace paths |
 | DSH-P03 | complete | DSH-P01/P02 | `Site`, `Page`, navigation/link types and `SiteSource` validation | DSH-V04–V06; all public structs/functions documented and typed |
-| DSH-P04 | complete | DSH-P03 | Heading/anchor, reading-order, locale/audience/version, canonical/source/edit and redirect projection | DSH-V04–V06 with property tests for route and anchor normalization |
+| DSH-P04 | baseline implemented; DSH-P16 follow-up open | DSH-P03 | Heading/anchor, reading-order, locale/audience/version, canonical/source/edit and redirect projection | DSH-V04–V06 with property tests for route and anchor normalization |
 | DSH-P05 | complete | DSH-P03/P04 | Section-aware search records, built-in deterministic JSON adapter and adapter behaviour | DSH-V07; fixed query corpus and browser-neutral output |
-| DSH-P06 | complete | DSH-P03–P05 | Renderer behaviour, normalized capability/requirement/context/asset contracts, reserved feature IDs and shared fallback/enhanced/connected conformance fixtures | DSH-V09/V10; fixtures published with the package for independent renderers |
-| DSH-P07 | complete | DSH-P02–P06 | Atomic static exporter, site manifest, sitemap, robots and llms outputs | DSH-V08; clean build, rollback, subpath and output-bound evidence |
+| DSH-P06 | baseline implemented; DSH-P15 extensions planned | DSH-P03–P05 | Renderer behaviour, normalized capability/requirement/context/asset contracts, reserved feature IDs and shared fallback/enhanced/connected conformance fixtures | DSH-V09/V10; fixtures published with the package for independent renderers |
+| DSH-P07 | baseline implemented; DSH-P13/P15 follow-ups open | DSH-P02–P06 | Atomic static exporter, site manifest, sitemap, robots and llms outputs | DSH-V08; clean build, rollback, subpath and output-bound evidence |
 | DSH-P08 | in progress | DSH-P06/P07 | Hosted/static semantic parity and live-capability degradation tool | Core comparison is complete; DSH-V11 still requires two independent renderer implementations |
-| DSH-P09 | complete | DSH-P01–P08 | Documentation, Livebooks, benchmarks, compatibility and packaged-consumer qualification | DSH-V12 and the core release evidence recorded below |
+| DSH-P09 | baseline qualification recorded; coordinated additions open | DSH-P01–P08 | Documentation, Livebooks, benchmarks, compatibility and packaged-consumer qualification | DSH-V12 and the core release evidence recorded below; additions require DSH-P17 |
 | DSH-P10 | planned | DSH-P03/P06 | Preserve the hosted graph/source-cohort boundary and validate a host publication/OpenAPI pair before renderer invocation | DSH-V13; hosted projection needs no synthetic per-repository collection; cross-surface and mixed-generation pairs fail |
 | DSH-P11 | in progress | DSH-P03/P06/P07 | Freeze portable artifact block/profile/receipt schemas and v2 state-specific capability fixtures | Static records and tests implemented; complete schema/limit and compatibility matrix remains open |
 | DSH-P12 | in progress | DSH-P11 | Add explicit per-call profile adapters, block validation and requirement/admission projection | Chart/drawing fixtures, runtime selection, callback containment, concurrent isolation and three-seed model checks pass |
 | DSH-P13 | in progress | DSH-P12/P07 | Join verified local variants, search/text fallback and atomic export | Selected closure, original-byte checks, prior-tree preservation, emitted-script refusal and root/subpath file export tests pass |
 | DSH-P14 | in progress | DSH-P13; actual producer and independent readers | Qualify document previews, renderer/native semantic parity and fresh package consumers | First producer's installed archive/static document join and full package gate pass; native/browser/manual target evidence remains open |
+| DSH-P15 | planned; no new public API yet | DSH-P03/P06/P07 | Define additive inert presentation settings and propagate validated choices through hosted/static renderer context | Defaults and legacy fixtures unchanged; invalid links/settings refuse; hosts own brand, labels, locale/release destinations and robots policy |
+| DSH-P16 | source gaps identified; regression work planned | DSH-P04/P15 | Complete locale/audience/section reading-flow boundaries and validate navigation/page presentation metadata | Automatic flow stays within its declared view; explicit host relationships remain possible; badges, collapse defaults, hero/banner and metadata have valid/refusal fixtures |
+| DSH-P17 | planned; new receipts required | DSH-P08/P10–P16 and the selected renderer packages | Qualify the coordinated source/package/runtime cohort and reconcile documentation | Full gates, runtime matrix, notebooks, consumers, relevant benchmarks and immutable renderer evidence; external target checks retain their own status |
+
+## Coordinated completion
+
+This is the shared dependency-order checklist for `doc_shell` and
+`phoenix_assets`, agreed on 2026-10-29. The
+[Phoenix Assets renderer plan](https://github.com/ghostshift-assembly/phoenix-assets/blob/main/docs/plans/doc-shell-renderers.md#coordinated-completion)
+owns renderer implementation and browser evidence. Rows below are work to do,
+not executed results. Historical qualification records retain their original scope.
+
+| Step | Work and owner | Tracker and required acceptance |
+| --- | --- | --- |
+| 1 | Reconcile each requirement with source, regressions and retained evidence in both repositories | DSH-S01–S11/DSH-V01–V13, PHA-S01–S11/PHA-V01–V13 and DSH-A01–A10/DSH-A-V01–V10 each need a named owner and evidence; no completion from a version string or passing subset |
+| 2 | Define shared presentation inputs upstream, then adopt them in Phoenix Assets | DSH-P15; PHA-P11. Optional validated brand/footer data, labels, locale/release destinations and metadata; no host policy, framework snippets or executable callbacks in portable data |
+| 3 | Implement hosted presentation/OpenAPI pair validation upstream and consume it before rendering | DSH-P10; PHA-P13. Matching immutable publication/source-view/graph-position/locale/release/disclosure bindings pass; absent, stale, mixed and cross-surface pairs refuse |
+| 4 | Complete site projection and navigation behavior upstream | DSH-P16; PHA-P12. Locale/audience/section flow, explicit relationships, badge/collapse metadata, hero/banner and deterministic valid/malformed fixtures |
+| 5 | Freeze and package the generic portable-artifact contracts upstream | DSH-P11. Block/profile/capability/receipt/manifest schema fixtures, version compatibility, exact/one-over limits and producer-owned schema boundaries |
+| 6 | Complete artifact profile validation, admission and atomic export upstream | DSH-P12/P13. Original bytes/digests/lengths/bindings, runtime selection, callback faults, concurrent isolation, selected closure, script-free output and preservation of the prior tree |
+| 7 | Complete ordinary Svelte, HEEx and static rendering in Phoenix Assets | PHA-P11/P12. Selectors, host customization, translated control labels, navigation metadata, splash/hero/banner and SEO metadata; ordinary links and no-JavaScript content remain usable |
+| 8 | Render verified artifact selections and supply a diagnostic preview in Phoenix Assets | PHA-P14; DSH-P14 supplies the generic inputs/observations. Show selected media, identities, captions, descriptions, anchors, limitations and complete fallback without producer-specific branches |
+| 9 | Extend browser/accessibility evidence in Phoenix Assets and collect external target observations | PHA-P15; DSH-P14. Keyboard/focus, search, navigation, selectors, themes/contrast, RTL, zoom/reflow, print, offline/file/subpath and failed-enhancement cases; human/native checks are separate evidence |
+| 10 | Close independent renderer conformance against one expanded upstream corpus | DSH-P08; PHA-P10/P16. Svelte, static HEEx and hosted LiveView agree on admitted content, routes, names, headings, digests and unavailable live capabilities |
+| 11 | Qualify fresh packages together without weakening compatibility | DSH-P17; PHA-P16. Both full gates, required runtimes, optional/minimum/unlocked consumers, notebooks, relevant benchmarks, local asset budgets, reviewed screenshots and new exact-archive receipts |
+| 12 | Reconcile docs, trackers and CI with the delivered behavior | DSH-P09/P17; both repositories' owning guidance. Record exact revisions/results/skips; investigate the Phoenix Assets Codecov upload failure; a maintainer push is needed before new local commits have remote CI evidence |
+
+Native reader implementation/lifecycle belongs to the native consumer. The
+artifact producer owns semantic validation, geometry and reference/candidate/
+difference images; human assistive tasks need actual target observations.
+These are dependencies of DSH-P14 qualification, not new core or Phoenix Assets
+product features. Browser tests cannot close those rows. PHA.03's conditional
+development-instrumentation extension is outside this buildout unless its
+separate admission evidence is supplied.
+
+### Ownership review (2026-10-29)
+
+Review covered `GraphProjector`/`Source`, site/page/context projection, artifact
+profiles/admission/export and the optional web gate, together with the Phoenix
+Assets generated-contract/configuration, transport, reporting, DocShell and dev
+tooling seams. No consumer-specific runtime feature to relocate was identified
+in those reviewed paths. This is a static ownership review, not a security or
+runtime qualification claim.
+
+A consumer-specific dynamic changelog locator appeared in an API-doc example
+and its test fixture. Both now use `graph://release-notes/example`; the
+extractor continues to preserve the caller's opaque locator unchanged. The
+portable-artifact specification also uses a generic producer boundary rather
+than naming one consumer.
+
+Two planning boundaries required correction: the visual preview is renderer-owned,
+and a hosted publication binding compares host-declared inputs without
+authenticating their origin or authorizing disclosure. Generic adapters remain
+explicit per-call inputs; native clients, source selection, tenancy, deployment,
+product workflows and producer algorithms stay with their owners. Host identity
+and translations may be carried as inert values; their policy and content are
+not library defaults.
+
+### AshOaskit release baseline (2026-10-29)
+
+Hex lists [AshOaskit 0.4.5](https://hex.pm/packages/ash_oaskit/0.4.5) as released
+with documentation. This checkout's `mix.lock` already selects 0.4.5; its
+outer checksum matches the
+[release metadata](https://hex.pm/api/packages/ash_oaskit/releases/0.4.5).
+The development/test declaration remains `~> 0.3 or ~> 0.4.1`; this records its
+declared compatibility rather than qualifying every release in that range.
+Fresh coordinated adapter/consumer checks must record their actual resolution,
+including 0.4.5 and its Ash/Plug/Oaskit dependency cohort. AshOaskit remains a
+host-installed adapter integration, not a production requirement of DocShell
+or Phoenix Assets. No dependency range or lock was changed by this docs review.
+The adapter qualification must exercise real Ash domains through both generated
+OpenAPI 3.0 and 3.1 paths, missing-adapter/failing-adapter cases and forwarding
+of host options. Downstream renderers separately retain admitted 3.0/3.1/3.2
+fixtures; accepting a raw 3.2 document does not mean AshOaskit generates it.
+
+### Tracker and boundary checks (2026-10-29)
+
+The coordinated documentation pass checked 41 tracked Markdown/Livebook files,
+99 local/repository reference paths and 29 anchors across the two checkouts.
+All twelve shared steps and all DSH-P01–P17/PHA-P01–P16 definitions are present
+without duplicate tracker IDs. The Phoenix Assets boundary script passes for
+182 files; a matching consumer-name check passes for DocShell's 72 production
+files. Source review and syntax comparison found only documentation/comment
+changes in the production files touched by this pass. The changelog test's
+opaque locator and expected value were changed together to a generic example.
+
+No dependency ranges, locks, release refs or client settings changed. Full
+Mix/runtime, notebook, benchmark, browser, package and native/human checks were
+not rerun for this documentation update. Earlier qualification records below
+do not certify the new planned APIs or requalify a changed source/archive join.
+
+## Hosted pairing implementation order
 
 P10 is outside the core site qualification record below. The existing
 `generation_id` joins artifacts written by one `DocShell.Build` run; it does not
@@ -210,9 +302,10 @@ declaring `runtime: []` is not a passing result. Asset source disclosure also
 applies to thumbnails, descriptions, search and fallbacks. Corrupt or absent
 required assets preserve the previous complete output tree.
 
-P14 supplies a local review page from the exact projected data, including
-artifact/variant IDs, anchors, selected capability, limitations, fallback and
-generated SVG/PNG.
+P14 supplies renderer-neutral preview inputs and semantic observations. Phoenix
+Assets supplies the local visual review page from the exact projected data,
+including artifact/variant IDs, anchors, selected capability, limitations,
+fallback and producer-supplied SVG/PNG. DocShell core adds no browser UI.
 
 The artifact producer supplies reference/candidate/difference
 images; DocShell does not calculate geometry or approve baselines.
@@ -227,7 +320,11 @@ these rows. Ship the new fixture/schema documents in the fresh package archive.
 The current v1 renderer pair and hosted publication/OpenAPI obligations remain
 open independently; artifact previews cannot close them.
 
-### Existing site quality evidence
+### Required site quality evidence
+
+This is the acceptance checklist, not a report that every item has executed.
+In particular, hosted publication pairing remains planned under DSH-P10;
+independent renderer and target evidence retain the statuses above.
 
 - Unit tests cover every structured error and public default.
 - StreamData covers route normalization, anchor uniqueness, input ordering,

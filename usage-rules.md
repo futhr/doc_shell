@@ -9,6 +9,21 @@ structure, authorization policy, tenancy, branding, and deployment.
 Requires Elixir 1.17 or later. Install `ash_oaskit`, `open_api_spex`, or `plug`
 when the host uses the corresponding optional integration.
 
+The [coordinated completion checklist](https://github.com/futhr/doc_shell/blob/main/docs/plans/documentation-sites.md#coordinated-completion)
+separates planned shared contracts from current APIs and renderer/consumer work.
+Do not invent presentation-settings or publication-pair options before those
+contracts are implemented. Core validates inert host inputs; Phoenix Assets
+owns visual controls/previews. Host source selection, authentication, disclosure,
+brand content, route choices, producer semantics and native readers stay at
+their owners. A matching publication binding will prove declared consistency,
+not permission to disclose either input.
+
+For the AshOaskit adapter, current host guidance selects `{:ash_oaskit, "~> 0.4.5"}`.
+Hex has released 0.4.5 and this checkout already locks it for development/tests.
+Retain the actual resolved dependency cohort in adapter/package evidence; this
+does not impose AshOaskit on core consumers or qualify every older version in
+the development dependency range.
+
 ## Build and configuration
 
 ### Configuration precedence

@@ -3,6 +3,11 @@
 **Status:** experimental static subset implemented; audited 2026-10-23. Complete
 consumer and target qualification remain open under DSH-P11–P14 in the
 [site plan](../plans/documentation-sites.md#portable-artifact-delivery).
+The [coordinated completion checklist](../plans/documentation-sites.md#coordinated-completion)
+assigns generic schema/admission/export work to DocShell and visual rendering
+and preview work to Phoenix Assets. Native reader implementation and human
+assistive tasks remain consumer/target obligations; their required evidence
+cannot be replaced with a core or browser test result.
 
 **Owner:** DocShell document bindings and presentation admission.
 
@@ -139,7 +144,7 @@ conformance. Descriptor fixtures identify exactly which constructs are admitted.
 **DSH-A03 — Open feature namespace.** A new supported profile derives its
 requirements through the same artifact block. Adding the chart fixture MUST
 require only its descriptor, adapter and renderer support; no core tag switch,
-Conjunct reference or new DocShell service is allowed.
+producer-specific reference or new DocShell service is allowed.
 
 Unknown optional profiles
 retain their opaque metadata and display verified safe fallback. Unknown
@@ -280,7 +285,8 @@ Its fixture mode includes light, dark, monochrome and enlarged views. It
 cannot mark observations as reviewed or accepted. Native readers and browser
 renderers may differ in layout but preserve these semantics.
 
-Required vectors, all initially planned:
+Required vectors follow. Some static cases have source tests; the plan records
+their evidence. The complete compatibility and target matrix remains open.
 
 | Vector | Observable acceptance |
 | --- | --- |

@@ -6,6 +6,10 @@ Qualification of two independent renderers and hosted presentation/OpenAPI pair
 validation remain acceptance work.
 The implementation plan records executable evidence; this specification states
 the required behavior and does not treat core tests as renderer qualification.
+The [coordinated completion checklist](../plans/documentation-sites.md#coordinated-completion)
+records the remaining upstream and Phoenix Assets work, including presentation
+settings, projection follow-ups and new package/target evidence. Those additions
+are planned; their field names and public APIs are not established by this document.
 
 ## Purpose
 
@@ -57,6 +61,14 @@ packages.
 | Writing a complete static site atomically | `DocShell.Presentation.StaticExporter` |
 | Framework components and browser integration | A separate renderer package |
 | Branding, taxonomy, authorization, and deployment | The host |
+
+Renderer-neutral settings may carry validated host identity, links, labels and
+locale/release choices. Hosts choose that content and those destinations;
+DocShell validates their shape and relationships, while renderer packages own
+controls, snippets/slots, CSS, SEO markup and visual previews. Native readers,
+producer geometry, repository discovery, product workflows and disclosure
+decisions remain outside both library implementations. A hosted pair check
+compares declared bindings; it cannot authenticate or authorize them.
 
 The `doc_shell` Hex package must not gain Phoenix, LiveView, Svelte, Astro,
 React, a CSS framework, Node, a browser, a network client, or a hosted search
@@ -712,8 +724,10 @@ accessibility contract.
 ## Planned portable artifact extension
 
 The [portable artifact capability draft](portable-artifact-capabilities.md)
-defines typed external-artifact blocks, per-call producer profiles,
+has an experimental static subset for typed external-artifact blocks, per-call
+producer profiles,
 state-specific runtime admission, exact semantic anchors and preview/export
-conformance. It is planned under DSH-P11–P14 and is not part of the implemented
-v0.4.0 baseline or the completion claim above. Existing v1 AST, site, renderer
-capability and fallback-digest semantics remain unchanged.
+conformance. Remaining implementation and qualification are tracked under
+DSH-P11–P14 and the coordinated checklist. This extension is not part of the
+implemented v0.4.0 baseline or the completion claim above. Existing v1 AST, site,
+renderer capability and fallback-digest semantics remain unchanged.

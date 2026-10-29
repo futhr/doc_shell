@@ -9,6 +9,14 @@ Publishing a site has three steps:
 This notebook follows those steps with a small HTML renderer. A production
 renderer can live in another package and implement the same behaviour.
 
+This example covers the existing core export path. The
+[coordinated completion checklist](https://github.com/futhr/doc_shell/blob/main/docs/plans/documentation-sites.md#coordinated-completion)
+tracks future presentation settings, hosted API pairing and complete artifact
+preview/reader qualification. They are not options exercised by this notebook.
+The host supplies source policy and brand content; renderer packages own the
+visual controls and preview, while native readers and producer algorithms stay
+with their respective consumers/producers.
+
 ## Setup
 
 Run the notebook from Livebook's default standalone runtime. The release task

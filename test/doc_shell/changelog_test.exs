@@ -18,7 +18,7 @@ defmodule DocShell.Generate.ChangelogTest do
     def load(opts) do
       opts
       |> Keyword.fetch!(:markdown)
-      |> Changelog.from_markdown("graph://release-notes/apace")
+      |> Changelog.from_markdown("graph://release-notes/example")
     end
   end
 
@@ -158,7 +158,7 @@ defmodule DocShell.Generate.ChangelogTest do
                )
 
       assert entry["id"] == "changelog-v9.0.0"
-      assert entry["meta"]["source_path"] == "graph://release-notes/apace"
+      assert entry["meta"]["source_path"] == "graph://release-notes/example"
     end
 
     test "validates source adapter output before returning it" do

@@ -62,7 +62,7 @@ defmodule DocShell.Generate.Changelog do
   Parses conventional changelog Markdown into DocShell changelog entries.
 
   `source_ref` is stored in each entry's metadata. Use a file path for file
-  sources or an opaque locator such as `graph://release-notes/apace` for dynamic
+  sources or an opaque locator such as `graph://release-notes/example` for dynamic
   sources.
   """
   @spec from_markdown(String.t(), String.t()) :: {:ok, [map()]} | {:error, term()}

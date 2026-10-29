@@ -14,6 +14,14 @@ It also validates collections of those artifacts and assembles them into sites
 for hosted rendering or static export. You supply the renderer, site structure,
 and authorization policy.
 
+The [coordinated completion checklist](docs/plans/documentation-sites.md#coordinated-completion)
+tracks the remaining work with Phoenix Assets: presentation settings, hosted
+presentation/OpenAPI pairing, projection follow-ups, portable-artifact contracts,
+renderer/preview support and package/target qualification. These are planned
+additions to the implemented baseline. DocShell owns portable validation;
+Phoenix Assets owns framework/browser rendering; consumers retain source,
+branding, authorization, deployment and native-reader responsibilities.
+
 [Installation](#installation) |
 [Quick start](#quick-start) |
 [Configuration](#configuration) |
@@ -42,12 +50,18 @@ def deps do
   [
     {:doc_shell, "~> 1.0.0"},
     # Derive the OpenAPI document from Ash domains
-    {:ash_oaskit, "~> 0.4"},
+    {:ash_oaskit, "~> 0.4.5"},
     # Serve artifacts over HTTP
     {:plug, "~> 1.16"}
   ]
 end
 ```
+
+AshOaskit 0.4.5 is the current released adapter baseline and is already selected
+by this checkout's development/test lock. Hosts install it explicitly; DocShell's
+production requirements do not install AshOaskit. The
+[qualification record](docs/plans/documentation-sites.md#ashoaskit-release-baseline-2026-10-29)
+distinguishes this resolution from new coordinated consumer proof.
 
 ## Quick start
 

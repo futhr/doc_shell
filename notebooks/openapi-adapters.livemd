@@ -126,7 +126,7 @@ config :doc_shell,
   api_version: "1.0.0"
 ```
 
-Add `{:ash_oaskit, "~> 0.3"}` to the host's dependencies when using real Ash
+Add `{:ash_oaskit, "~> 0.4.5"}` to the host's dependencies when using real Ash
 domains. DocShell keeps the dependency optional and resolves it at runtime.
 
 With no domains configured, the adapter returns a valid empty document. That is

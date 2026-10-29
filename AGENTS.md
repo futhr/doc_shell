@@ -8,6 +8,15 @@ For collection, site projection, search adapter, renderer, or static-export
 work, also read `docs/specs/DSH.01-documentation-sites.md` and implement
 `docs/plans/documentation-sites.md` in dependency order.
 
+The plan's coordinated completion checklist owns work sequencing with
+`phoenix_assets`; consult the linked renderer tracker before changing shared
+shapes. Land portable data/validation and conformance fixtures here first.
+Framework controls, slots/snippets, CSS and visual previews belong in Phoenix
+Assets. Consumer source selection, route/brand/translation content, authorization,
+product state, native readers and producer algorithms remain at their owners.
+Keep per-call adapters generic; shared use alone does not establish library
+ownership. Record external native/human evidence separately from core tests.
+
 ## Architecture
 
 - Keep extraction under `DocShell.Generate`, presentation under
