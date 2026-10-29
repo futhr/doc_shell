@@ -30,6 +30,9 @@ defmodule DocShell.Presentation.ArtifactBlock do
   @fallback_keys ~w(profile profile_digest artifact_ref manifest_digest bindings caption description locale)
   @safe_tags ~w(p span strong em ul ol li dl dt dd code pre br)
   @options ~w(profiles manifests projections assets capabilities constraints limits)a
+  @receipt_keys ~w(schema_version page_digest descriptor_set_digest constraints_digest capabilities constraints blocks)
+  @selection_required ~w(status variant block_id profile profile_digest artifact_ref manifest_digest bindings fallback_digest)
+  @selection_keys @selection_required ++ ~w(presentation_id checked_projection)
 
   @doc "Computes the canonical complete fallback binding for one typed AST block."
   @spec fallback_digest(map()) :: {:ok, String.t()} | {:error, term()}
@@ -42,6 +45,106 @@ defmodule DocShell.Presentation.ArtifactBlock do
   end
 
   def fallback_digest(_), do: {:error, :invalid_artifact_block}
+
+  @doc """
+  Verifies a previously admitted receipt against its exact page and runtime declarations.
+
+  Checks closed records, page/constraint/fallback digests, block identities,
+  anchors, checked subject bindings and the selected variant's declared feature.
+  It performs no callbacks, negotiation, byte retrieval or rendering. The
+  descriptor-set digest remains an opaque binding to the host's original
+  admission; this function does not re-establish producer semantics or source
+  authenticity. A renderer must additionally check selected media bytes and
+  implement the declared state/runtime. Positive limits use `ArtifactLimits`.
+  """
+  @spec verify_receipt([DocShell.Ast.ast_node()], map(), keyword()) ::
+          {:ok, map()} | {:error, term()}
+  def verify_receipt(content, receipt, limit_options \\ []) do
+    with {:ok, limits} <- ArtifactLimits.new(limit_options),
+         :ok <- ArtifactLimits.content(content, limits),
+         :ok <- ArtifactLimits.json(receipt, :max_admission_bytes, limits),
+         true <- DocShell.Ast.valid?(content) and receipt?(receipt),
+         :ok <- ArtifactAdmission.validate(receipt["capabilities"], receipt["constraints"]),
+         {:ok, page_digest} <- Canonical.digest(content),
+         {:ok, constraints_digest} <- Canonical.digest(receipt["constraints"]),
+         true <- receipt["page_digest"] == page_digest,
+         true <- receipt["constraints_digest"] == constraints_digest,
+         {:ok, blocks} <- collect(content, []),
+         :ok <- ArtifactLimits.check(limits, :max_blocks, length(blocks)),
+         true <- unique?(blocks, & &1["attrs"]["id"]) and anchors?(content, blocks),
+         true <- length(blocks) == length(receipt["blocks"]),
+         :ok <- verify_selections(blocks, receipt, limits) do
+      {:ok, receipt}
+    else
+      false -> {:error, :invalid_artifact_receipt}
+      {:error, _} = error -> error
+    end
+  end
+
+  defp receipt?(value),
+    do:
+      is_map(value) and keys?(value, @receipt_keys) and
+        value["schema_version"] == "doc-shell-artifact-presentation/v1" and
+        Enum.all?(~w(page_digest descriptor_set_digest constraints_digest), &digest?(value[&1])) and
+        is_list(value["blocks"])
+
+  defp verify_selections(blocks, receipt, limits) do
+    blocks
+    |> Enum.zip(receipt["blocks"])
+    |> Enum.reduce_while(:ok, fn {node, selection}, :ok ->
+      block = node["meta"]["artifact"]
+
+      with :ok <- envelope(node, block, limits),
+           {:ok, fallback_digest} <- fallback_digest(node),
+           true <- block["fallback_digest"] == fallback_digest,
+           true <- selection?(selection, node, receipt, limits) do
+        {:cont, :ok}
+      else
+        _ -> {:halt, {:error, {:artifact_block, node["attrs"]["id"], :invalid_artifact_receipt}}}
+      end
+    end)
+  end
+
+  defp selection?(selection, node, receipt, limits) when is_map(selection) do
+    block = node["meta"]["artifact"]
+
+    identity_keys =
+      ~w(profile profile_digest artifact_ref manifest_digest bindings fallback_digest)
+
+    Map.keys(selection) -- @selection_keys == [] and
+      @selection_required -- Map.keys(selection) == [] and
+      selection["block_id"] == node["attrs"]["id"] and
+      Map.take(selection, identity_keys) == Map.take(block, identity_keys) and
+      checked_selection?(selection, block, receipt, limits)
+  end
+
+  defp selection?(_, _, _, _), do: false
+
+  defp checked_selection?(selection, block, receipt, limits) do
+    checked = Map.get(selection, "checked_projection")
+
+    (not Map.has_key?(selection, "checked_projection") or
+       (ArtifactLimits.json(checked, :max_projection_bytes, limits) == :ok and
+          checked?(checked, block, limits))) and
+      selected_state?(selection, block, receipt)
+  end
+
+  defp selected_state?(%{"status" => "available"} = selection, block, receipt),
+    do:
+      text?(selection["presentation_id"]) and Map.has_key?(selection, "checked_projection") and
+        ArtifactAdmission.admitted?(
+          selection,
+          block,
+          receipt["capabilities"],
+          receipt["constraints"]
+        )
+
+  defp selected_state?(%{"status" => "unavailable", "variant" => nil} = selection, block, _),
+    do:
+      not Map.has_key?(selection, "presentation_id") and block["essential"] == false and
+        "fallback" in block["acceptable_states"]
+
+  defp selected_state?(_, _, _), do: false
 
   @doc "Finds typed blocks recursively and returns verified selections and local asset closure."
   @spec project([DocShell.Ast.ast_node()], keyword()) :: {:ok, map()} | {:error, term()}
@@ -305,12 +408,6 @@ defmodule DocShell.Presentation.ArtifactBlock do
     with :ok <- envelope(node, block, opts[:limits]),
          {:ok, digest} <- fallback_digest(node),
          true <- block["fallback_digest"] == digest,
-         true <-
-           Enum.all?(
-             block["variants"],
-             &(&1["profile"] == block["profile"] and
-                 &1["profile_digest"] == block["profile_digest"])
-           ),
          :ok <- verify_variants(block["variants"], assets),
          {:ok, selection} <- producer(block, profiles, assets, opts) do
       {:ok,
@@ -344,8 +441,14 @@ defmodule DocShell.Presentation.ArtifactBlock do
     is_boolean(block["essential"]) and states?(block["acceptable_states"]) and
       records?(block["bindings"], limits.max_bindings, &binding?/1, "anchor") and
       records?(block["variants"], limits.max_variants, &variant?(&1, limits), "id") and
+      Enum.all?(block["variants"], &same_profile?(&1, block)) and
       safe?(node["content"])
   end
+
+  defp same_profile?(variant, block),
+    do:
+      variant["profile"] == block["profile"] and
+        variant["profile_digest"] == block["profile_digest"]
 
   defp binding?(value),
     do:

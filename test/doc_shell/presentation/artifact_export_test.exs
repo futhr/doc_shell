@@ -23,6 +23,7 @@ defmodule DocShell.ArtifactStaticFixture do
   @impl true
   @spec render_page(term(), term()) :: {:ok, binary()}
   def render_page(page, context) do
+    send(self(), {:artifact_render_assets, context.artifact_assets})
     receipt = page.metadata["artifact_presentation"]
     selection = hd(receipt["blocks"])
     variant = selection["variant"]
@@ -83,6 +84,12 @@ defmodule DocShell.Presentation.ArtifactExportTest do
 
       assert File.read!(Path.join(destination, binding["asset_urls"]["static.svg"])) ==
                hd(options[:assets]).bytes
+
+      assert_received {:artifact_render_assets, assets}
+      assert Map.keys(assets) == ["static.svg"]
+      assert assets["static.svg"]["media_type"] == "image/svg+xml"
+      assert Base.decode64!(assets["static.svg"]["base64"]) == hd(options[:assets]).bytes
+      assert DocShell.Json.valid?(assets)
 
       assert Enum.any?(manifest["files"], &(&1["path"] == "presentation-manifest.json"))
       refute Enum.any?(manifest["files"], &String.contains?(&1["path"], "enhanced"))

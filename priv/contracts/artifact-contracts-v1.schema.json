@@ -679,6 +679,11 @@
               "variant": {
                 "type": "null"
               }
+            },
+            "not": {
+              "required": [
+                "presentation_id"
+              ]
             }
           }
         }

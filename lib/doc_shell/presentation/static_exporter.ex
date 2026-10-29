@@ -89,6 +89,11 @@ defmodule DocShell.Presentation.StaticExporter do
              renderer: renderer,
              renderer_assets: renderer_assets ++ presentation_entries,
              asset_paths: asset_paths,
+             artifact_assets:
+               Map.new(artifact_assets, fn asset ->
+                 {asset.path,
+                  %{"media_type" => asset.media_type, "base64" => Base.encode64(asset.bytes)}}
+               end),
              search_assets: search_assets,
              search_contract: search_contract,
              opts: opts
@@ -415,6 +420,7 @@ defmodule DocShell.Presentation.StaticExporter do
       navigation: build.site.navigation,
       search: %{"contract" => build.search_contract, "records" => build.site.search},
       assets: build.asset_paths,
+      artifact_assets: build.artifact_assets,
       canonical_origin: Keyword.get(build.opts, :canonical_origin),
       presentation: build.site.presentation
     }

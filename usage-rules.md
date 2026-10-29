@@ -618,3 +618,13 @@ Resolve file-reader `presentation-manifest.json` asset URLs against that file's
 directory. They are relative to the output root, while page HTML uses its own
 relative paths. The manifest lists selected artifact assets; renderer chrome
 files have their existing site-manifest entries. Web-reader URLs stay rooted.
+
+Use `ArtifactBlock.verify_receipt(content, receipt, limits)` before consuming an
+already producer-admitted artifact receipt. It checks page/constraints/fallback
+digests, closed selection identity, anchors, checked subjects and the declared
+runtime feature without callbacks or choosing another variant. Its descriptor
+set digest is an opaque binding to the original admission; a valid declaration
+does not authenticate a producer or prove media semantics. Renderers must verify
+the selected raw bytes and implement the selected state/runtime. Static renderer
+context carries only selected original bytes in `artifact_assets`, indexed by
+logical name, as JSON records with `media_type` and `base64`.

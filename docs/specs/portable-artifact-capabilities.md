@@ -198,6 +198,21 @@ and any limitation.
 
 Rendering consumes this result rather than renegotiating.
 
+`ArtifactBlock.verify_receipt/3` checks a previously admitted receipt against
+the exact page/constraints/fallback digests, closed block/selection identity,
+anchors, checked subject bindings and the selected feature/runtime declaration.
+It runs no producer callbacks and chooses no replacement presentation. The
+descriptor-set digest remains an opaque binding to the host's original
+admission; verification does not authenticate a source or repeat producer
+semantics. The renderer checks selected media bytes and implements their state.
+Unavailable selections have no `presentation_id` and cannot retain a variant.
+
+Static renderer context supplies `artifact_assets`, an inert JSON map of only
+selected logical names to `media_type` and original `base64` byte records.
+Encoding occurs once after input admission. Renderer chrome continues to use
+the existing asset URL map. This allows format/byte checks without file I/O or
+network retrieval; it adds no artifact generation, producer lookup or process.
+
 Runtime requirement arrays represent sets. Reordering either a variant's or a
 capability's runtime list must not change selection; receipts preserve the
 original variant record.

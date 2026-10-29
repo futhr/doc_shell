@@ -7,6 +7,12 @@ defmodule DocShell.Presentation.Renderer.Context do
   has no request, user, session, socket, authorization callback, or application
   process. Hosted adapters keep those concerns outside the portable renderer
   boundary and pass only this stable view to shared components.
+
+  `artifact_assets` contains only selected artifact bytes, indexed by logical
+  name as JSON records with `media_type` and original `base64`. Renderers can
+  check their format and raw digest without reading files or fetching URLs.
+  The exporter bounds inputs before this encoding; renderer chrome retains its
+  existing URL map in `assets`.
   """
 
   alias DocShell.Presentation.NavigationItem
@@ -21,7 +27,7 @@ defmodule DocShell.Presentation.Renderer.Context do
     :search,
     :assets
   ]
-  defstruct @enforce_keys ++ [:canonical_origin, presentation: %{}]
+  defstruct @enforce_keys ++ [:canonical_origin, presentation: %{}, artifact_assets: %{}]
 
   @typedoc "Renderer context without session, policy or executable callbacks."
   @type t :: %__MODULE__{
@@ -34,7 +40,10 @@ defmodule DocShell.Presentation.Renderer.Context do
           search: map(),
           assets: %{String.t() => String.t()},
           canonical_origin: String.t() | nil,
-          presentation: DocShell.Presentation.Settings.t()
+          presentation: DocShell.Presentation.Settings.t(),
+          artifact_assets: %{
+            String.t() => %{required(String.t()) => String.t()}
+          }
         }
 end
 

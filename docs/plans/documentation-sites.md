@@ -429,3 +429,22 @@ renderer files in the selection map. Root/subpath cases read the selected
 original bytes through the emitted manifest path; web mode retains rooted URLs.
 The full current-runtime gate passes: 431 checks and 95.5% line coverage,
 including strict lint, Dialyzer, docs/spec coverage and optional-free compile.
+
+### Receipt consumption boundary
+
+`ArtifactBlock.verify_receipt/3` now checks an existing producer-admitted receipt
+against its exact content and runtime declarations without callbacks or choosing
+a different presentation. Frozen chart/drawing vectors, stale/malformed identities,
+constraints, fallback, unavailable states and all 300 seeded selection cases
+exercise this path. The descriptor-set digest remains an opaque original-admission
+binding; source authenticity and producer semantics are not re-established here.
+Selected original media bytes reach static renderers as inert `artifact_assets`
+records, with no file/network operation. Tests inspect selected-only bytes.
+
+Variant/profile equality also moved into generic preflight. The regression
+against the prior source fails at `refute_received :descriptor_called`; the
+corrected path rejects the mismatch before callbacks. Renderer media policies,
+visual preview and final cross-repository qualification remain downstream work.
+The complete current-runtime gate passes: 437 checks (16 doctests, 35 properties,
+386 tests), 95.5% line coverage, compiler, strict lint, Dialyzer, docs/spec coverage,
+audits and no-optional compilation. No archive or target claim follows from it.

@@ -376,3 +376,11 @@ In file-reader mode, resolve selected asset URLs against
 `presentation-manifest.json` itself. HTML has page-relative URLs; the manifest
 has output-root-relative paths and lists only selected artifact assets. Web
 mode retains root-relative URLs.
+
+Before displaying an existing artifact receipt, call
+`ArtifactBlock.verify_receipt(content, receipt)`. It checks the portable binding
+without producer callbacks or a second presentation choice. The original
+producer admission and source authenticity remain host prerequisites. A static
+renderer receives selected original bytes in `context.artifact_assets` as
+`%{"media_type" => type, "base64" => encoded_bytes}` records, so it can check
+its own media subset and raw digest without fetching URLs or reading files.

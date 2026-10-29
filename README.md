@@ -507,6 +507,12 @@ experimental static subset for typed external artifacts.
   Independent reader and target qualification remain open.
 - Runtime requirements are sets: reordering a variant or capability runtime
   list does not change admission.
+- Renderers can use `ArtifactBlock.verify_receipt/3` to check an existing receipt
+  against its page, fallback, selection and runtime declarations without callbacks
+  or renegotiation. This does not re-establish producer meaning or authenticity.
+  Static renderer context supplies selected original media as
+  `artifact_assets[logical_name]` records with `media_type` and `base64`; the
+  renderer still checks supported media formats and byte integrity.
 - Script-free export checks MIME types without regard to case or parameters
   and rejects browser-recognized JavaScript aliases before publication.
 

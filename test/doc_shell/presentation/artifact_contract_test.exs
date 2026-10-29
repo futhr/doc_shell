@@ -102,7 +102,11 @@ defmodule DocShell.Presentation.ArtifactContractTest do
     assert {:error, _} =
              JSV.validate(Map.delete(selection, "checked_projection"), schema("selection"))
 
-    optional = Map.merge(selection, %{"status" => "unavailable", "variant" => nil})
+    optional =
+      selection
+      |> Map.merge(%{"status" => "unavailable", "variant" => nil})
+      |> Map.delete("presentation_id")
+
     assert {:ok, _} = JSV.validate(optional, schema("selection"))
   end
 

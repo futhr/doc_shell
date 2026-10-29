@@ -241,6 +241,7 @@ defmodule DocShell.Presentation.ArtifactBlockTest do
 
         expected = if wants_enhanced and available != [], do: "enhanced", else: "static"
         assert hd(receipt["blocks"])["variant"]["id"] == expected
+        assert {:ok, ^receipt} = ArtifactBlock.verify_receipt([node], receipt)
       end
     end
   end

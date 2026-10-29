@@ -52,6 +52,25 @@ defmodule DocShell.Presentation.ArtifactAdmission do
     end
   end
 
+  @doc """
+  Checks an existing available selection against its declared feature and runtime policy.
+
+  This does not choose another presentation or rerun producer validation. The
+  host must supply a producer-admitted receipt; a declaration is not proof of
+  artifact meaning, source authenticity or actual deployed runtime support.
+  Inputs are the already validated declarations used by `ArtifactBlock.verify_receipt/3`.
+  """
+  @spec admitted?(map(), map(), map(), map()) :: boolean()
+  def admitted?(selection, block, capabilities, constraints) do
+    Enum.any?(capabilities["features"], fn feature ->
+      descriptor = %{"input_schema_digest" => feature["schema_digest"]}
+
+      feature["id"] == selection["presentation_id"] and
+        matches?(feature, block, descriptor, constraints) and
+        Enum.any?(variants(feature, block), &(&1["variant"] == selection["variant"]))
+    end)
+  end
+
   defp matches?(feature, block, descriptor, constraints) do
     feature["profile"] == block["profile"] and
       feature["profile_digest"] == block["profile_digest"] and
