@@ -76,6 +76,18 @@ defmodule DocShell.Presentation.ArtifactExport do
   def entry(nil, _), do: {:ok, []}
 
   def entry(binding, paths) do
+    selected =
+      Enum.flat_map(binding["pages"], fn {_, receipt} ->
+        Enum.flat_map(receipt["blocks"], &selected_asset/1)
+      end)
+
+    paths = Map.take(paths, selected)
+
+    paths =
+      if file_reader?(binding),
+        do: Map.new(paths, fn {name, path} -> {name, String.trim_leading(path, "/")} end),
+        else: paths
+
     with {:ok, bytes} <- Canonical.encode(Map.put(binding, "asset_urls", paths)) do
       {:ok,
        [
@@ -129,13 +141,14 @@ defmodule DocShell.Presentation.ArtifactExport do
   def reader_entries(entries, _, nil), do: {:ok, entries}
 
   def reader_entries(entries, site, binding) do
-    file_reader =
+    if file_reader?(binding), do: localize(entries, site), else: {:ok, entries}
+  end
+
+  defp file_reader?(binding),
+    do:
       Enum.all?(binding["pages"], fn {_, receipt} ->
         receipt["constraints"]["reader_mode"] == "file"
       end)
-
-    if file_reader, do: localize(entries, site), else: {:ok, entries}
-  end
 
   defp localize(entries, site) do
     files = Map.new(entries, &{"/" <> &1.path, &1.path})

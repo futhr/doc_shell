@@ -421,3 +421,11 @@ open. The current-runtime full gate passes with 430 checks (16 doctests,
 spec coverage, Dialyzer, audits and no-optional compilation. The descriptor test
 fails against the prior source at an assertion showing a successful receipt.
 Downstream adoption and archive/matrix results remain to be executed.
+
+File-reader export now gives `presentation-manifest.json` file-relative URLs
+and limits its map to selected artifact assets. Two regression assertions fail
+against the prior implementation: root-relative manifest URLs and unrelated
+renderer files in the selection map. Root/subpath cases read the selected
+original bytes through the emitted manifest path; web mode retains rooted URLs.
+The full current-runtime gate passes: 431 checks and 95.5% line coverage,
+including strict lint, Dialyzer, docs/spec coverage and optional-free compile.

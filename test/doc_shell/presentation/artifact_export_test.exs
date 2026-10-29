@@ -74,6 +74,16 @@ defmodule DocShell.Presentation.ArtifactExportTest do
       assert binding["schema_version"] == "doc-shell-presentation-manifest/v1"
       assert binding["pages"]["chart"]["page_digest"] == site.pages["chart"].content_digest
       assert binding["pages"]["chart"]["blocks"] |> hd() |> get_in(["variant", "id"]) == "static"
+      assert Map.keys(binding["asset_urls"]) == ["static.svg"]
+
+      assert binding["asset_urls"]["static.svg"] =~
+               String.trim_leading(base, "/") <> "assets/static-"
+
+      refute String.starts_with?(binding["asset_urls"]["static.svg"], "/")
+
+      assert File.read!(Path.join(destination, binding["asset_urls"]["static.svg"])) ==
+               hd(options[:assets]).bytes
+
       assert Enum.any?(manifest["files"], &(&1["path"] == "presentation-manifest.json"))
       refute Enum.any?(manifest["files"], &String.contains?(&1["path"], "enhanced"))
     end
@@ -264,6 +274,31 @@ defmodule DocShell.Presentation.ArtifactExportTest do
 
     assert File.read!(Path.join(destination, "review/index.html")) =~
              "src=\"/review/assets/static-"
+
+    binding =
+      destination |> Path.join("presentation-manifest.json") |> File.read!() |> Jason.decode!()
+
+    assert binding["asset_urls"]["static.svg"] =~ "/review/assets/static-"
+  end
+
+  test "presentation manifest lists selected artifact assets without unrelated renderer files" do
+    {site, options} = site("/")
+    destination = destination()
+    extra = %Asset{path: "renderer.txt", media_type: "text/plain", bytes: "renderer-owned"}
+
+    assert {:ok, _} =
+             StaticExporter.export(
+               site: site,
+               renderer: DocShell.ArtifactStaticFixture,
+               destination: destination,
+               artifact_options: options,
+               asset_options: [additional_assets: [extra]]
+             )
+
+    binding =
+      destination |> Path.join("presentation-manifest.json") |> File.read!() |> Jason.decode!()
+
+    assert Map.keys(binding["asset_urls"]) == ["static.svg"]
   end
 
   test "file reader rewrites local navigation fragments and preserves ordinary external links" do

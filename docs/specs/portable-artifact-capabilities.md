@@ -30,6 +30,11 @@ existing v1 site identity.
 
 Constraint `reader_mode` is `web` by default;
 explicit `file` mode rewrites validated local URLs to file-relative output paths.
+The presentation manifest maps only selected artifact logical names to URLs.
+In file mode those URLs resolve relative to `presentation-manifest.json` at
+the output root; HTML URLs resolve relative to their own output files. Web mode
+retains root-relative asset URLs. Renderer chrome assets do not enter this
+artifact selection map.
 Legacy calls and v1 capability/digest behavior retain their original path.
 
 Native reader parity, complete schema/limit compatibility and human target

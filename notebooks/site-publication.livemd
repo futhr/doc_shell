@@ -371,3 +371,8 @@ chart/drawing inputs, exact original bytes, expected selections and semantic
 observations. Tests use a separate schema engine only in development/test;
 DocShell core does not acquire that runtime dependency. These vectors do not
 establish external producer or native-reader conformance.
+
+In file-reader mode, resolve selected asset URLs against
+`presentation-manifest.json` itself. HTML has page-relative URLs; the manifest
+has output-root-relative paths and lists only selected artifact assets. Web
+mode retains root-relative URLs.

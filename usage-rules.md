@@ -613,3 +613,8 @@ does not check cross-record identity, byte integrity or producer semantics.
 The chart/drawing vectors are synthetic contract examples, not qualification
 of an external producer, native paint or human assistive tasks. Their schemas
 exercise the listed 2020-12 subset; core does not execute producer JSON Schema.
+
+Resolve file-reader `presentation-manifest.json` asset URLs against that file's
+directory. They are relative to the output root, while page HTML uses its own
+relative paths. The manifest lists selected artifact assets; renderer chrome
+files have their existing site-manifest entries. Web-reader URLs stay rooted.

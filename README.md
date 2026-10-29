@@ -501,7 +501,8 @@ experimental static subset for typed external artifacts.
   Site page/depth limits still apply; a failure preserves prior published output.
 - Each presentation declares its own runtime requirements. Setting
   `%{"reader_mode" => "file"}` selects file-relative assets; web mode preserves
-  existing site URLs.
+  existing site URLs. Manifest asset URLs are relative to the manifest file;
+  its map contains only selected artifact assets.
 - Artifact generation and interaction belong to the producer and host.
   Independent reader and target qualification remain open.
 - Runtime requirements are sets: reordering a variant or capability runtime
