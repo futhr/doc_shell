@@ -22,7 +22,7 @@ rule to make its fixtures pass.
 | DSH-P13 | in progress | DSH-P12/P07 | Join verified local variants, search/text fallback and atomic export | Selected closure, original-byte checks, prior-tree preservation, emitted-script refusal and root/subpath file export tests pass |
 | DSH-P14 | in progress | DSH-P13; actual producer and independent readers | Qualify document previews, renderer/native semantic parity and fresh package consumers | First producer's installed archive/static document join and full package gate pass; native/browser/manual target evidence remains open |
 | DSH-P15 | source implemented; coordinated qualification pending | DSH-P03/P06/P07 | Define additive inert presentation settings and propagate validated choices through hosted/static renderer context | Defaults and legacy fixtures unchanged; invalid links/settings refuse; hosts own brand, labels, locale/release destinations and robots policy |
-| DSH-P16 | projection and validation implemented; renderer adoption and qualification pending | DSH-P04/P15 | Complete locale/audience/section reading-flow boundaries and validate navigation/page presentation metadata | Automatic flow stays within its declared view; explicit host relationships remain possible; badges, collapse defaults, hero/banner and metadata have valid/refusal fixtures |
+| DSH-P16 | projection and renderer adoption implemented; coordinated qualification pending | DSH-P04/P15 | Complete locale/audience/section reading-flow boundaries and validate navigation/page presentation metadata | Automatic flow stays within its declared view; explicit host relationships remain possible; badges, collapse defaults, hero/banner and metadata have valid/refusal fixtures |
 | DSH-P17 | planned; new receipts required | DSH-P08/P10–P16 and the selected renderer packages | Qualify the coordinated source/package/runtime cohort and reconcile documentation | Full gates, runtime matrix, notebooks, consumers, relevant benchmarks and immutable renderer evidence; external target checks retain their own status |
 
 ## Coordinated completion
@@ -373,3 +373,10 @@ host-admitted bindings and required wire fields before output. Host source
 validation, source authenticity and authorization remain prerequisites. Candidate
 renderer checks and the downstream full gate pass; fresh coordinated package,
 browser and independent-reader qualification remain open.
+
+Phoenix Assets now consumes hero/banner, splash, per-page SEO and projected
+navigation metadata, with explicit local image asset handoff and alt fallback.
+Its current full gate and 21 candidate HEEx checks pass. Locale marker behavior
+uses matching page/context locale IDs while preserving host destinations; graph
+metadata stays opaque outside the projected site profile. Expanded browser and
+fresh coordinated package receipts remain required before closing this row.
