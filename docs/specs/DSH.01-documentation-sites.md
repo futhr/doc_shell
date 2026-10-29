@@ -2,14 +2,15 @@
 
 Specification version: 0.4.0. Contract: accepted. Collection loading, core site
 projection, renderer admission, search, and static publication are implemented.
-Qualification of two independent renderers and hosted presentation/OpenAPI pair
-validation remain acceptance work.
+Hosted presentation/OpenAPI pair validation and the additive presentation
+settings are implemented in the checkout. Named local archives have independent
+Svelte/HEEx/hosted renderer evidence in the implementation plan.
 The implementation plan records executable evidence; this specification states
 the required behavior and does not treat core tests as renderer qualification.
 The [coordinated completion checklist](../plans/documentation-sites.md#coordinated-completion)
-records the remaining upstream and Phoenix Assets work, including presentation
-settings, projection follow-ups and new package/target evidence. Those additions
-are planned; their field names and public APIs are not established by this document.
+records implemented upstream and Phoenix Assets behavior, exact local archive
+evidence and remaining external producer/native/human obligations. Checkout
+implementation and local qualification do not establish registry publication.
 
 ## Purpose
 
@@ -750,13 +751,14 @@ renderer consumers. A renderer's visual tests cannot close core collection or
 export requirements. Core tests cannot claim a renderer meets the browser and
 accessibility contract.
 
-## Planned portable artifact extension
+## Portable artifact extension
 
 The [portable artifact capability draft](portable-artifact-capabilities.md)
 has an experimental static subset for typed external-artifact blocks, per-call
 producer profiles,
 state-specific runtime admission, exact semantic anchors and preview/export
-conformance. Remaining implementation and qualification are tracked under
-DSH-P11–P14 and the coordinated checklist. This extension is not part of the
-implemented v0.4.0 baseline or the completion claim above. Existing v1 AST, site,
+conformance. Core and Svelte/HEEx implementations have local archive/browser
+evidence under DSH-P11–P14 and the coordinated checklist. Actual producer, native
+application and human observations remain unverified. This extension is separate
+from the original v0.4.0 site baseline and its completion rule above. Existing v1 AST, site,
 renderer capability and fallback-digest semantics remain unchanged.

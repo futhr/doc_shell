@@ -1,7 +1,9 @@
 # Portable artifact capabilities
 
-**Status:** experimental static subset implemented; audited 2026-10-23. Complete
-consumer and target qualification remain open under DSH-P11–P14 in the
+**Status:** experimental static subset implemented. The 2026-10-29 coordinated
+archive run qualifies the synthetic profiles in independent Svelte/HEEx readers.
+Actual producer, native-application and human evidence remains unverified under
+DSH-P11–P14 in the
 [site plan](../plans/documentation-sites.md#portable-artifact-delivery).
 The [coordinated completion checklist](../plans/documentation-sites.md#coordinated-completion)
 assigns generic schema/admission/export work to DocShell and visual rendering

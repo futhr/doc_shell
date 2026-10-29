@@ -15,11 +15,12 @@ for hosted rendering or static export. You supply the renderer, site structure,
 and authorization policy.
 
 The [coordinated completion checklist](docs/plans/documentation-sites.md#coordinated-completion)
-tracks the remaining work with Phoenix Assets: presentation controls, hosted
-pair consumption, projection follow-ups, portable-artifact contracts,
-renderer/preview support and package/target qualification. These are planned
-additions to the implemented baseline. Validated inert presentation settings
-are available in this checkout. DocShell owns portable validation;
+records implemented presentation settings, hosted publication pairs, reading-flow
+projection and portable-artifact contracts, plus Phoenix Assets rendering and
+preview adoption. Fresh local archives pass the recorded automated qualification;
+external producer, native-application and human assistive-task evidence remains
+unverified. These additions are available in the checkout and are unreleased.
+DocShell owns portable validation;
 Phoenix Assets owns framework/browser rendering; consumers retain source,
 branding, authorization, deployment and native-reader responsibilities.
 
@@ -508,7 +509,9 @@ experimental static subset for typed external artifacts.
   existing site URLs. Manifest asset URLs are relative to the manifest file;
   its map contains only selected artifact assets.
 - Artifact generation and interaction belong to the producer and host.
-  Independent reader and target qualification remain open.
+  Independent Svelte/HEEx archive readers pass the recorded automated browser,
+  print and offline/file tasks. External producer, native-application and human
+  assistive-task qualification remains unverified.
 - Artifact bindings resolve only textual document IDs. A JSON array/object or
   numeric/boolean `attrs.id` cannot create a target that a reader will not render.
 - Artifact fallbacks reject child content under void `br` elements so required

@@ -10,28 +10,33 @@ rule to make its fixtures pass.
 | DSH-P01 | complete | Existing `doc-shell/v2` reader | Additive `collection.json`, `DocShell.Generate.Collection` and collection descriptor | DSH-V01/V02 plus collection integrity requirements below; no network or process startup |
 | DSH-P02 | complete | DSH-P01 | `DocShell.Generate.Cohort`, canonical payload digest, normalized source provenance | DSH-V03; digest excludes time, random IDs, and absolute workspace paths |
 | DSH-P03 | complete | DSH-P01/P02 | `Site`, `Page`, navigation/link types and `SiteSource` validation | DSH-V04–V06; all public structs/functions documented and typed |
-| DSH-P04 | source implemented; coordinated qualification pending | DSH-P03 | Heading/anchor, reading-order, locale/audience/version, canonical/source/edit and redirect projection | DSH-V04–V06 with property tests for route and anchor normalization |
+| DSH-P04 | implemented; coordinated archive reader evidence below | DSH-P03 | Heading/anchor, reading-order, locale/audience/version, canonical/source/edit and redirect projection | DSH-V04–V06 with property tests for route and anchor normalization |
 | DSH-P05 | complete | DSH-P03/P04 | Section-aware search records, built-in deterministic JSON adapter and adapter behaviour | DSH-V07; fixed query corpus and browser-neutral output |
-| DSH-P06 | source implemented; coordinated qualification pending | DSH-P03–P05 | Renderer behaviour, normalized capability/requirement/context/asset contracts, reserved feature IDs and shared fallback/enhanced/connected conformance fixtures | DSH-V09/V10; fixtures published with the package for independent renderers |
-| DSH-P07 | source implemented; coordinated qualification pending | DSH-P02–P06 | Atomic static exporter, site manifest, sitemap, robots and llms outputs | DSH-V08; clean build, rollback, subpath and output-bound evidence |
-| DSH-P08 | in progress | DSH-P06/P07 | Hosted/static semantic parity and live-capability degradation tool | Core comparison is complete; DSH-V11 still requires two independent renderer implementations |
-| DSH-P09 | baseline qualification recorded; coordinated additions open | DSH-P01–P08 | Documentation, Livebooks, benchmarks, compatibility and packaged-consumer qualification | DSH-V12 and the core release evidence recorded below; additions require DSH-P17 |
-| DSH-P10 | core and renderer admission implemented; coordinated qualification pending | DSH-P03/P06 | Preserve the hosted graph/source-cohort boundary and validate a host publication/OpenAPI pair before renderer invocation | DSH-V13; hosted projection needs no synthetic per-repository collection; cross-surface and mixed-generation pairs fail |
-| DSH-P11 | structural schemas and synthetic vectors implemented; compatibility qualification pending | DSH-P03/P06/P07 | Freeze portable artifact block/profile/receipt schemas and v2 state-specific capability fixtures | Packaged schemas and independent canonical chart/drawing vectors; runtime byte/reference checks and external producer/reader evidence remain separate |
-| DSH-P12 | source implemented; archive/producer qualification pending | DSH-P11 | Add explicit per-call profile adapters, block validation and requirement/admission projection | Chart/drawing fixtures, runtime selection, callback containment, concurrent isolation and three-seed model checks pass |
-| DSH-P13 | source implemented; expanded archive/target qualification pending | DSH-P12/P07 | Join verified local variants, search/text fallback and atomic export | Selected closure, original-byte checks, prior-tree preservation, emitted-script refusal and root/subpath file export tests pass |
-| DSH-P14 | renderer receipt views implemented; expanded target/archive qualification pending | DSH-P13; actual producer and independent readers | Qualify document previews, renderer/native semantic parity and fresh package consumers | First producer's installed archive/static document join and full package gate pass; native/browser/manual target evidence remains open |
-| DSH-P15 | source implemented; coordinated qualification pending | DSH-P03/P06/P07 | Define additive inert presentation settings and propagate validated choices through hosted/static renderer context | Defaults and legacy fixtures unchanged; invalid links/settings refuse; hosts own brand, labels, locale/release destinations and robots policy |
-| DSH-P16 | projection and renderer adoption implemented; coordinated qualification pending | DSH-P04/P15 | Complete locale/audience/section reading-flow boundaries and validate navigation/page presentation metadata | Automatic flow stays within its declared view; explicit host relationships remain possible; badges, collapse defaults, hero/banner and metadata have valid/refusal fixtures |
-| DSH-P17 | planned; new receipts required | DSH-P08/P10–P16 and the selected renderer packages | Qualify the coordinated source/package/runtime cohort and reconcile documentation | Full gates, runtime matrix, notebooks, consumers, relevant benchmarks and immutable renderer evidence; external target checks retain their own status |
+| DSH-P06 | implemented; coordinated archive conformance evidence below | DSH-P03–P05 | Renderer behaviour, normalized capability/requirement/context/asset contracts, reserved feature IDs and shared fallback/enhanced/connected conformance fixtures | DSH-V09/V10; fixtures published with the package for independent renderers |
+| DSH-P07 | implemented; coordinated archive/export evidence below | DSH-P02–P06 | Atomic static exporter, site manifest, sitemap, robots and llms outputs | DSH-V08; clean build, rollback, subpath and output-bound evidence |
+| DSH-P08 | independent Svelte/static HEEx/hosted conformance recorded | DSH-P06/P07 | Hosted/static semantic parity and live-capability degradation tool | DSH-V11: independently observed Svelte, static HEEx and hosted LiveView surfaces agree |
+| DSH-P09 | local qualification recorded; external targets and publication separate | DSH-P01–P08 | Documentation, Livebooks, benchmarks, compatibility and packaged-consumer qualification | DSH-V12 and the core release evidence recorded below; additions require DSH-P17 |
+| DSH-P10 | implemented; source and package admission evidence below | DSH-P03/P06 | Preserve the hosted graph/source-cohort boundary and validate a host publication/OpenAPI pair before renderer invocation | DSH-V13; hosted projection needs no synthetic per-repository collection; cross-surface and mixed-generation pairs fail |
+| DSH-P11 | schemas and synthetic archive readers qualified; external producer unverified | DSH-P03/P06/P07 | Freeze portable artifact block/profile/receipt schemas and v2 state-specific capability fixtures | Packaged schemas and independent canonical chart/drawing vectors; runtime byte/reference checks and external producer/reader evidence remain separate |
+| DSH-P12 | implemented; synthetic archive evidence below; external producer unverified | DSH-P11 | Add explicit per-call profile adapters, block validation and requirement/admission projection | Chart/drawing fixtures, runtime selection, callback containment, concurrent isolation and three-seed model checks pass |
+| DSH-P13 | implemented; paired archive/export/browser evidence below | DSH-P12/P07 | Join verified local variants, search/text fallback and atomic export | Selected closure, original-byte checks, prior-tree preservation, emitted-script refusal and root/subpath file export tests pass |
+| DSH-P14 | synthetic archive readers qualified; actual producer/native/human checks unverified | DSH-P13; actual producer and independent readers | Qualify document previews, renderer/native semantic parity and fresh package consumers | Synthetic profile archive/static/browser joins pass; actual producer, native-application and human observations remain unverified |
+| DSH-P15 | implemented; coordinated archive reader evidence below | DSH-P03/P06/P07 | Define additive inert presentation settings and propagate validated choices through hosted/static renderer context | Defaults and legacy fixtures unchanged; invalid links/settings refuse; hosts own brand, labels, locale/release destinations and robots policy |
+| DSH-P16 | implemented; coordinated archive reader evidence below | DSH-P04/P15 | Complete locale/audience/section reading-flow boundaries and validate navigation/page presentation metadata | Automatic flow stays within its declared view; explicit host relationships remain possible; badges, collapse defaults, hero/banner and metadata have valid/refusal fixtures |
+| DSH-P17 | local coordinated archives qualified; external targets and new remote CI unverified | DSH-P08/P10–P16 and the selected renderer packages | Qualify the coordinated source/package/runtime cohort and reconcile documentation | Full gates, runtime matrix, notebooks, consumers, relevant benchmarks and immutable renderer evidence; external target checks retain their own status |
 
 ## Coordinated completion
+
+The status table is current. Dated records below describe each earlier cut;
+where they say work was pending, the final coordinated archive record states
+the subsequent result without changing the historical observation.
 
 This is the shared dependency-order checklist for `doc_shell` and
 `phoenix_assets`, agreed on 2026-10-29. The
 [Phoenix Assets renderer plan](https://github.com/ghostshift-assembly/phoenix-assets/blob/main/docs/plans/doc-shell-renderers.md#coordinated-completion)
-owns renderer implementation and browser evidence. Rows below are work to do,
-not executed results. Historical qualification records retain their original scope.
+owns renderer implementation and browser evidence. Rows below define the
+acceptance sequence; the status table and dated evidence record what ran.
+Historical qualification records retain their original scope.
 
 | Step | Work and owner | Tracker and required acceptance |
 | --- | --- | --- |
@@ -127,7 +132,7 @@ Implemented core admission:
 - The closed `doc-shell-publication/v1` object requires comparable context on both sides. An opaque binding alone cannot
   detect a token reused across source views, graph positions, locales,
   releases, or disclosure surfaces.
-- Claim authentication stays in the host. Core tests cover each missing/mismatched field, stale agreeing pairs, malformed shapes, legacy omission and JSON round trips. The packaged binding schema and fixture support independent renderer tests. Renderer adoption and fresh package qualification remain open.
+- Claim authentication stays in the host. Core tests cover each missing/mismatched field, stale agreeing pairs, malformed shapes, legacy omission and JSON round trips. The packaged binding schema and fixture support independent renderer tests. Phoenix Assets now adopts this check; the final coordinated archive record below includes independent package admission checks.
 
 ## Public API shape
 
@@ -597,3 +602,68 @@ Svelte SSR component CSS, explicit layout checks and a passive 404 regression.
 Earlier shared-stylesheet-only images are superseded for full-shell visual
 qualification. The fresh archive join and external native/human obligations
 remain separate from these checkout observations.
+
+
+## Coordinated archive qualification — 2026-10-29
+
+The local cohort pairs Phoenix Assets
+`2e9a9e086e433807b62a7a6d84b3fd08a65ff547` with DocShell
+`b9987b9a0ed0ca1a4a3c43bf30200cf9b13c0acb`. These are unpublished archives;
+no remote refs or repository visibility were changed. The retained directory is
+`phoenix-assets/dist/release/coordinated-2e9a9e0` in the two-repository workspace.
+
+| Evidence | Executed result |
+| --- | --- |
+| Phoenix Assets full gate, Elixir 1.20.4/OTP 29.0.4 | All 25 required checks; 505 backend checks, 87.5% coverage; 556 frontend tests, both coverage floors; 17 release-script tests |
+| DocShell full gate, same runtime | 439 checks (16 doctests, 35 properties, 388 tests), 95.6% coverage; strict compiler/lint/docs/audits/Dialyzer and no-optional compilation |
+| Elixir 1.20.4/OTP 28.5.0.7 | Both warnings-as-errors compiles and backend suites pass; DocShell no-optional compile also passes |
+| Independent archived baseline renderers | 166 browser cases; Svelte, static HEEx and hosted LiveView observations pass upstream surface/conformance comparison; JSON/Pagefind, keyboard/focus, no-JavaScript, themes, RTL, reflow and offline cases |
+| Fresh extracted Hex pair and separately installed npm renderer | 152 settings/artifact/preview browser cases; exact receipt/media/fallback/anchor parity, passive controls/404, actual locale links, SEO, HTTP/file/root/subpath, print and reflow |
+| Screenshot review | All 132 baseline and 26 expanded screenshots reviewed; changed images inspected, unchanged images matched by SHA-256 to explicitly reviewed images; component CSS is included |
+| Hosted pair package checks | Extracted HEEx and installed Svelte SSR each render the matching fixture and refuse 21 missing/mismatched/stale cases; checks use the packaged upstream fixture |
+| Producer consumers | Nine fresh core/Plug/Ash combinations pass across locked, unlocked and minimum dependencies; AshOaskit 0.4.5 remains the released adapter baseline |
+| Notebooks and benchmarks | Five checkout notebooks, 64 executable cells; full non-CI benchmark suite and all six refreshed reports; ExDoc warnings-as-errors |
+
+The reviewed baseline receipt is
+`qualification-74449d8e5f00499641cf605d68dd0c11d368fa51195af78e3b2d8bfb587d2088.json`.
+Its SHA-256 is
+`74449d8e5f00499641cf605d68dd0c11d368fa51195af78e3b2d8bfb587d2088`.
+The separate joined proof is
+`doc-shell-cohort/coordinated-proof-fd0932bcc11013e195e40c61e715b6e27a9ba5482042f1d322e3665716933f31.json`,
+SHA-256 `fd0932bcc11013e195e40c61e715b6e27a9ba5482042f1d322e3665716933f31`.
+It binds the archive/source identities, expanded reader output/screenshots,
+paired Hex/npm consumer locks and retained gate/consumer/notebook/benchmark logs.
+The hosted-pair checks were executed subsequently against the same extracted
+packages; their scripts/logs are retained with the final documentation cohort.
+
+The nine producer smoke consumers delete their temporary locks; their retained
+logs prove execution, not retention of all nine resolved lockfiles. The separate
+paired Hex/npm consumer locks are retained. Some optional upstream dependency
+warnings were printed; successful consumers do not establish warning-free
+upstream dependencies. Notebook checkout execution does not prove fresh Livebook
+installation of unreleased APIs. Benchmark allocations are not peak RSS or
+performance guarantees. Earlier failed or narrower cohorts retain their original
+scope and are superseded only where the current evidence names the same task.
+
+This closes the recorded local automated archive/browser work for the synthetic
+profiles. It does not close actual external producer semantics/geometry and
+comparison images, a named native application's reading/paint/lifecycle behavior,
+or human assistive-task/device observations. The repository boundary review found
+no consumer-specific runtime feature to relocate in the reviewed paths. Hosts and
+producers retain those implementations and authorization/product policy.
+
+New local commits have no GitHub Actions result until the maintainer pushes them.
+The last observed successful remote runs remain
+[Phoenix Assets 40860204683](https://github.com/ghostshift-assembly/phoenix-assets/actions/runs/40860204683)
+and [DocShell 40842385182](https://github.com/futhr/doc_shell/actions/runs/40842385182)
+at their earlier source revisions. Phoenix Assets' three Codecov uploads returned
+`Repository not found` despite the green job; repository activation/app access/
+credential configuration remains unverified. No full specification-completion or
+publication claim is made while the required external evidence is absent.
+
+The final documentation commit changes tracked inputs. A subsequent archive run
+must have its own source-bound receipt; the immutable results above continue to
+refer to their exact named cuts. `dist/release/coordinated-final/qualification.json`
+and `doc-shell-cohort/coordinated-proof.json` in that directory are the local
+lookup paths for a subsequent final cut, if present and verified. They are ignored
+release artifacts rather than published or Git-tracked evidence.

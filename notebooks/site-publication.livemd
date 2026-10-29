@@ -343,7 +343,9 @@ before publication. Empty sites still validate their artifact options.
 
 A host passes
 `:artifact_options` explicitly; it never starts an artifact producer implicitly.
-Independent reader and human target qualification remain open.
+Independent Svelte/HEEx archive reader observations are recorded in the shared
+plan. External producer, native-application and human target qualification
+remains unverified.
 
 ## Clean up
 

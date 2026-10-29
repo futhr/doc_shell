@@ -10,7 +10,8 @@ Requires Elixir 1.20 or later. Install `ash_oaskit`, `open_api_spex`, or `plug`
 when the host uses the corresponding optional integration.
 
 The [coordinated completion checklist](https://github.com/futhr/doc_shell/blob/main/docs/plans/documentation-sites.md#coordinated-completion)
-separates planned shared contracts from current APIs and renderer/consumer work.
+separates implemented APIs and local archive evidence from remaining external
+producer, native-application and human checks.
 Use the implemented `presentation` site-source field for shared settings;
 use `HostedPair.validate/3` for a hosted API pair. Core validates inert host inputs; Phoenix Assets
 owns visual controls/previews. Host source selection, authentication, disclosure,
@@ -193,8 +194,10 @@ writers or symlink aliases.
   validate that both inputs came from the same admitted source view, graph
   position, locale, release, and disclosure surface before rendering. Never
   reuse a public artifact for an internal projection or attach a process-global
-  current spec to an older presentation. DocShell does not yet validate this
-  pair; DSH-P10 plans a common opaque publication binding and pre-render check.
+  current spec to an older presentation. Use `HostedPair.validate/3` with the
+  expected `doc-shell-publication/v1` binding before renderer invocation. It
+  checks declared consistency; the host still authenticates both inputs and
+  authorizes disclosure. This API is absent from the published 1.0.0 archive.
 
 - Do not manufacture per-package or per-repository collections merely to feed a
   hosted graph projection. Collections/cohorts are the portable site path, not
