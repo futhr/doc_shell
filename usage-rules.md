@@ -579,3 +579,11 @@ cross those boundaries and also apply to pages omitted from navigation. They
 are relationships, not authorization. Set a link to `false` to disable it.
 Badge text is bounded to 256 UTF-8 bytes, and `collapsed` is a boolean group
 setting; malformed reserved navigation metadata fails projection.
+
+Use `DocShell.Presentation.PageDecorations.validate/2` for portable hero/banner
+records. Banners carry `label`, `text` and optional `href`; heroes carry `title`,
+optional `tagline`/`description`, link `actions` and logical `image` asset/alt data.
+Keep records closed and text plain. Use `metadata["seo"]` for the shared
+metadata shape. Site source callbacks must return JSON-encodable declarations;
+callbacks inside data fail rather than becoming inspected text. The full page
+record and projected relationships count toward `max_page_bytes`.

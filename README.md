@@ -419,6 +419,21 @@ structures, conflicting indexing tokens, duplicate selectors and oversized
 values fail before renderer invocation. Hosts supply translations and release
 routes. Renderers choose which labels they recognize and own their visual controls.
 
+### Page presentation data
+
+A page declaration may supply a `banner` with `label`, `text` and an optional
+`href`, or a `hero` with a required `title`, optional `tagline`/`description`,
+ordinary link `actions`, and an `image` (`asset` logical name and `alt` text).
+`DocShell.Presentation.PageDecorations.validate/2` validates these closed records.
+Text has a 4096-byte UTF-8 bound; links and assets follow the shared settings policy.
+A banner needs at least a label or text. Renderers own the visual presentation.
+
+Use `metadata["seo"]` for page-specific description, Open Graph image and robots
+choices using the shared metadata shape. Invalid reserved metadata fails projection;
+other inert metadata remains host data. Site declarations must be JSON-encodable:
+callbacks cannot silently become inspected text. The page byte limit includes the
+complete record and final projected relationships, in addition to AST checks.
+
 ### Renderer contract
 
 A renderer implements `DocShell.Presentation.Renderer`: render a page and the

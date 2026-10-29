@@ -9,8 +9,9 @@ defmodule DocShell.Presentation.Page do
 
   A page never carries raw head HTML, executable callbacks, scripts, framework
   component names, application sessions, or authorization decisions. `metadata`,
-  `banner`, and `hero` remain inert JSON records; their interpretation belongs to
-  the selected host profile and renderer. Source and edit URLs are inert links:
+  `banner`, and `hero` remain inert JSON records. `PageDecorations` validates the
+  portable banner/hero fields, and `metadata["seo"]` uses the shared presentation
+  metadata shape. Other metadata remains host data. Source and edit URLs are inert links:
   DocShell validates them but never assumes a source-hosting provider.
   """
 

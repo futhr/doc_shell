@@ -789,6 +789,52 @@ defmodule DocShell.Presentation.SiteProjectorTest do
       assert {:error, {:redirect_cycle, _}} = project(Map.put(declaration(), "redirects", cycle))
     end
 
+    test "validates complete page presentation and counts metadata in page byte limits" do
+      hero = %{
+        "title" => "Start here",
+        "description" => "Read the guide",
+        "actions" => [%{"label" => "Reference", "href" => "/docs/reference/"}]
+      }
+
+      banner = %{"label" => "Preview", "text" => "Example release", "href" => "/docs/api/"}
+
+      base =
+        declaration()
+        |> put_in(["pages", Access.at(0), "hero"], hero)
+        |> put_in(["pages", Access.at(0), "banner"], banner)
+        |> put_in(["pages", Access.at(0), "metadata"], %{
+          "seo" => %{"description" => "SEO description", "robots" => ["noindex"]}
+        })
+
+      assert {:ok, site} = project(base)
+      assert site.pages["alpha:intro"].hero == hero
+      assert site.pages["alpha:intro"].banner == banner
+
+      for {key, value} <- [
+            {"hero", %{"title" => 1}},
+            {"banner", %{}},
+            {"metadata", %{"seo" => %{"robots" => ["index", "noindex"]}}},
+            {"description", []},
+            {"last_modified", %{}},
+            {"status", 1}
+          ] do
+        assert {:error, _} = project(put_in(base, ["pages", Access.at(0), key], value))
+      end
+
+      executable = put_in(base, ["presentation"], %{"labels" => %{"search" => fn -> :ok end}})
+      assert {:error, {:invalid_site_source_json, _}} = project(executable)
+      executable = put_in(base, ["pages", Access.at(0), "hero", "title"], fn -> :ok end)
+      assert {:error, {:invalid_site_source_json, _}} = project(executable)
+
+      oversized =
+        put_in(base, ["pages", Access.at(0), "metadata"], %{
+          "host_data" => String.duplicate("x", 10_000)
+        })
+
+      assert {:error, {:site_limit, :max_page_bytes, _, 8_000}} =
+               project(oversized, collections(), limits: [max_page_bytes: 8_000])
+    end
+
     test "supports internal profiles, file routes and every reserved content feature" do
       ast = [
         heading("Features"),

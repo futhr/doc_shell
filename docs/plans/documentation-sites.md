@@ -22,7 +22,7 @@ rule to make its fixtures pass.
 | DSH-P13 | in progress | DSH-P12/P07 | Join verified local variants, search/text fallback and atomic export | Selected closure, original-byte checks, prior-tree preservation, emitted-script refusal and root/subpath file export tests pass |
 | DSH-P14 | in progress | DSH-P13; actual producer and independent readers | Qualify document previews, renderer/native semantic parity and fresh package consumers | First producer's installed archive/static document join and full package gate pass; native/browser/manual target evidence remains open |
 | DSH-P15 | source implemented; coordinated qualification pending | DSH-P03/P06/P07 | Define additive inert presentation settings and propagate validated choices through hosted/static renderer context | Defaults and legacy fixtures unchanged; invalid links/settings refuse; hosts own brand, labels, locale/release destinations and robots policy |
-| DSH-P16 | reading-flow boundaries and navigation metadata implemented; page decorations pending | DSH-P04/P15 | Complete locale/audience/section reading-flow boundaries and validate navigation/page presentation metadata | Automatic flow stays within its declared view; explicit host relationships remain possible; badges, collapse defaults, hero/banner and metadata have valid/refusal fixtures |
+| DSH-P16 | projection and validation implemented; renderer adoption and qualification pending | DSH-P04/P15 | Complete locale/audience/section reading-flow boundaries and validate navigation/page presentation metadata | Automatic flow stays within its declared view; explicit host relationships remain possible; badges, collapse defaults, hero/banner and metadata have valid/refusal fixtures |
 | DSH-P17 | planned; new receipts required | DSH-P08/P10–P16 and the selected renderer packages | Qualify the coordinated source/package/runtime cohort and reconcile documentation | Full gates, runtime matrix, notebooks, consumers, relevant benchmarks and immutable renderer evidence; external target checks retain their own status |
 
 ## Coordinated completion
@@ -351,4 +351,14 @@ collapse defaults are booleans on groups. Tests cover cross-view isolation,
 explicit cross-section relationships, hidden-navigation pages, malformed metadata
 and valid metadata propagation. The regression module fails in five reader-facing
 assertions against the previous implementation and passes after the change.
-Page hero/banner validation and remaining metadata work still belong to DSH-P16.
+PageDecorations now validates hero/banner text, links, actions and logical images.
+Reserved page SEO metadata uses the shared shape, scalar presentation fields are
+bounded text, callbacks fail before lossy normalization, and the complete page
+record is checked against its byte budget before and after relationship projection.
+Renderer adoption and coordinated qualification remain open under DSH-P16.
+
+The full current-runtime gate passes after these projection changes: 410 checks
+(16 doctests, 33 properties, 361 tests), 95.4% line coverage, strict compile/lint,
+100% documentation/spec coverage, Dialyzer, audits and no-optional compilation.
+This supersedes the earlier checkout test count for the changed upstream source;
+fresh archives, matrix runtimes and independent renderer qualification remain open.

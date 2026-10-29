@@ -2,7 +2,7 @@ defmodule DocShell.Presentation.SiteProjection.Pages do
   @moduledoc false
 
   alias DocShell.Json.Canonical
-  alias DocShell.Presentation.{Limits, Page}
+  alias DocShell.Presentation.{Limits, Page, PageDecorations, Settings}
   alias DocShell.Presentation.SiteProjection.{Anchors, Paths, Requirements}
 
   @page_keys ~w(id route title description locale audience template canonical_url source_url
@@ -120,6 +120,9 @@ defmodule DocShell.Presentation.SiteProjection.Pages do
          {:ok, display} <- page_display(declaration, source.document, context),
          {:ok, controls} <- page_controls(declaration, source.document),
          page = make_page(declaration, source, display, controls, context),
+         :ok <- validate_page_text(page),
+         {:ok, encoded} <- Canonical.encode(page),
+         :ok <- Limits.check(context.limits, :max_page_bytes, byte_size(encoded)),
          :ok <- validate_page_urls(page, context.limits) do
       if excluded?(%{"status" => page.status}, context.profile),
         do: {:ok, :excluded},
@@ -167,8 +170,8 @@ defmodule DocShell.Presentation.SiteProjection.Pages do
   defp page_controls(declaration, document) do
     with {:ok, navigation?} <- boolean(declaration, "navigation", true),
          {:ok, search?} <- boolean(declaration, "search", true),
-         {:ok, banner} <- optional_json_map(declaration["banner"]),
-         {:ok, hero} <- optional_json_map(declaration["hero"]),
+         {:ok, banner} <- PageDecorations.validate(:banner, declaration["banner"]),
+         {:ok, hero} <- PageDecorations.validate(:hero, declaration["hero"]),
          title = declaration["title"] || document["title"],
          true <- nonempty?(title) do
       {:ok,
@@ -223,6 +226,15 @@ defmodule DocShell.Presentation.SiteProjection.Pages do
     end
   end
 
+  defp validate_page_text(page) do
+    if Enum.all?([page.description, page.status, page.last_modified], &optional_text?/1),
+      do: :ok,
+      else: {:error, {:invalid_page_text, page.id}}
+  end
+
+  defp optional_text?(nil), do: true
+  defp optional_text?(value), do: nonempty?(value) and byte_size(value) <= 4096
+
   defp fetch_document(documents, id) do
     case Map.fetch(documents, id) do
       {:ok, value} -> {:ok, value}
@@ -251,22 +263,18 @@ defmodule DocShell.Presentation.SiteProjection.Pages do
   defp page_metadata(value) when is_map(value) do
     forbidden = ~w(head head_html scripts script component framework renderer_class)
 
-    if DocShell.Json.valid?(value) and not Enum.any?(forbidden, &Map.has_key?(value, &1)),
-      do: {:ok, value},
-      else: {:error, {:invalid_page_metadata, value}}
+    if DocShell.Json.valid?(value) and not Enum.any?(forbidden, &Map.has_key?(value, &1)) and
+         valid_seo?(value),
+       do: {:ok, value},
+       else: {:error, {:invalid_page_metadata, value}}
   end
 
   defp page_metadata(value), do: {:error, {:invalid_page_metadata, value}}
 
-  defp optional_json_map(nil), do: {:ok, nil}
-
-  defp optional_json_map(value) when is_map(value) do
-    if DocShell.Json.valid?(value),
-      do: {:ok, value},
-      else: {:error, {:invalid_page_record, value}}
+  defp valid_seo?(metadata) do
+    not Map.has_key?(metadata, "seo") or
+      Settings.validate(%{"metadata" => metadata["seo"]}) == :ok
   end
-
-  defp optional_json_map(value), do: {:error, {:invalid_page_record, value}}
 
   defp audience(nil), do: {:ok, nil}
 

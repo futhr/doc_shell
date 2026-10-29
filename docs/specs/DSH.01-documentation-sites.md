@@ -435,6 +435,22 @@ collection descriptor's exact inert URL and `edit_url` joins the normalized
 source path to `edit_base_url`. DocShell validates HTTP(S) syntax but does not
 invent provider-specific path segments such as repository blob routes.
 
+`PageDecorations.validate/2` validates closed banner and hero objects. Banners
+accept `label`, `text` and `href`, with at least a nonempty label or text. Heroes
+require `title` and accept `tagline`, `description`, link `actions` and an `image`
+logical asset/alt record. Text fields have at most 4096 UTF-8 bytes; link lists
+and images use the shared settings limits and URL policy. Unknown fields,
+invalid links and executable values refuse. The supported records keep their
+values without synthesizing routes or host product layout.
+
+The reserved `metadata["seo"]` object uses the shared description/image/robots
+metadata shape. Other metadata stays inert host data, subject to forbidden
+executable/framework keys and the full page byte budget. Description, status and
+last-modified values are optional nonempty UTF-8 strings of at most 4096 bytes.
+The final projected record, including metadata, breadcrumbs and reading links,
+must fit `max_page_bytes`. Site sources must return JSON-encodable declarations;
+normalization cannot hide callbacks inside inspected strings.
+
 Raw `<head>` HTML, arbitrary scripts, renderer class names, and framework
 component names are not page metadata. A renderer may add host-owned metadata
 from validated fields.

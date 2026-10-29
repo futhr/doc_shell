@@ -94,6 +94,16 @@ implements its own controls and recognizes its own label keys; the source
 supplies translations, destinations and brand content. The runnable baseline
 below uses no settings, so it also works with the pinned release.
 
+### Page decoration data in the current checkout
+
+Page declarations may carry `banner` records (`label`, `text`, `href`) and
+`hero` records (`title`, `tagline`, `description`, ordinary link `actions`, and
+an `image` logical asset/alt record). `PageDecorations.validate/2` checks them.
+Use `metadata["seo"]` for page description/image/robots overrides. All values
+stay inert and must be JSON-encodable. The complete projected page, including
+metadata and reading relationships, must fit its byte budget. These fields do
+not choose a host's product layout or supply executable rendering callbacks.
+
 ### Hosted API pairing in the current checkout
 
 A graph-backed host can call

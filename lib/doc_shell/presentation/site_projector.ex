@@ -16,6 +16,7 @@ defmodule DocShell.Presentation.SiteProjector do
   """
 
   alias DocShell.Generate.Cohort
+  alias DocShell.Json.Canonical
   alias DocShell.Presentation.{Limits, Settings, Site}
   alias DocShell.Presentation.SiteProjection.{Links, Navigation, Pages, Paths, Search}
   alias DocShell.Presentation.SiteSource.Default
@@ -84,7 +85,7 @@ defmodule DocShell.Presentation.SiteProjector do
 
   defp invoke_site_source(source, collections, opts) do
     case source.project(collections, opts) do
-      {:ok, declaration} when is_map(declaration) -> normalize_json(declaration)
+      {:ok, declaration} when is_map(declaration) -> inert_declaration(declaration)
       {:error, _} = error -> error
       other -> {:error, {:invalid_site_source_result, other}}
     end
@@ -92,6 +93,20 @@ defmodule DocShell.Presentation.SiteProjector do
     exception -> {:error, {:site_source_exception, exception.__struct__}}
   catch
     kind, reason -> {:error, {:site_source_failure, kind, reason}}
+  end
+
+  defp inert_declaration(declaration) do
+    with {:ok, normalized} <- normalize_json(declaration),
+         :ok <- encodable_declaration(declaration) do
+      {:ok, normalized}
+    end
+  end
+
+  defp encodable_declaration(declaration) do
+    case Canonical.encode(declaration) do
+      {:ok, _} -> :ok
+      {:error, reason} -> {:error, {:invalid_site_source_json, reason}}
+    end
   end
 
   defp validate_declaration(declaration) do
@@ -130,6 +145,7 @@ defmodule DocShell.Presentation.SiteProjector do
          {:ok, pages} <- Links.resolve(pages, limits),
          {:ok, navigation, pages, redirects} <-
            Navigation.project(declaration, pages, declarations, base_path, limits),
+         :ok <- page_budgets(pages, limits),
          generation_id = Keyword.get(opts, :generation_id, DocShell.Artifact.new_generation_id()),
          true <- nonempty?(generation_id) do
       {:ok,
@@ -166,6 +182,19 @@ defmodule DocShell.Presentation.SiteProjector do
     else
       {:error, {:invalid_site_locales, default, locales}}
     end
+  end
+
+  defp page_budgets(pages, limits) do
+    pages
+    |> Enum.sort()
+    |> Enum.reduce_while(:ok, fn {_, page}, :ok ->
+      with {:ok, encoded} <- Canonical.encode(page),
+           :ok <- Limits.check(limits, :max_page_bytes, byte_size(encoded)) do
+        {:cont, :ok}
+      else
+        {:error, _} = error -> {:halt, error}
+      end
+    end)
   end
 
   defp normalize_json(value) do
