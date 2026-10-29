@@ -518,3 +518,18 @@ matching native/Svelte preview pairs have identical bytes for these synthetic
 inputs. These source observations extend P14; new archive-bound results, actual
 producer comparison images, native applications and human assistive tasks remain
 separate qualification requirements.
+
+
+### Elixir 1.20 support policy
+
+The maintainer requested Elixir 1.20 for both repositories. The package now
+requires `~> 1.20`; the development pin remains Elixir 1.20.4/OTP 29. CI retains
+Elixir 1.20 on OTP 28 and 29. Older runtime records above remain historical;
+they no longer define the supported matrix. Fresh coordinated archives must
+contain the new requirement and have their own checksums.
+
+
+Elixir 1.20.4/OTP 28.5.0.7 passes warnings-as-errors compilation, all 439 checks
+at 95.6% coverage, and compilation without optional dependencies. The full
+Elixir 1.20.4/OTP 29.0.4 gate also passes all required checks at 95.6% coverage.
+The workflow parses and its test matrix contains only the two Elixir 1.20 legs.

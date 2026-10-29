@@ -33,7 +33,7 @@ branding, authorization, deployment and native-reader responsibilities.
 
 ## Installation
 
-Add DocShell to `mix.exs`. Requires Elixir 1.17 or later.
+Add DocShell to `mix.exs`. Requires Elixir 1.20 or later.
 
 ```elixir
 def deps do
@@ -784,7 +784,7 @@ documentation and typespec coverage, tests with coverage, dependency
 advisories, Dialyzer, and a compile with the optional dependencies removed.
 
 CI also executes the notebooks and packaged consumer checks. It runs tests and
-coverage across Elixir 1.17 through 1.20, with the remaining quality checks on
+coverage on Elixir 1.20 with OTP 28 and 29, with the remaining quality checks on
 Elixir 1.20.
 
 The local gate disables automatic retry-only mode: every `mix check` runs all

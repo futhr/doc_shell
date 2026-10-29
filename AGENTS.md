@@ -2,7 +2,8 @@
 
 Read `README.md` and `usage-rules.md` before changing public behavior. This is an
 Elixir library, so preserve compatibility with every Elixir/OTP pair in CI and
-keep optional integrations optional.
+keep optional integrations optional. The package and development checkouts use
+Elixir 1.20; CI covers OTP 28 and 29.
 
 For collection, site projection, search adapter, renderer, or static-export
 work, also read `docs/specs/DSH.01-documentation-sites.md` and implement

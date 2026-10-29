@@ -6,7 +6,7 @@ collections into portable sites. It validates routes and renderer capabilities
 and publishes static output. The host supplies the visual renderer, site
 structure, authorization policy, tenancy, branding, and deployment.
 
-Requires Elixir 1.17 or later. Install `ash_oaskit`, `open_api_spex`, or `plug`
+Requires Elixir 1.20 or later. Install `ash_oaskit`, `open_api_spex`, or `plug`
 when the host uses the corresponding optional integration.
 
 The [coordinated completion checklist](https://github.com/futhr/doc_shell/blob/main/docs/plans/documentation-sites.md#coordinated-completion)
