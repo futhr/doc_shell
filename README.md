@@ -150,6 +150,10 @@ config :doc_shell,
   search_tokens: false
 ```
 
+Canonical digests preserve Jason's number spelling and uppercase hexadecimal
+control escapes. Readers whose number model loses those details must retain
+the original canonical bytes; `JSON.stringify` alone is not equivalent proof.
+
 Artifacts are written as compact canonical JSON. Set `pretty: true` to indent
 them while debugging; decoded values and collection digests are identical either
 way.

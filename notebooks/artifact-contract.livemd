@@ -1,5 +1,11 @@
 # Artifact Contract
 
+Canonical byte digests use Jason's number representation and uppercase
+hexadecimal control escapes. Preserve original canonical bytes when a reader's
+decoded number type loses `1.0`, negative zero or large integers. JavaScript
+re-encoding alone cannot establish the same digest. The packaged
+`priv/contracts/canonical-json-v1.json` contains shared byte/hash examples.
+
 DocShell's JSON artifacts are a public API. Renderers in other repositories
 consume them and release independently. This notebook builds a small set of
 artifacts so you can inspect each file and its fields.

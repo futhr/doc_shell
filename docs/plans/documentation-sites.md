@@ -448,3 +448,12 @@ visual preview and final cross-repository qualification remain downstream work.
 The complete current-runtime gate passes: 437 checks (16 doctests, 35 properties,
 386 tests), 95.5% line coverage, compiler, strict lint, Dialyzer, docs/spec coverage,
 audits and no-optional compilation. No archive or target claim follows from it.
+
+The canonical byte corpus now also fixes control escapes, literal backslashes
+and Unicode text. The original three values retain their byte/hash meaning.
+Browser receipt consumption must preserve original canonical bytes for number
+representations that JavaScript decoding cannot retain; JSON.stringify's lowercase
+control escapes also need the owning encoding rule. Source authentication remains
+the host's prerequisite.
+The expanded corpus passes the full current-runtime gate: 437 checks,
+95.5% coverage, docs/spec coverage, Dialyzer, audits and no-optional compile.

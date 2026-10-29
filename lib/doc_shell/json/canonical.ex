@@ -9,6 +9,12 @@ defmodule DocShell.Json.Canonical do
   not an implementation of RFC 8785 (in particular, numbers use Jason's
   encoding).
 
+  Jason's JSON string escaping uses uppercase hexadecimal digits for control
+  escapes. Its numbers also preserve distinctions such as `1.0`, negative zero
+  and integers outside JavaScript's exact range. Readers must retain original
+  canonical bytes when their decoded number type loses those distinctions;
+  re-encoding a JavaScript value is not equivalent proof.
+
   ## One pass
 
   Native JSON values are validated and encoded in a single walk, so a large

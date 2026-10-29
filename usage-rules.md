@@ -628,3 +628,9 @@ does not authenticate a producer or prove media semantics. Renderers must verify
 the selected raw bytes and implement the selected state/runtime. Static renderer
 context carries only selected original bytes in `artifact_assets`, indexed by
 logical name, as JSON records with `media_type` and `base64`.
+
+Preserve canonical JSON bytes alongside decoded values when crossing into a
+reader whose number model loses floats or large integers. Jason uses uppercase
+hexadecimal control escapes; `JSON.stringify` alone does not reproduce the
+DocShell format. The packaged canonical vectors include float and control/literal
+escape cases. This byte binding is independent of source authenticity.
