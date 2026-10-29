@@ -16,7 +16,7 @@ rule to make its fixtures pass.
 | DSH-P07 | baseline implemented; DSH-P13/P15 follow-ups open | DSH-P02–P06 | Atomic static exporter, site manifest, sitemap, robots and llms outputs | DSH-V08; clean build, rollback, subpath and output-bound evidence |
 | DSH-P08 | in progress | DSH-P06/P07 | Hosted/static semantic parity and live-capability degradation tool | Core comparison is complete; DSH-V11 still requires two independent renderer implementations |
 | DSH-P09 | baseline qualification recorded; coordinated additions open | DSH-P01–P08 | Documentation, Livebooks, benchmarks, compatibility and packaged-consumer qualification | DSH-V12 and the core release evidence recorded below; additions require DSH-P17 |
-| DSH-P10 | core pair admission implemented; renderer adoption pending | DSH-P03/P06 | Preserve the hosted graph/source-cohort boundary and validate a host publication/OpenAPI pair before renderer invocation | DSH-V13; hosted projection needs no synthetic per-repository collection; cross-surface and mixed-generation pairs fail |
+| DSH-P10 | core and renderer admission implemented; coordinated qualification pending | DSH-P03/P06 | Preserve the hosted graph/source-cohort boundary and validate a host publication/OpenAPI pair before renderer invocation | DSH-V13; hosted projection needs no synthetic per-repository collection; cross-surface and mixed-generation pairs fail |
 | DSH-P11 | in progress | DSH-P03/P06/P07 | Freeze portable artifact block/profile/receipt schemas and v2 state-specific capability fixtures | Static records and tests implemented; complete schema/limit and compatibility matrix remains open |
 | DSH-P12 | in progress | DSH-P11 | Add explicit per-call profile adapters, block validation and requirement/admission projection | Chart/drawing fixtures, runtime selection, callback containment, concurrent isolation and three-seed model checks pass |
 | DSH-P13 | in progress | DSH-P12/P07 | Join verified local variants, search/text fallback and atomic export | Selected closure, original-byte checks, prior-tree preservation, emitted-script refusal and root/subpath file export tests pass |
@@ -233,6 +233,9 @@ DocShell.Generate.Cohort
 DocShell.Presentation.Limits
 DocShell.Presentation.Site
 DocShell.Presentation.Page
+DocShell.Presentation.PageDecorations
+DocShell.Presentation.Settings
+DocShell.Presentation.HostedPair
 DocShell.Presentation.Link
 DocShell.Presentation.Heading
 DocShell.Presentation.SiteSource
@@ -362,3 +365,11 @@ The full current-runtime gate passes after these projection changes: 410 checks
 100% documentation/spec coverage, Dialyzer, audits and no-optional compilation.
 This supersedes the earlier checkout test count for the changed upstream source;
 fresh archives, matrix runtimes and independent renderer qualification remain open.
+
+Phoenix Assets now provides Svelte/HEEx hosted pair consumption. The shared
+`hosted-pair-v1.json` fixture is retained byte-for-byte and checksum-pinned there.
+Native HEEx delegates to `HostedPair.validate/3`; browser helpers compare the
+host-admitted bindings and required wire fields before output. Host source
+validation, source authenticity and authorization remain prerequisites. Candidate
+renderer checks and the downstream full gate pass; fresh coordinated package,
+browser and independent-reader qualification remain open.
