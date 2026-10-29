@@ -498,3 +498,23 @@ The Phoenix Assets job log confirms three Codecov uploads failed with
 by that workflow. Repository activation/app access/credential configuration needs
 maintainer verification. No new local commit has remote CI evidence until the
 maintainer pushes it; neither repository was pushed or had its visibility changed.
+
+
+### Passive browser and export source observations
+
+Phoenix Assets `c50c500` adds actual static exports for both frozen profiles at
+root/subpath routes in web/file mode. Original selected bytes resolve correctly;
+changed media and unexpected JavaScript refuse without replacing the prior tree.
+The candidate suite now passes 38 renderer/projection/conformance checks,
+including twelve artifact checks. Its full gate passes 505 backend checks at
+87.5% coverage and 555 frontend tests.
+
+A checkout run of its independent Svelte SSR and HEEx readers passes 120 Chromium
+156.0.8078.4 cases with JavaScript disabled: image paint, exact receipt/selection/
+caption/description/locale/fallback/anchor observations, native keyboard
+disclosure/anchor controls, 360/1280-pixel reflow, HTTP and offline file loading,
+root/subpath routes and print visibility. Twenty screenshots were inspected;
+matching native/Svelte preview pairs have identical bytes for these synthetic
+inputs. These source observations extend P14; new archive-bound results, actual
+producer comparison images, native applications and human assistive tasks remain
+separate qualification requirements.
