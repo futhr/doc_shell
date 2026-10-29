@@ -593,3 +593,13 @@ a positive container-depth ceiling before decoding. It skips quoted syntax and
 escapes without allocating a decoded tree. A passing depth check does not
 validate JSON syntax, duplicate keys or source authenticity; still decode with
 `DocShell.Json.decode/1`. Collection loading retains its existing limit errors.
+
+Use `ArtifactBlock.project_many/2` for a page batch: every page is preflighted
+before any profile callback, and each profile descriptor loads once for that
+invocation. `project/2` retains the single-page receipt shape. Supply explicit
+positive `:limits` overrides; `ArtifactLimits.new/1` lists the finite defaults.
+Generic fallback, variant and supplied-manifest integrity is checked before
+callbacks. Callback outputs have descriptor/projection byte bounds and unique
+subject anchors. Site page/depth budgets constrain artifact overrides, and full
+page budgets are checked before callbacks and again after receipts are attached.
+No resource option authorizes asset retrieval or producer work.

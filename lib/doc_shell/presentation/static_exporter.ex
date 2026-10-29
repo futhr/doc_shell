@@ -67,10 +67,12 @@ defmodule DocShell.Presentation.StaticExporter do
          %Site{} = site <- Keyword.get(opts, :site),
          :ok <- validate_site(site),
          :ok <- Settings.validate(site.presentation),
-         {:ok, site, artifact_assets, presentation_binding} <-
-           ArtifactExport.project(site, Keyword.get(opts, :artifact_options)),
-         :ok <- validate_origin(Keyword.get(opts, :canonical_origin)),
          {:ok, limits} <- Limits.normalize(Keyword.get(opts, :limits, [])),
+         :ok <- page_budgets(site, limits),
+         {:ok, site, artifact_assets, presentation_binding} <-
+           ArtifactExport.project(site, Keyword.get(opts, :artifact_options), limits),
+         :ok <- page_budgets(site, limits),
+         :ok <- validate_origin(Keyword.get(opts, :canonical_origin)),
          {:ok, renderer} <- renderer(Keyword.get(opts, :renderer)),
          {:ok, capabilities} <- renderer_capabilities(renderer),
          :ok <- Renderer.Capabilities.validate(capabilities),
@@ -108,6 +110,19 @@ defmodule DocShell.Presentation.StaticExporter do
   end
 
   def export(opts), do: {:error, {:invalid_static_export_options, opts}}
+
+  defp page_budgets(site, limits) do
+    site.pages
+    |> Enum.sort()
+    |> Enum.reduce_while(:ok, fn {_, page}, :ok ->
+      with {:ok, bytes} <- Canonical.encode(page),
+           :ok <- Limits.check(limits, :max_page_bytes, byte_size(bytes)) do
+        {:cont, :ok}
+      else
+        error -> {:halt, error}
+      end
+    end)
+  end
 
   defp validate_options(opts) do
     if Keyword.keyword?(opts) and Keyword.keys(opts) -- @allowed_options == [],

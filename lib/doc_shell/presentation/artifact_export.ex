@@ -2,7 +2,7 @@ defmodule DocShell.Presentation.ArtifactExport do
   @moduledoc false
 
   alias DocShell.Json.Canonical
-  alias DocShell.Presentation.{ArtifactBlock, Asset, Site}
+  alias DocShell.Presentation.{ArtifactBlock, ArtifactLimits, Asset, Limits, Site}
 
   @javascript_types ~w(application/ecmascript application/javascript application/x-ecmascript
                        application/x-javascript text/ecmascript text/javascript
@@ -11,50 +11,59 @@ defmodule DocShell.Presentation.ArtifactExport do
                        text/jscript text/livescript text/x-ecmascript text/x-javascript)
 
   @doc false
-  @spec project(Site.t(), keyword() | nil) ::
+  @spec project(Site.t(), keyword() | nil, Limits.t() | nil) ::
           {:ok, Site.t(), [Asset.t()], map() | nil} | {:error, term()}
-  def project(site, nil) do
+  def project(site, options, limits \\ nil)
+
+  def project(site, nil, _) do
     if Enum.any?(site.pages, fn {_, page} -> typed?(page.content) end),
       do: {:error, :artifact_options_required},
       else: {:ok, site, [], nil}
   end
 
-  def project(site, options) when is_list(options) do
-    with {:ok, _} <- ArtifactBlock.project([], options) do
-      project_pages(site, options)
+  def project(site, options, limits) when is_list(options) do
+    with {:ok, options} <- bounded_options(options, limits),
+         contents = Map.new(site.pages, fn {id, page} -> {id, page.content} end),
+         {:ok, receipts} <- ArtifactBlock.project_many(contents, options) do
+      project_pages(site, options, receipts)
     end
   end
 
-  def project(_, _), do: {:error, :invalid_artifact_options}
+  def project(_, _, _), do: {:error, :invalid_artifact_options}
 
-  defp project_pages(site, options) do
-    site.pages
-    |> Enum.sort()
-    |> Enum.reduce_while({:ok, %{}, %{}, MapSet.new()}, fn {id, page},
-                                                           {:ok, pages, receipts, names} ->
-      case ArtifactBlock.project(page.content, options) do
-        {:ok, receipt} ->
-          updated = %{page | metadata: Map.put(page.metadata, "artifact_presentation", receipt)}
-          selected = Enum.flat_map(receipt["blocks"], &selected_asset/1)
+  defp bounded_options(options, nil), do: {:ok, options}
 
-          {:cont,
-           {:ok, Map.put(pages, id, updated), Map.put(receipts, id, receipt),
-            MapSet.union(names, MapSet.new(selected))}}
+  defp bounded_options(options, %Limits{} = site_limits) do
+    with true <- Keyword.keyword?(options),
+         {:ok, artifact_limits} <- ArtifactLimits.new(Keyword.get(options, :limits, [])) do
+      limits =
+        artifact_limits
+        |> Map.update!(:max_pages, &min(&1, site_limits.max_pages))
+        |> Map.update!(:max_page_bytes, &min(&1, site_limits.max_page_bytes))
+        |> Map.update!(:max_ast_depth, &min(&1, site_limits.max_ast_depth))
+        |> Map.to_list()
 
-        {:error, _} = error ->
-          {:halt, error}
-      end
-    end)
-    |> finish(site, options)
+      {:ok, Keyword.put(options, :limits, limits)}
+    else
+      false -> {:error, :invalid_artifact_options}
+      {:error, _} = error -> error
+    end
   end
 
-  defp finish({:ok, pages, receipts, names}, site, options) do
+  defp project_pages(site, options, receipts) do
+    {pages, names} =
+      Enum.reduce(site.pages, {%{}, MapSet.new()}, fn {id, page}, {pages, names} ->
+        receipt = Map.fetch!(receipts, id)
+        updated = %{page | metadata: Map.put(page.metadata, "artifact_presentation", receipt)}
+        selected = Enum.flat_map(receipt["blocks"], &selected_asset/1)
+        {Map.put(pages, id, updated), MapSet.union(names, MapSet.new(selected))}
+      end)
+
     assets = Enum.filter(options[:assets] || [], &MapSet.member?(names, &1.path))
     binding = %{"schema_version" => "doc-shell-presentation-manifest/v1", "pages" => receipts}
     {:ok, %{site | pages: pages}, assets, binding}
   end
 
-  defp finish(error, _, _), do: error
   defp selected_asset(%{"variant" => %{"asset" => name}}), do: [name]
   defp selected_asset(_), do: []
   defp typed?(nodes) when is_list(nodes), do: Enum.any?(nodes, &typed?/1)

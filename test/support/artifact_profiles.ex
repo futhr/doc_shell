@@ -195,3 +195,30 @@ defmodule DocShell.ArtifactProfiles do
     put_in(node, ["meta", "artifact", "fallback_digest"], digest)
   end
 end
+
+defmodule DocShell.ArtifactLimitProbeFixture do
+  @moduledoc false
+  @spec describe() :: map()
+  def describe do
+    send(self(), :descriptor_called)
+    DocShell.ArtifactChartFixture.describe()
+  end
+
+  @spec validate(map(), map()) :: term()
+  def validate(block, context) do
+    send(self(), :validator_called)
+    DocShell.ArtifactChartFixture.validate(block, context)
+  end
+end
+
+defmodule DocShell.ArtifactDuplicateSubjectsFixture do
+  @moduledoc false
+  @spec describe() :: map()
+  defdelegate describe(), to: DocShell.ArtifactChartFixture
+
+  @spec validate(map(), map()) :: term()
+  def validate(block, context) do
+    with {:ok, checked} <- DocShell.ArtifactChartFixture.validate(block, context),
+         do: {:ok, Map.update!(checked, "subjects", &(&1 ++ &1))}
+  end
+end

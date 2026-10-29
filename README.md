@@ -483,11 +483,16 @@ executable example with a small host source and renderer.
 
 ### External artifact blocks (experimental)
 
-`ArtifactProfile`, `ArtifactBlock`, and `ArtifactAdmission` provide an
+`ArtifactProfile`, `ArtifactBlock`, `ArtifactLimits`, and `ArtifactAdmission` provide an
 experimental static subset for typed external artifacts.
 
 - Pass `:artifact_options` explicitly with profiles, original manifests, checked
   projections, assets, v2 capabilities, and caller constraints.
+- Pass positive resource overrides as `artifact_options: [limits: [...], ...]`
+  or the `:limits` option to `ArtifactBlock.project/2` and `project_many/2`.
+  All page/input limits and advertised-byte integrity checks run before profile
+  callbacks. A batch loads each descriptor once after every page passes preflight.
+  Site page/depth limits still apply; a failure preserves prior published output.
 - Each presentation declares its own runtime requirements. Setting
   `%{"reader_mode" => "file"}` selects file-relative assets; web mode preserves
   existing site URLs.

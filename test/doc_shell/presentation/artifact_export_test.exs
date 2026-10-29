@@ -104,6 +104,81 @@ defmodule DocShell.Presentation.ArtifactExportTest do
     end
   end
 
+  test "export enforces all page budgets before any profile callback and preserves its prior tree" do
+    {site, options} = site("/")
+    options = Keyword.put(options, :profiles, [DocShell.ArtifactLimitProbeFixture])
+    destination = destination()
+    File.mkdir_p!(destination)
+    File.write!(Path.join(destination, "prior.txt"), "prior complete output")
+
+    assert {:error, {:site_limit, :max_page_bytes, _, 1}} =
+             StaticExporter.export(
+               site: site,
+               renderer: DocShell.ArtifactStaticFixture,
+               destination: destination,
+               artifact_options: options,
+               limits: [max_page_bytes: 1]
+             )
+
+    refute_received :descriptor_called
+    refute_received :validator_called
+
+    assert {:error, {:artifact_page, "chart", {:artifact_limit, :max_ast_depth, _, 1}}} =
+             StaticExporter.export(
+               site: site,
+               renderer: DocShell.ArtifactStaticFixture,
+               destination: destination,
+               artifact_options: options,
+               limits: [max_ast_depth: 1]
+             )
+
+    refute_received :descriptor_called
+    refute_received :validator_called
+    assert File.read!(Path.join(destination, "prior.txt")) == "prior complete output"
+
+    page = site.pages["chart"]
+
+    changed_content =
+      put_in(page.content, [Access.at(0), "meta", "artifact", "caption"], "Stale caption")
+
+    changed = %{page | id: "later", route: "/later/", content: changed_content}
+    pages = Map.put(site.pages, "later", changed)
+    site = %{site | pages: pages, routes: Map.put(site.routes, "/later/", "later")}
+    assert {:error, {:artifact_page, "later", _}} = ArtifactExport.project(site, options)
+    refute_received :descriptor_called
+    refute_received :validator_called
+  end
+
+  test "a later invalid page cannot invoke an earlier page's producer and descriptors load once" do
+    {site, options} = site("/")
+    options = Keyword.put(options, :profiles, [DocShell.ArtifactLimitProbeFixture])
+    page = site.pages["chart"]
+
+    changed = %{
+      page
+      | id: "later",
+        route: "/later/",
+        content:
+          put_in(page.content, [Access.at(0), "meta", "artifact", "caption"], "Stale caption")
+    }
+
+    invalid = %{
+      site
+      | pages: Map.put(site.pages, "later", changed),
+        routes: Map.put(site.routes, "/later/", "later")
+    }
+
+    assert {:error, _} = ArtifactExport.project(invalid, options)
+    refute_received :descriptor_called
+    refute_received :validator_called
+
+    assert {:ok, _, _, _} = ArtifactExport.project(site, options)
+    assert_received :descriptor_called
+    refute_received :descriptor_called
+    assert_received :validator_called
+    refute_received :validator_called
+  end
+
   test "declared static output cannot hide a JavaScript or remote CSS dependency" do
     {site, options} = site("/")
 

@@ -19,7 +19,7 @@ accepted v0.4.0 behavior or advertise a capability in a released DocShell 0.5.0 
 `DocShell.Presentation.ArtifactProfile`, `ArtifactBlock` and `ArtifactAdmission`
 provide explicit per-call profile validation and v2 presentation selection.
 `StaticExporter.export/1` accepts `:artifact_options` containing `:profiles`,
-`:manifests`, `:projections`, `:assets`, `:capabilities` and `:constraints`.
+`:manifests`, `:projections`, `:assets`, `:capabilities`, `:constraints` and optional positive `:limits`.
 
 Manifests and checked projections are keyed by original manifest digest; assets
 use the existing `Asset` handoff. Producers retain their meaning and media checks.
@@ -258,23 +258,44 @@ V1 capability manifests and page-wide fallback digests retain v1 admission.
 New per-block requirements and selection receipts use separate versioned
 records; unknown versions refuse without implicit conversion.
 
-The initial extension ceilings are:
+`ArtifactLimits.new/1` supplies these finite defaults. Explicit positive
+integer overrides may raise or lower them; unknown/duplicate keys and unlimited
+sentinels refuse. Site page/depth ceilings and producer-specific bounds still
+apply, with the lower applicable bound winning.
 
-| Resource | Maximum | Scope |
+| Resource option | Default | Scope |
 | --- | ---: | --- |
-| Blocks | 256 | Per page |
-| Bindings | 64 | Per block |
-| Variants | 16 | Per block |
-| Profile descriptors | 128 | Per invocation |
-| Descriptor bytes | 64 KiB | Per descriptor |
-| Manifest bytes | 1 MiB | Per artifact manifest |
+| `max_pages` | 100,000 | Per batch |
+| `max_page_bytes` | 8 MiB | Native page content, checked as canonical JSON |
+| `max_json_depth` | 256 | Native JSON and original manifest container nesting |
+| `max_json_values` | 1,000,000 | Per native JSON value tree, including object keys |
+| `max_ast_depth` | 64 | Per page |
+| `max_blocks` | 256 | Per page |
+| `max_bindings` | 64 | Per block/checked subject list |
+| `max_variants` | 16 | Per block |
+| `max_profiles` | 128 | Per invocation |
+| `max_descriptor_bytes` | 64 KiB | Per descriptor |
+| `max_manifests` | 256 | Per invocation |
+| `max_manifest_bytes` | 1 MiB | Per original manifest |
+| `max_projections` | 256 | Per invocation |
+| `max_projection_bytes` | 1 MiB | Per supplied or returned checked projection |
+| `max_admission_bytes` | 8 MiB | Each capability/constraint document |
+| `max_assets` | 4,096 | Per invocation |
+| `max_asset_bytes` | 32 MiB | Per prepared asset/variant |
+| `max_total_asset_bytes` | 256 MiB | Per invocation |
 
-Existing page AST, nesting, file, site, and output limits also apply; the lower
-applicable bound wins. Asset references cannot authorize additional reads or
-relax producer limits.
+`ArtifactBlock.project_many/2` preflights every page, fallback binding and
+advertised variant/supplied-manifest bytes before any profile callback.
+Descriptors load once per batch; producer validation remains per block. Native
+JSON bounds precede canonical encoding, and original manifest nesting is checked
+before decoding. Callback descriptor/projection bounds are checked after the
+callback returns and before its data is consumed. Checked subject anchors are
+unique. This bounds admitted data, not arbitrary work inside trusted adapters.
 
-Limits are checked before callback dispatch or asset decoding. Overrides are
-explicit positive bounds; there is no unlimited value.
+Static export checks full page byte budgets before callbacks and after adding
+receipts. Selected output still passes existing file/site/output limits before
+publication. Failure retains the previous complete tree; resource settings
+cannot authorize additional reads or relax producer or disclosure policy.
 
 ## Cross-platform preview and conformance
 

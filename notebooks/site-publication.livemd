@@ -351,3 +351,15 @@ Independent reader and human target qualification remain open.
 File.rm_rf!(workspace)
 :ok
 ```
+
+## Artifact input budgets in the current checkout
+
+For artifact-bearing pages, pass positive `:limits` through `:artifact_options`.
+`ArtifactLimits.new/1` supplies defaults for page/AST/JSON size and depth,
+block/binding/variant counts, descriptors, manifests, projections and assets.
+`ArtifactBlock.project_many/2` validates every page before loading descriptors,
+then loads each descriptor once per invocation. Static export uses this batch
+path and applies the lower site page/depth ceilings. A late invalid page cannot
+invoke an earlier page's producer or replace the prior output. These APIs are
+checkout additions awaiting release; they do not relax source authentication,
+producer limits or renderer qualification.

@@ -380,3 +380,21 @@ Its current full gate and 21 candidate HEEx checks pass. Locale marker behavior
 uses matching page/context locale IDs while preserving host destinations; graph
 metadata stays opaque outside the projected site profile. Expanded browser and
 fresh coordinated package receipts remain required before closing this row.
+
+### Artifact preflight and callback boundaries
+
+ArtifactLimits now supplies explicit per-call data budgets. Batch projection
+checks all pages and generic integrity before descriptors or producer validators
+run, shares one immutable descriptor set per invocation, bounds callback outputs
+and rejects ambiguous repeated checked-subject anchors. Static export uses the
+batch path, applies lower site page/depth bounds, and checks complete page bytes
+before callbacks and after receipt attachment. The regression against the prior
+exporter receives a descriptor callback for an invalid later page; it passes
+with preflight. Resource/rollback/descriptor-once tests cover the changed owner.
+Schema freeze and independent media/reader qualification remain open under P11–P14.
+
+The current-runtime full gate passes after preflight/batch integration: 424 checks
+(16 doctests, 35 properties, 373 tests), 95.5% line coverage, strict compile/lint,
+100% documentation/spec coverage, Dialyzer, audits and no-optional compilation.
+The checked-projection regression also refuses duplicate subject anchors.
+These are source checks; package/matrix/browser/native evidence remains separate.

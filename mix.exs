@@ -252,6 +252,7 @@ defmodule DocShell.MixProject do
           DocShell.Presentation.Site,
           DocShell.Presentation.Page,
           DocShell.Presentation.PageDecorations,
+          DocShell.Presentation.ArtifactLimits,
           DocShell.Presentation.Settings,
           DocShell.Presentation.HostedPair,
           DocShell.Presentation.Breadcrumb,
