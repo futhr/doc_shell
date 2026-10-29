@@ -368,6 +368,12 @@ Then project them through host policy:
 | DocShell projector | Validate declarations; resolve links and anchors; derive breadcrumbs, reading order, search records, and cohort digest. |
 | Renderer | Turn the validated `Site` into output. |
 
+Automatic previous/next links stay within the same locale, audience set and
+nearest navigation group. Hosts may declare explicit cross-section relationships
+or disable a link, including on a page omitted from navigation. Navigation
+badges are nonempty text (at most 256 UTF-8 bytes); collapse state is boolean
+and applies only to groups.
+
 Use `DocShell.Presentation.SiteSource.Default` for flat routes. Source and edit
 URLs follow the host's declarations; DocShell does not invent forge URL shapes.
 The projected `Site` contains no session, authorization callback, framework

@@ -572,3 +572,10 @@ are `publication_id`, `source_view`, `graph_position`, `locale`, `release`, and
 identities and admit sources in the host. Comparing declarations grants no
 access and cannot detect a host that lies about the source. This additive
 checkout API is awaiting release; it is absent from published 1.0.0.
+
+For projected reading flow, automatic links stay within the same locale,
+audience set and nearest navigation group. Explicit `previous`/`next` IDs may
+cross those boundaries and also apply to pages omitted from navigation. They
+are relationships, not authorization. Set a link to `false` to disable it.
+Badge text is bounded to 256 UTF-8 bytes, and `collapsed` is a boolean group
+setting; malformed reserved navigation metadata fails projection.

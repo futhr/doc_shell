@@ -10,8 +10,8 @@ defmodule DocShell.Presentation.SiteProjection.Navigation do
   @spec project(map(), map(), [map()], String.t(), Limits.t()) ::
           {:ok, [NavigationItem.t()], map(), %{String.t() => String.t()}} | {:error, term()}
   def project(declaration, pages, declarations, base_path, limits) do
-    with {:ok, navigation, flow, breadcrumbs} <- navigation(declaration, pages, limits),
-         {:ok, pages} <- reading_flow(pages, flow, breadcrumbs, declarations),
+    with {:ok, navigation, flow, breadcrumbs, sections} <- navigation(declaration, pages, limits),
+         {:ok, pages} <- reading_flow(pages, flow, breadcrumbs, sections, declarations),
          {:ok, redirects} <-
            redirects(Map.get(declaration, "redirects", %{}), pages, base_path, limits) do
       {:ok, navigation, pages, redirects}
@@ -34,9 +34,16 @@ defmodule DocShell.Presentation.SiteProjection.Navigation do
 
     with true <- is_list(items),
          context = %{pages: pages, limits: limits},
-         state = %{depth: 1, trail: [], breadcrumbs: %{}, seen: MapSet.new()},
+         state = %{
+           depth: 1,
+           trail: [],
+           section: nil,
+           sections: %{},
+           breadcrumbs: %{},
+           seen: MapSet.new()
+         },
          {:ok, navigation, flow, state} <- navigation_items(items, context, state) do
-      {:ok, navigation, flow, state.breadcrumbs}
+      {:ok, navigation, flow, state.breadcrumbs, state.sections}
     else
       false -> {:error, :invalid_site_navigation}
       {:error, _} = error -> error
@@ -64,11 +71,12 @@ defmodule DocShell.Presentation.SiteProjection.Navigation do
            state
            | depth: state.depth + 1,
              trail: state.trail ++ [%Breadcrumb{title: title}],
+             section: id,
              seen: MapSet.put(state.seen, id)
          },
          {:ok, children, flow, child_state} <- navigation_items(children, context, child_state) do
       meta = Map.merge(Map.get(item, "meta", %{}), Map.take(item, ["badge", "collapsed"]))
-      next_state = %{child_state | depth: state.depth, trail: state.trail}
+      next_state = %{child_state | depth: state.depth, trail: state.trail, section: state.section}
 
       {:ok,
        %NavigationItem{
@@ -103,6 +111,7 @@ defmodule DocShell.Presentation.SiteProjection.Navigation do
       next_state = %{
         state
         | breadcrumbs: Map.put(state.breadcrumbs, id, crumbs),
+          sections: Map.put(state.sections, id, state.section),
           seen: MapSet.put(state.seen, id)
       }
 
@@ -116,7 +125,8 @@ defmodule DocShell.Presentation.SiteProjection.Navigation do
     valid? =
       Map.keys(item) -- @navigation_keys == [] and nonempty?(item["id"]) and
         nonempty?(item["title"]) and is_list(item["children"]) and
-        is_map(Map.get(item, "meta", %{})) and Map.get(item, "path", "") == ""
+        is_map(Map.get(item, "meta", %{})) and Map.get(item, "path", "") == "" and
+        navigation_meta?(item, true)
 
     if valid?, do: :ok, else: {:error, {:invalid_navigation_group, item}}
   end
@@ -138,9 +148,10 @@ defmodule DocShell.Presentation.SiteProjection.Navigation do
   end
 
   defp validate_navigation_leaf_shape(item) do
-    if Map.keys(item) -- @navigation_keys == [] and is_map(Map.get(item, "meta", %{})),
-      do: :ok,
-      else: {:error, {:invalid_navigation_item, item}}
+    if Map.keys(item) -- @navigation_keys == [] and is_map(Map.get(item, "meta", %{})) and
+         navigation_meta?(item, false),
+       do: :ok,
+       else: {:error, {:invalid_navigation_item, item}}
   end
 
   defp validate_navigation_visibility(item, page) do
@@ -167,24 +178,31 @@ defmodule DocShell.Presentation.SiteProjection.Navigation do
       else: :ok
   end
 
-  defp reading_flow(pages, flow, breadcrumbs, declarations) do
-    indexed = Enum.with_index(flow)
+  defp navigation_meta?(item, group?) do
+    meta = Map.merge(Map.get(item, "meta", %{}), Map.take(item, ~w(badge collapsed)))
+
+    badge? =
+      not Map.has_key?(meta, "badge") or
+        (nonempty?(meta["badge"]) and byte_size(meta["badge"]) <= 256)
+
+    collapsed? = not Map.has_key?(meta, "collapsed") or (group? and is_boolean(meta["collapsed"]))
+    badge? and collapsed?
+  end
+
+  defp reading_flow(pages, flow, breadcrumbs, sections, declarations) do
+    neighbors = flow_neighbors(pages, flow, sections)
     policies = Map.new(declarations, &{&1["id"], &1})
 
-    Enum.reduce_while(indexed, {:ok, pages}, fn {id, index}, {:ok, current} ->
+    pages
+    |> Map.keys()
+    |> Enum.sort()
+    |> Enum.reduce_while({:ok, pages}, fn id, {:ok, current} ->
       page = Map.fetch!(current, id)
       policy = Map.get(policies, id, %{})
+      {previous_id, next_id} = Map.get(neighbors, id, {nil, nil})
 
-      with {:ok, previous} <-
-             flow_choice(policy, "previous", pages, Enum.at(flow, index - 1), index > 0),
-           {:ok, next} <-
-             flow_choice(
-               policy,
-               "next",
-               pages,
-               Enum.at(flow, index + 1),
-               index + 1 < length(flow)
-             ) do
+      with {:ok, previous} <- flow_choice(policy, "previous", pages, previous_id),
+           {:ok, next} <- flow_choice(policy, "next", pages, next_id) do
         page = %{page | previous: previous, next: next, breadcrumbs: breadcrumbs[id] || []}
         {:cont, {:ok, Map.put(current, id, page)}}
       else
@@ -193,10 +211,24 @@ defmodule DocShell.Presentation.SiteProjection.Navigation do
     end)
   end
 
-  defp flow_choice(policy, key, pages, automatic_id, automatic?) do
+  defp flow_neighbors(pages, flow, sections) do
+    flow
+    |> Enum.group_by(fn id ->
+      page = pages[id]
+      {page.locale, Enum.sort(List.wrap(page.audience)), sections[id]}
+    end)
+    |> Enum.flat_map(fn {_, ids} ->
+      [[nil | ids], ids, tl(ids) ++ [nil]]
+      |> Enum.zip()
+      |> Enum.map(fn {previous, id, next} -> {id, {previous, next}} end)
+    end)
+    |> Map.new()
+  end
+
+  defp flow_choice(policy, key, pages, automatic_id) do
     case Map.fetch(policy, key) do
-      :error -> {:ok, flow_link(pages, automatic_id, automatic?)}
-      {:ok, nil} -> {:ok, flow_link(pages, automatic_id, automatic?)}
+      :error -> {:ok, flow_link(pages, automatic_id)}
+      {:ok, nil} -> {:ok, flow_link(pages, automatic_id)}
       {:ok, false} -> {:ok, nil}
       {:ok, id} when is_binary(id) -> explicit_flow_link(pages, id)
       {:ok, value} -> {:error, {:invalid_reading_flow, policy["id"], key, value}}
@@ -210,9 +242,9 @@ defmodule DocShell.Presentation.SiteProjection.Navigation do
     end
   end
 
-  defp flow_link(_, _, false), do: nil
+  defp flow_link(_, nil), do: nil
 
-  defp flow_link(pages, id, true) do
+  defp flow_link(pages, id) do
     page = Map.fetch!(pages, id)
     %Link{title: page.title, path: page.route}
   end

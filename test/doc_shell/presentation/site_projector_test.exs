@@ -380,8 +380,8 @@ defmodule DocShell.Presentation.SiteProjectorTest do
       assert intro.previous == nil
       assert intro.next.path == other.route
       assert other.previous.path == intro.route
-      assert other.next.path == api.route
-      assert api.previous.path == other.route
+      assert other.next == nil
+      assert api.previous == nil
       assert api.next == nil
 
       assert [%{id: "guides", children: children}] = site.navigation
@@ -442,8 +442,90 @@ defmodule DocShell.Presentation.SiteProjectorTest do
 
       assert {:ok, site} = project(declaration)
       assert site.pages["alpha:intro"].next == nil
-      assert site.pages["beta:api"].previous.path == "/docs/start/"
+      assert site.pages["beta:api"].previous == nil
       assert Enum.any?(site.search, &(&1.page_id == "alpha:other"))
+    end
+
+    test "automatic flow stays within locale, audience set and nearest navigation section" do
+      base =
+        declaration()
+        |> Map.put("locales", ["en", "sv"])
+        |> update_in(["pages"], fn pages ->
+          Enum.map(pages, &Map.put(&1, "audience", ["reader", "builder"]))
+        end)
+        |> put_in(["pages", Access.at(1), "locale"], "sv")
+        |> put_in(["pages", Access.at(2), "audience"], ["builder", "reader"])
+
+      assert {:ok, site} = project(base)
+      assert site.pages["alpha:intro"].next.path == site.pages["beta:api"].route
+      assert site.pages["beta:api"].previous.path == site.pages["alpha:intro"].route
+      assert site.pages["alpha:other"].previous == nil
+      assert site.pages["alpha:other"].next == nil
+
+      sections = [
+        %{"id" => "first", "title" => "First", "children" => [%{"id" => "alpha:intro"}]},
+        %{
+          "id" => "second",
+          "title" => "Second",
+          "children" => [%{"id" => "beta:api"}, %{"id" => "alpha:other"}]
+        }
+      ]
+
+      assert {:ok, separated} = project(Map.put(base, "navigation", sections))
+      assert separated.pages["alpha:intro"].next == nil
+      assert separated.pages["beta:api"].previous == nil
+
+      explicit = put_in(base, ["pages", Access.at(0), "next"], "alpha:other")
+      assert {:ok, explicit} = project(Map.put(explicit, "navigation", sections))
+      assert explicit.pages["alpha:intro"].next.path == explicit.pages["alpha:other"].route
+    end
+
+    test "explicit reading relationships also apply to pages omitted from navigation" do
+      base =
+        declaration()
+        |> put_in(["pages", Access.at(1), "navigation"], false)
+        |> put_in(["pages", Access.at(1), "previous"], "alpha:intro")
+        |> put_in(["navigation", Access.at(0), "children"], [
+          %{"id" => "alpha:intro"},
+          %{"id" => "beta:api"}
+        ])
+
+      assert {:ok, site} = project(base)
+      assert site.pages["alpha:other"].previous.path == site.pages["alpha:intro"].route
+      assert site.pages["alpha:other"].next == nil
+
+      invalid = put_in(base, ["pages", Access.at(1), "previous"], "unknown")
+      assert {:error, {:unknown_reading_flow_page, "unknown"}} = project(invalid)
+    end
+
+    test "navigation presentation metadata has bounded text badges and boolean group collapse" do
+      base = declaration()
+      group = hd(base["navigation"])
+      valid = %{group | "children" => [Map.put(hd(group["children"]), "badge", "New")]}
+      valid = Map.merge(valid, %{"badge" => "Preview", "collapsed" => true})
+      assert {:ok, site} = project(Map.put(base, "navigation", [valid]))
+      assert hd(site.navigation).meta == %{"badge" => "Preview", "collapsed" => true}
+      assert hd(hd(site.navigation).children).meta["badge"] == "New"
+
+      for invalid <- [
+            Map.put(group, "badge", 1),
+            Map.put(group, "badge", ""),
+            Map.put(group, "badge", String.duplicate("x", 257)),
+            Map.put(group, "collapsed", "yes"),
+            Map.put(group, "meta", %{"collapsed" => nil})
+          ] do
+        assert {:error, {:invalid_navigation_group, _}} =
+                 project(Map.put(base, "navigation", [invalid]))
+      end
+
+      for invalid <- [
+            %{"id" => "alpha:intro", "badge" => false},
+            %{"id" => "alpha:intro", "collapsed" => true},
+            %{"id" => "alpha:intro", "meta" => %{"badge" => []}}
+          ] do
+        assert {:error, {:invalid_navigation_item, _}} =
+                 project(Map.put(base, "navigation", [invalid]))
+      end
     end
 
     test "rejects ambiguous and unresolved site declarations" do

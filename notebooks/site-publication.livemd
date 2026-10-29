@@ -66,7 +66,11 @@ end
 ```
 
 The map declares the host's site policy. A database or graph projection can
-produce it too; the returned values must remain inert JSON.
+produce it too; the returned values must remain inert JSON. In the current
+checkout, automatic reading links stay within the same locale, audience set and
+nearest navigation group. Explicit `previous`/`next` document IDs can cross
+sections or apply to a page omitted from navigation. Badges use nonempty text
+(up to 256 UTF-8 bytes), and `collapsed` is a boolean on a navigation group.
 
 ### Presentation settings in the current checkout
 

@@ -459,9 +459,16 @@ ecosystem taxonomy from filesystem adjacency.
 
 ### Reading flow and versions
 
-Previous and next links follow the visible navigation order for the selected
-locale and audience. A page can disable or explicitly override either link.
-Cross-section jumps require an explicit host relationship.
+Previous and next links follow visible navigation order within the same locale,
+audience set, and nearest containing navigation group. Audience string/list
+forms have the same meaning, and list order does not affect membership. Root
+leaves share a section. A page can disable or explicitly override either link,
+including a page omitted from navigation. Cross-section or cross-view jumps
+require an explicit host relationship; these links grant no authorization.
+
+Navigation badges are nonempty strings of at most 256 UTF-8 bytes. A group's
+optional `collapsed` value is boolean; leaves cannot declare collapse state.
+The same checks apply to these reserved values inside `meta`.
 
 A site may contain several named release cohorts. Version selection is a host
 facet over immutable site generations. A stable route may redirect to a named
