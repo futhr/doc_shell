@@ -127,4 +127,45 @@ defmodule DocShell.Presentation.ArtifactReceiptTest do
     refute_received :descriptor_called
     refute_received :validator_called
   end
+
+  test "non-text IDs outside the fallback cannot masquerade as document anchors" do
+    {node, options} = DocShell.ArtifactProfiles.fixture(DocShell.ArtifactChartFixture)
+
+    node =
+      node
+      |> put_in(["content", Access.at(0), "attrs"], %{})
+      |> DocShell.ArtifactProfiles.stamp()
+
+    options = Keyword.put(options, :profiles, [DocShell.ArtifactLimitProbeFixture])
+
+    for id <- [["total"], %{"value" => "total"}, 12, false] do
+      outside = %{"tag" => "p", "attrs" => %{"id" => id}, "content" => ["Outside"], "meta" => %{}}
+
+      assert {:error, :invalid_artifact_projection} =
+               ArtifactBlock.project([outside, node], options)
+
+      refute_received :descriptor_called
+      refute_received :validator_called
+    end
+
+    ignored = %{"tag" => "p", "attrs" => %{"id" => ["total"]}, "content" => [], "meta" => %{}}
+    target = %{ignored | "attrs" => %{"id" => "total"}}
+    content = [ignored, ignored, target, node]
+    assert {:ok, receipt} = ArtifactBlock.project(content, options)
+    assert {:ok, ^receipt} = ArtifactBlock.verify_receipt(content, receipt)
+    assert_received :descriptor_called
+    assert_received :validator_called
+  end
+
+  test "void fallback elements cannot hide required text from the reader" do
+    {node, options} = DocShell.ArtifactProfiles.fixture(DocShell.ArtifactChartFixture)
+
+    node =
+      node
+      |> put_in(["content", Access.at(1), "tag"], "br")
+      |> DocShell.ArtifactProfiles.stamp()
+
+    assert {:error, {:artifact_block, "chart", :invalid_artifact_block}} =
+             ArtifactBlock.project([node], options)
+  end
 end

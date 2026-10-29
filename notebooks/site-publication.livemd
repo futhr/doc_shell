@@ -384,3 +384,9 @@ producer admission and source authenticity remain host prerequisites. A static
 renderer receives selected original bytes in `context.artifact_assets` as
 `%{"media_type" => type, "base64" => encoded_bytes}` records, so it can check
 its own media subset and raw digest without fetching URLs or reading files.
+
+Artifact binding targets must be textual AST `attrs.id` values. JSON arrays,
+objects, numbers and booleans cannot stand in for an anchor that readers ignore;
+a genuine textual target may be outside the artifact's fallback subtree.
+The void `br` element must have empty content; putting fallback text under it
+fails admission rather than disappearing in HTML output.

@@ -90,6 +90,7 @@ defmodule DocShell.Presentation.ArtifactContractTest do
 
     for changed <- [
           put_in(node, ["content", Access.at(1), "tag"], "script"),
+          put_in(node, ["content", Access.at(1), "tag"], "br"),
           put_in(node, ["content", Access.at(1), "attrs", "onclick"], "alert(1)"),
           put_in(node, ["attrs", "id"], "bad\n"),
           put_in(node, ["meta", "artifact", "essential"], "true")

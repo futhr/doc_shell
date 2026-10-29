@@ -634,3 +634,9 @@ reader whose number model loses floats or large integers. Jason uses uppercase
 hexadecimal control escapes; `JSON.stringify` alone does not reproduce the
 DocShell format. The packaged canonical vectors include float and control/literal
 escape cases. This byte binding is independent of source authenticity.
+
+Artifact bindings resolve textual document `attrs.id` values only. Other JSON ID
+values are ignored by readers and cannot satisfy a binding or count as duplicate
+document anchors. A textual target may live outside the artifact fallback.
+Void `br` fallback elements must have empty content; HTML readers discard
+children under that element, so text placed there fails artifact admission.

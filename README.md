@@ -509,6 +509,10 @@ experimental static subset for typed external artifacts.
   its map contains only selected artifact assets.
 - Artifact generation and interaction belong to the producer and host.
   Independent reader and target qualification remain open.
+- Artifact bindings resolve only textual document IDs. A JSON array/object or
+  numeric/boolean `attrs.id` cannot create a target that a reader will not render.
+- Artifact fallbacks reject child content under void `br` elements so required
+  text cannot disappear during HTML rendering.
 - Runtime requirements are sets: reordering a variant or capability runtime
   list does not change admission.
 - Renderers can use `ArtifactBlock.verify_receipt/3` to check an existing receipt

@@ -457,3 +457,16 @@ control escapes also need the owning encoding rule. Source authentication remain
 the host's prerequisite.
 The expanded corpus passes the full current-runtime gate: 437 checks,
 95.5% coverage, docs/spec coverage, Dialyzer, audits and no-optional compile.
+
+Artifact document-anchor discovery now ignores non-text IDs. The regression
+against the previous source returns a successful receipt when an array-valued
+ID masquerades as the binding target. The corrected path refuses before profile
+callbacks, accepts an actual textual target outside the block, and ignores
+duplicate inert non-text IDs. Receipt verification uses the same anchor rule.
+An additional regression rejects child text under a void `br` fallback element;
+the old source returns a successful receipt even though HTML drops that text.
+The packaged safe-node schema enforces the same empty-content rule.
+The full current-runtime gate passes: 439 checks (16 doctests, 35 properties,
+388 tests), 95.6% line coverage, strict lint, docs/spec coverage, Dialyzer,
+audits and no-optional compilation. Renderer adoption and fresh target/archive
+qualification remain separate work.

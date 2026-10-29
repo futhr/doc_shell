@@ -102,6 +102,10 @@ unique page anchor; `content` contains the complete safe fallback AST.
 Every binding contains a unique `anchor`, opaque `subject_ref`, namespaced
 `subject_kind` and `subject_id`. The producer validates membership in the
 referenced artifact; DocShell validates uniqueness and document resolution.
+Only textual AST `attrs.id` values declare document anchors. Arrays, objects,
+numbers and booleans remain inert attributes; they cannot satisfy a binding
+or create duplicate-anchor conflicts. An anchor can be outside its artifact
+block if it exists as a textual document ID.
 Triangle numbers, display labels and array positions cannot replace stable
 subject IDs. Cross-document references include the qualified document ID.
 
@@ -116,6 +120,8 @@ warnings. A still image alone is insufficient when essential meaning requires
 text. The primary artifact can be absent only for an optional block with a
 complete verified fallback and an explicit unavailable presentation status.
 Advertised variants cannot refer to absent bytes.
+The void `br` element has no child content; placing text under it fails
+admission because HTML readers would discard that text.
 
 ## Extending capabilities
 

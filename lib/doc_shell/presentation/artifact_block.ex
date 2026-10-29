@@ -275,8 +275,10 @@ defmodule DocShell.Presentation.ArtifactBlock do
 
   defp anchors(nodes) when is_list(nodes), do: Enum.flat_map(nodes, &anchors/1)
 
-  defp anchors(%{"attrs" => attrs, "content" => content}),
-    do: List.wrap(attrs["id"]) ++ anchors(content)
+  defp anchors(%{"attrs" => attrs, "content" => content}) do
+    ids = if is_binary(attrs["id"]), do: [attrs["id"]], else: []
+    ids ++ anchors(content)
+  end
 
   defp anchors(_), do: []
 
@@ -559,7 +561,7 @@ defmodule DocShell.Presentation.ArtifactBlock do
   defp safe_node?(%{"tag" => tag, "attrs" => attrs, "content" => content}) do
     tag in @safe_tags and is_map(attrs) and Map.keys(attrs) -- ["id"] == [] and
       (not Map.has_key?(attrs, "id") or id?(attrs["id"])) and
-      is_list(content) and Enum.all?(content, &safe_node?/1)
+      is_list(content) and (tag != "br" or content == []) and Enum.all?(content, &safe_node?/1)
   end
 
   defp safe_node?(_), do: false

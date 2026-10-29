@@ -200,7 +200,25 @@
             "content",
             "meta"
           ],
-          "additionalProperties": true
+          "additionalProperties": true,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "tag": {
+                    "const": "br"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "content": {
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          ]
         }
       ]
     },
