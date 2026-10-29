@@ -121,6 +121,23 @@ supported variant media types, fallback contract and finite limits. Duplicate
 IDs with different digests fail. Profiles never arrive by automatic discovery,
 global registration, dependency import side effects or network lookup.
 
+Descriptor subject vocabularies and media types are nonempty sets of unique
+text values, each bounded to 4096 UTF-8 bytes. `limits` is a nonempty object
+with nonempty bounded text keys and positive integer values no greater than
+9,007,199,254,740,991. Their names and semantic enforcement remain producer-owned.
+
+The packaged `priv/contracts/artifact-contracts-v1.schema.json` fixes the generic
+structural records under named `$defs`. Runtime checks additionally enforce
+UTF-8 byte limits, configured counts, unique IDs, path segments, cross-record
+references, original-byte digests and deterministic admission. JSON Schema
+`maxLength` counts characters and cannot replace these byte checks.
+`artifact-conformance-v1.json` freezes synthetic chart/drawing profiles,
+producer input schemas, original manifests/media, canonical content, receipts
+and semantic observations. Its integer-only canonical bytes were produced by
+an independent sorted compact JSON encoder. The listed producer-schema keywords
+describe those fixtures' subset; they are not a core schema engine or an
+external producer/native-reader qualification result.
+
 `DocShell.Presentation.ArtifactProfile` provides
 `describe/0` and `validate/2`. `describe/0` returns
 the inert descriptor; `validate/2` receives the block plus caller-supplied

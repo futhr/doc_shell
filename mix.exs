@@ -76,6 +76,7 @@ defmodule DocShell.MixProject do
       [
         {:jason, "~> 1.4"},
         {:open_api_spex, "~> 3.22.4", only: :test, runtime: false},
+        {:jsv, "~> 0.26.1", only: [:dev, :test], runtime: false},
         {:earmark_parser, "~> 1.4"},
         {:yaml_elixir, "~> 2.11"},
         {:credo, "~> 1.7", only: [:dev, :test], runtime: false},

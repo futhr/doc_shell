@@ -198,10 +198,25 @@ defmodule DocShell.Presentation.ArtifactBlock do
   defp descriptor?(value) when is_map(value),
     do:
       DocShell.Json.valid?(value) and text?(value["profile"]) and text?(value["revision"]) and
-        digest?(value["input_schema_digest"]) and is_list(value["subject_vocabulary"]) and
-        is_list(value["media_types"]) and text?(value["fallback"]) and is_map(value["limits"])
+        digest?(value["input_schema_digest"]) and text_set?(value["subject_vocabulary"]) and
+        text_set?(value["media_types"]) and text?(value["fallback"]) and
+        finite_limits?(value["limits"])
 
   defp descriptor?(_), do: false
+
+  defp text_set?(values),
+    do:
+      is_list(values) and values != [] and values == Enum.uniq(values) and
+        Enum.all?(values, &text?/1)
+
+  defp finite_limits?(limits) when is_map(limits),
+    do:
+      map_size(limits) > 0 and
+        Enum.all?(limits, fn {key, value} ->
+          text?(key) and is_integer(value) and value > 0 and value <= 9_007_199_254_740_991
+        end)
+
+  defp finite_limits?(_), do: false
 
   defp profile_descriptors(profiles),
     do: Map.new(profiles, fn {id, {_, descriptor, _}} -> {id, descriptor} end)

@@ -488,6 +488,12 @@ experimental static subset for typed external artifacts.
 
 - Pass `:artifact_options` explicitly with profiles, original manifests, checked
   projections, assets, v2 capabilities, and caller constraints.
+- Packaged `priv/contracts/artifact-contracts-v1.schema.json` defines the
+  structural records; `artifact-conformance-v1.json` supplies frozen synthetic
+  chart/drawing vectors with independent canonical bytes and expected receipts.
+  Runtime checks additionally enforce UTF-8 byte limits, unique IDs, references,
+  original-byte hashes and producer validation. These fixtures are not external
+  producer or native-reader qualification.
 - Pass positive resource overrides as `artifact_options: [limits: [...], ...]`
   or the `:limits` option to `ArtifactBlock.project/2` and `project_many/2`.
   All page/input limits and advertised-byte integrity checks run before profile

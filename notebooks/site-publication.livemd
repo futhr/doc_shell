@@ -363,3 +363,11 @@ path and applies the lower site page/depth ceilings. A late invalid page cannot
 invoke an earlier page's producer or replace the prior output. These APIs are
 checkout additions awaiting release; they do not relax source authentication,
 producer limits or renderer qualification.
+
+The packaged `priv/contracts/artifact-contracts-v1.schema.json` contains
+structural definitions for nodes, descriptors, variants, capabilities, receipts
+and export manifests. `artifact-conformance-v1.json` contains frozen synthetic
+chart/drawing inputs, exact original bytes, expected selections and semantic
+observations. Tests use a separate schema engine only in development/test;
+DocShell core does not acquire that runtime dependency. These vectors do not
+establish external producer or native-reader conformance.

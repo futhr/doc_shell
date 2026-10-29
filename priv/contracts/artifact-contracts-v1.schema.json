@@ -1,0 +1,807 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:doc-shell:artifact-contracts:v1",
+  "title": "DocShell portable artifact contracts",
+  "$comment": "Structural schemas. Runtime validation additionally checks UTF-8 byte limits, configurable collection bounds, path traversal, unique IDs/anchors, hashes, reference resolution, producer membership and deterministic admission. No remote references or executable extensions are required. Profile/presentation extensions remain opaque where the runtime preserves them.",
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "minLength": 71,
+      "maxLength": 71
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9._-]{0,127}(?![\\s\\S])",
+      "maxLength": 128
+    },
+    "runtime": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "browser_js",
+          "live_transport",
+          "native_host"
+        ]
+      }
+    },
+    "states": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "fallback",
+          "enhanced",
+          "connected"
+        ]
+      }
+    },
+    "binding": {
+      "type": "object",
+      "properties": {
+        "anchor": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]{0,127}(?![\\s\\S])",
+          "maxLength": 128
+        },
+        "subject_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "subject_kind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "subject_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "anchor",
+        "subject_ref",
+        "subject_kind",
+        "subject_id"
+      ],
+      "additionalProperties": false
+    },
+    "variant": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]{0,127}(?![\\s\\S])",
+          "maxLength": 128
+        },
+        "profile": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "profile_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        },
+        "state": {
+          "enum": [
+            "fallback",
+            "enhanced",
+            "connected"
+          ]
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "blob_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "asset": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[a-zA-Z0-9_.-]+(?:/[a-zA-Z0-9_.-]+)*(?![\\s\\S])"
+        },
+        "runtime": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "browser_js",
+              "live_transport",
+              "native_host"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "profile",
+        "profile_digest",
+        "state",
+        "media_type",
+        "blob_digest",
+        "byte_length",
+        "asset",
+        "runtime"
+      ],
+      "additionalProperties": false
+    },
+    "safe_node": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "tag": {
+              "enum": [
+                "p",
+                "span",
+                "strong",
+                "em",
+                "ul",
+                "ol",
+                "li",
+                "dl",
+                "dt",
+                "dd",
+                "code",
+                "pre",
+                "br"
+              ]
+            },
+            "attrs": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9._-]{0,127}(?![\\s\\S])",
+                  "maxLength": 128
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "content": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/safe_node"
+              }
+            },
+            "meta": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "tag",
+            "attrs",
+            "content",
+            "meta"
+          ],
+          "additionalProperties": true
+        }
+      ]
+    },
+    "block": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "doc-shell-artifact-block/v1"
+        },
+        "profile": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "profile_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        },
+        "artifact_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "manifest_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "locale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/binding"
+          },
+          "uniqueItems": true
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/variant"
+          },
+          "uniqueItems": true
+        },
+        "acceptable_states": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "fallback",
+              "enhanced",
+              "connected"
+            ]
+          }
+        },
+        "essential": {
+          "type": "boolean"
+        },
+        "fallback_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        }
+      },
+      "required": [
+        "schema_version",
+        "profile",
+        "profile_digest",
+        "artifact_ref",
+        "manifest_digest",
+        "caption",
+        "description",
+        "locale",
+        "bindings",
+        "variants",
+        "acceptable_states",
+        "essential",
+        "fallback_digest"
+      ],
+      "additionalProperties": false
+    },
+    "profile": {
+      "type": "object",
+      "properties": {
+        "profile": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "input_schema_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        },
+        "subject_vocabulary": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "media_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "fallback": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "limits": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        }
+      },
+      "required": [
+        "profile",
+        "revision",
+        "input_schema_digest",
+        "subject_vocabulary",
+        "media_types",
+        "fallback",
+        "limits"
+      ],
+      "additionalProperties": true
+    },
+    "feature": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "profile": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "profile_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        },
+        "schema_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        },
+        "output_mode": {
+          "enum": [
+            "static",
+            "hosted"
+          ]
+        },
+        "state": {
+          "enum": [
+            "fallback",
+            "enhanced",
+            "connected"
+          ]
+        },
+        "media_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "minItems": 1
+        },
+        "runtime": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "browser_js",
+              "live_transport",
+              "native_host"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "profile",
+        "profile_digest",
+        "schema_digest",
+        "output_mode",
+        "state",
+        "media_types",
+        "runtime"
+      ],
+      "additionalProperties": false
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "doc-shell-renderer-capabilities/v2"
+        },
+        "renderer_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "renderer_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "output_modes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "static",
+              "hosted"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/feature"
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "schema_version",
+        "renderer_id",
+        "renderer_version",
+        "output_modes",
+        "features"
+      ],
+      "additionalProperties": true
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "output_mode": {
+          "enum": [
+            "static",
+            "hosted"
+          ]
+        },
+        "reader_mode": {
+          "enum": [
+            "web",
+            "file"
+          ]
+        },
+        "available_runtime": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "browser_js",
+              "live_transport",
+              "native_host"
+            ]
+          }
+        },
+        "forbidden_runtime": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "browser_js",
+              "live_transport",
+              "native_host"
+            ]
+          }
+        },
+        "preferences": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        }
+      },
+      "required": [
+        "output_mode",
+        "available_runtime",
+        "forbidden_runtime",
+        "preferences"
+      ],
+      "additionalProperties": true
+    },
+    "checked_projection": {
+      "type": "object",
+      "properties": {
+        "profile": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "artifact_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "manifest_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        },
+        "subjects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/binding"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "profile",
+        "artifact_ref",
+        "manifest_digest",
+        "subjects"
+      ],
+      "additionalProperties": true
+    },
+    "selection": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "available",
+            "unavailable"
+          ]
+        },
+        "presentation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "variant": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/variant"
+            }
+          ]
+        },
+        "checked_projection": {
+          "$ref": "#/$defs/checked_projection"
+        },
+        "block_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]{0,127}(?![\\s\\S])",
+          "maxLength": 128
+        },
+        "profile": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "profile_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        },
+        "artifact_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "manifest_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/binding"
+          },
+          "uniqueItems": true
+        },
+        "fallback_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        }
+      },
+      "required": [
+        "status",
+        "variant",
+        "block_id",
+        "profile",
+        "profile_digest",
+        "artifact_ref",
+        "manifest_digest",
+        "bindings",
+        "fallback_digest"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "available"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "presentation_id",
+              "checked_projection"
+            ],
+            "properties": {
+              "variant": {
+                "$ref": "#/$defs/variant"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "variant": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "receipt": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "doc-shell-artifact-presentation/v1"
+        },
+        "page_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        },
+        "descriptor_set_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        },
+        "constraints_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "minLength": 71,
+          "maxLength": 71
+        },
+        "capabilities": {
+          "$ref": "#/$defs/capabilities"
+        },
+        "constraints": {
+          "$ref": "#/$defs/constraints"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/selection"
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "page_digest",
+        "descriptor_set_digest",
+        "constraints_digest",
+        "capabilities",
+        "constraints",
+        "blocks"
+      ],
+      "additionalProperties": false
+    },
+    "manifest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "doc-shell-presentation-manifest/v1"
+        },
+        "pages": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/receipt"
+          }
+        },
+        "asset_urls": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "pages",
+        "asset_urls"
+      ],
+      "additionalProperties": false
+    },
+    "artifact_node": {
+      "type": "object",
+      "properties": {
+        "tag": {
+          "const": "artifact"
+        },
+        "attrs": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false
+        },
+        "content": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/safe_node"
+          }
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "$ref": "#/$defs/block"
+            }
+          },
+          "required": [
+            "artifact"
+          ]
+        }
+      },
+      "required": [
+        "tag",
+        "attrs",
+        "content",
+        "meta"
+      ]
+    }
+  }
+}

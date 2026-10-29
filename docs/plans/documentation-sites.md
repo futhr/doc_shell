@@ -17,7 +17,7 @@ rule to make its fixtures pass.
 | DSH-P08 | in progress | DSH-P06/P07 | Hosted/static semantic parity and live-capability degradation tool | Core comparison is complete; DSH-V11 still requires two independent renderer implementations |
 | DSH-P09 | baseline qualification recorded; coordinated additions open | DSH-P01–P08 | Documentation, Livebooks, benchmarks, compatibility and packaged-consumer qualification | DSH-V12 and the core release evidence recorded below; additions require DSH-P17 |
 | DSH-P10 | core and renderer admission implemented; coordinated qualification pending | DSH-P03/P06 | Preserve the hosted graph/source-cohort boundary and validate a host publication/OpenAPI pair before renderer invocation | DSH-V13; hosted projection needs no synthetic per-repository collection; cross-surface and mixed-generation pairs fail |
-| DSH-P11 | in progress | DSH-P03/P06/P07 | Freeze portable artifact block/profile/receipt schemas and v2 state-specific capability fixtures | Static records and tests implemented; complete schema/limit and compatibility matrix remains open |
+| DSH-P11 | structural schemas and synthetic vectors implemented; compatibility qualification pending | DSH-P03/P06/P07 | Freeze portable artifact block/profile/receipt schemas and v2 state-specific capability fixtures | Packaged schemas and independent canonical chart/drawing vectors; runtime byte/reference checks and external producer/reader evidence remain separate |
 | DSH-P12 | in progress | DSH-P11 | Add explicit per-call profile adapters, block validation and requirement/admission projection | Chart/drawing fixtures, runtime selection, callback containment, concurrent isolation and three-seed model checks pass |
 | DSH-P13 | in progress | DSH-P12/P07 | Join verified local variants, search/text fallback and atomic export | Selected closure, original-byte checks, prior-tree preservation, emitted-script refusal and root/subpath file export tests pass |
 | DSH-P14 | in progress | DSH-P13; actual producer and independent readers | Qualify document previews, renderer/native semantic parity and fresh package consumers | First producer's installed archive/static document join and full package gate pass; native/browser/manual target evidence remains open |
@@ -391,10 +391,33 @@ batch path, applies lower site page/depth bounds, and checks complete page bytes
 before callbacks and after receipt attachment. The regression against the prior
 exporter receives a descriptor callback for an invalid later page; it passes
 with preflight. Resource/rollback/descriptor-once tests cover the changed owner.
-Schema freeze and independent media/reader qualification remain open under P11–P14.
+Packaged schema/vector coverage is recorded below; independent media/reader
+qualification remains open under P11–P14.
 
 The current-runtime full gate passes after preflight/batch integration: 424 checks
 (16 doctests, 35 properties, 373 tests), 95.5% line coverage, strict compile/lint,
 100% documentation/spec coverage, Dialyzer, audits and no-optional compilation.
 The checked-projection regression also refuses duplicate subject anchors.
 These are source checks; package/matrix/browser/native evidence remains separate.
+
+### Packaged artifact contracts
+
+The artifact structural schema now defines the node, block, descriptor, binding,
+variant, v2 capability, constraints, checked projection, selection, receipt and
+export manifest. Frozen synthetic drawing/chart vectors include producer input
+schemas, raw manifest/media bytes, independently encoded canonical content,
+expected receipts and semantic observations. Separate fixture adapters exercise
+different producer subject structures through the same core path. A development/
+test-only JSV dependency checks schemas; no production schema engine was added.
+
+Descriptor admission now rejects empty, duplicate or non-text vocabulary/media
+sets and empty/nonpositive/noninteger limits. Regression checks bind the altered
+descriptor digest correctly so an invalid declaration cannot merely fail later
+at an unrelated integrity check. Unsupported versions and closed-record fields
+refuse in the packaged schemas. These vectors are synthetic contract evidence;
+external producer/media, independent-reader and native/human qualification remain
+open. The current-runtime full gate passes with 430 checks (16 doctests,
+35 properties, 379 tests), 95.4% line coverage, strict compile/lint, documentation/
+spec coverage, Dialyzer, audits and no-optional compilation. The descriptor test
+fails against the prior source at an assertion showing a successful receipt.
+Downstream adoption and archive/matrix results remain to be executed.

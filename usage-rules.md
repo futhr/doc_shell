@@ -603,3 +603,13 @@ callbacks. Callback outputs have descriptor/projection byte bounds and unique
 subject anchors. Site page/depth budgets constrain artifact overrides, and full
 page budgets are checked before callbacks and again after receipts are attached.
 No resource option authorizes asset retrieval or producer work.
+
+Use the packaged artifact structural schemas and frozen conformance vectors in
+`priv/contracts/` when implementing a reader. Descriptor vocabularies and media
+sets must contain unique nonempty bounded strings. Descriptor `limits` is a
+nonempty object of named positive integers at most 9,007,199,254,740,991; the
+producer owns each name's meaning and enforcement. Structural validation alone
+does not check cross-record identity, byte integrity or producer semantics.
+The chart/drawing vectors are synthetic contract examples, not qualification
+of an external producer, native paint or human assistive tasks. Their schemas
+exercise the listed 2020-12 subset; core does not execute producer JSON Schema.
