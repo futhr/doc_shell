@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:doc-shell:publication-binding:v1",
+  "title": "DocShell publication binding",
+  "description": "Host-declared immutable identity. Each field is also bounded to 4096 UTF-8 bytes by admission. This declaration grants no authorization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "publication_id", "source_view", "graph_position", "locale", "release", "disclosure_surface"],
+  "properties": {
+    "schema_version": {"const": "doc-shell-publication/v1"},
+    "publication_id": {"type": "string", "minLength": 1, "maxLength": 4096},
+    "source_view": {"type": "string", "minLength": 1, "maxLength": 4096},
+    "graph_position": {"type": "string", "minLength": 1, "maxLength": 4096},
+    "locale": {"type": "string", "minLength": 1, "maxLength": 4096},
+    "release": {"type": "string", "minLength": 1, "maxLength": 4096},
+    "disclosure_surface": {"type": "string", "minLength": 1, "maxLength": 4096}
+  }
+}

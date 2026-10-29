@@ -16,7 +16,7 @@ rule to make its fixtures pass.
 | DSH-P07 | baseline implemented; DSH-P13/P15 follow-ups open | DSH-P02–P06 | Atomic static exporter, site manifest, sitemap, robots and llms outputs | DSH-V08; clean build, rollback, subpath and output-bound evidence |
 | DSH-P08 | in progress | DSH-P06/P07 | Hosted/static semantic parity and live-capability degradation tool | Core comparison is complete; DSH-V11 still requires two independent renderer implementations |
 | DSH-P09 | baseline qualification recorded; coordinated additions open | DSH-P01–P08 | Documentation, Livebooks, benchmarks, compatibility and packaged-consumer qualification | DSH-V12 and the core release evidence recorded below; additions require DSH-P17 |
-| DSH-P10 | planned | DSH-P03/P06 | Preserve the hosted graph/source-cohort boundary and validate a host publication/OpenAPI pair before renderer invocation | DSH-V13; hosted projection needs no synthetic per-repository collection; cross-surface and mixed-generation pairs fail |
+| DSH-P10 | core pair admission implemented; renderer adoption pending | DSH-P03/P06 | Preserve the hosted graph/source-cohort boundary and validate a host publication/OpenAPI pair before renderer invocation | DSH-V13; hosted projection needs no synthetic per-repository collection; cross-surface and mixed-generation pairs fail |
 | DSH-P11 | in progress | DSH-P03/P06/P07 | Freeze portable artifact block/profile/receipt schemas and v2 state-specific capability fixtures | Static records and tests implemented; complete schema/limit and compatibility matrix remains open |
 | DSH-P12 | in progress | DSH-P11 | Add explicit per-call profile adapters, block validation and requirement/admission projection | Chart/drawing fixtures, runtime selection, callback containment, concurrent isolation and three-seed model checks pass |
 | DSH-P13 | in progress | DSH-P12/P07 | Join verified local variants, search/text fallback and atomic export | Selected closure, original-byte checks, prior-tree preservation, emitted-script refusal and root/subpath file export tests pass |
@@ -120,15 +120,14 @@ bind independently supplied hosted graph and OpenAPI inputs. The build invokes
 the OpenAPI adapter and presentation source separately, then creates that ID
 when writing artifacts.
 
-Before implementing validation:
+Implemented core admission:
 
-- Define an additive pair contract and its admission point. Preserve existing
+- `HostedPair.validate/3` admits both typed inputs against an expected binding. Preserve existing
   `doc-shell/v2` fields and keep host authorization policy outside DocShell.
-- Require comparable context on both sides. An opaque binding alone cannot
+- The closed `doc-shell-publication/v1` object requires comparable context on both sides. An opaque binding alone cannot
   detect a token reused across source views, graph positions, locales,
   releases, or disclosure surfaces.
-- Keep claim authentication in the host. DocShell checks declared equality
-  before renderer invocation.
+- Claim authentication stays in the host. Core tests cover each missing/mismatched field, stale agreeing pairs, malformed shapes, legacy omission and JSON round trips. The packaged binding schema and fixture support independent renderer tests. Renderer adoption and fresh package qualification remain open.
 
 ## Public API shape
 
@@ -323,7 +322,7 @@ open independently; artifact previews cannot close them.
 ### Required site quality evidence
 
 This is the acceptance checklist, not a report that every item has executed.
-In particular, hosted publication pairing remains planned under DSH-P10;
+Hosted publication pairing has core admission under DSH-P10; downstream adoption,
 independent renderer and target evidence retain the statuses above.
 
 - Unit tests cover every structured error and public default.

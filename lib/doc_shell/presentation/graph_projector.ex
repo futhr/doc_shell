@@ -10,6 +10,7 @@ defmodule DocShell.Presentation.GraphProjector do
   """
 
   alias DocShell.Presentation.Backlink
+  alias DocShell.Presentation.HostedPair
   alias DocShell.Presentation.NavigationItem
   alias DocShell.Presentation.References
   alias DocShell.Presentation.SearchEntry
@@ -41,12 +42,20 @@ defmodule DocShell.Presentation.GraphProjector do
          :ok <- check_list(presentation[:search], SearchEntry, :search),
          :ok <- check_content(presentation[:content]),
          :ok <- check_backlinks(Map.get(presentation, :backlinks)),
+         :ok <- check_publication(presentation),
          :ok <- References.validate(presentation) do
       {:ok, presentation}
     end
   end
 
   def validate(_), do: {:error, {:invalid_presentation, :missing_schema_version}}
+
+  defp check_publication(presentation) do
+    case Map.fetch(presentation, :publication) do
+      :error -> :ok
+      {:ok, binding} -> HostedPair.validate_binding(binding)
+    end
+  end
 
   defp invoke(module, opts) do
     normalize_result(module.project(opts))

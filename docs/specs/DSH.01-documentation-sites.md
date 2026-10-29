@@ -104,43 +104,34 @@ The hosted path needs no collection per repository or component. For both
 paths, the host authenticates and admits sources before rendering; DocShell
 does not make authorization decisions.
 
-#### Hosted API pairing: current boundary and planned contract
+#### Hosted API pairing
 
-Today `GraphProjector.validate/1` checks one renderer-neutral presentation, and
-`DocShell.Generate.OpenApi.validate/1` checks the OpenAPI version and JSON
-encodability, not the complete OpenAPI schema.
+`DocShell.Presentation.HostedPair.validate/3` checks a typed graph presentation
+and an OpenAPI document against the expected publication binding supplied by the
+host. The presentation carries `:publication`; OpenAPI carries the extension
+`"x-doc-shell-publication"`. Both contain this string-keyed object:
 
-`DocShell.Build.run/1` gives
-artifacts written in one build the same `generation_id`; the runtime cache
-checks that identity across one loaded artifact directory.
+```json
+{"schema_version":"doc-shell-publication/v1","publication_id":"snapshot-1","source_view":"view-1","graph_position":"position-1","locale":"en","release":"v1","disclosure_surface":"public"}
+```
 
-None of these APIs
-checks a separately supplied hosted graph presentation against an OpenAPI
-document, and the current presentation contract has no publication binding.
+All fields are required, nonempty opaque strings of at most 4096 UTF-8 bytes.
+Unknown keys and versions refuse. The schema and shared fixture ship in
+`priv/contracts/publication-binding-v1.schema.json` and `hosted-pair-v1.json`.
+Both bindings must equal the host's expected binding before existing graph
+presentation and OpenAPI shape validation completes. This rejects missing,
+mixed, cross-surface and mutually consistent but stale pairs when the host
+expects another publication. Errors identify the input and field without
+returning private values.
 
-Until a pair contract exists, a host serving graph-backed API reference must
-ensure both inputs come from the same admitted source view, graph position,
-locale, release, and disclosure surface.
-
-- Public and authenticated internal pairs are independent inputs. Matching
-  operation IDs or API versions do not make their OpenAPI documents interchangeable.
-- The host validates the session, organization, and disclosure decision before
-  constructing and serving either input.
-- A process-global current OpenAPI document must not be attached to an older
-  or differently authorized graph-backed presentation.
-
-DSH-S11 requires a future DocShell contract to accept a host-declared pair with
-one opaque immutable publication binding and reject missing or mismatched
-bindings before renderer consumption. That contract must:
-
-1. Require comparable source-view, graph-position, locale, release, and
-   disclosure-surface values on both sides. A matching opaque binding alone
-   cannot detect a token reused for the wrong view.
-2. Define the binding's location and input shape as an additive API, without
-   changing existing `doc-shell/v2` fields.
-3. Keep declaration authentication, login session, organization, disclosure
-   capability, and graph query in the host. DocShell validates declared pair
-   consistency.
+A matching operation ID, API version or opaque publication ID alone is
+insufficient. The host authenticates the session, admits the inputs, supplies
+the expected source view and maintains immutable publication identities.
+DocShell neither authenticates those declarations nor detects a host that
+relabels altered source data with a reused binding. Public and internal views
+remain separate host-admitted pairs. Existing unpaired presentations stay valid;
+hosted API integrations must use pair admission before renderer consumption.
+No repository discovery or synthetic collections are needed for this path.
 
 ## Source collection contract
 

@@ -16,7 +16,7 @@ and authorization policy.
 
 The [coordinated completion checklist](docs/plans/documentation-sites.md#coordinated-completion)
 tracks the remaining work with Phoenix Assets: presentation controls, hosted
-presentation/OpenAPI pairing, projection follow-ups, portable-artifact contracts,
+pair consumption, projection follow-ups, portable-artifact contracts,
 renderer/preview support and package/target qualification. These are planned
 additions to the implemented baseline. Validated inert presentation settings
 are available in this checkout. DocShell owns portable validation;
@@ -373,6 +373,19 @@ URLs follow the host's declarations; DocShell does not invent forge URL shapes.
 The projected `Site` contains no session, authorization callback, framework
 component, or deployment setting.
 
+### Hosted API pairs
+
+A host serving a graph-backed narrative beside an OpenAPI reference can call
+`DocShell.Presentation.HostedPair.validate(presentation, openapi, expected)`
+before invoking a renderer. The presentation's `:publication` field and
+OpenAPI's `"x-doc-shell-publication"` extension must both match the host's
+expected `doc-shell-publication/v1` binding, including source view, graph position,
+locale, release and disclosure surface. Missing, mixed and stale pairs refuse.
+The host authenticates the request and supplies immutable source declarations;
+DocShell checks consistency without fetching or authorizing either input.
+This additive checkout API is awaiting release. See the
+[hosted pairing contract](docs/specs/DSH.01-documentation-sites.md#hosted-api-pairing).
+
 ### Shared presentation data
 
 A site source may return an optional `"presentation"` object. The default source
@@ -669,14 +682,11 @@ The host must:
 A hosted graph needs no collection per repository. Collections and cohorts are
 used for the separate [portable site workflow](#portable-sites).
 
-**Current limitation:** presentation and OpenAPI validation run separately.
 A build's `generation_id` does not bind independently supplied hosted inputs.
-Never attach a process-global current OpenAPI document to an older or differently
-authorized presentation.
-
-A common publication binding and pre-render pair check are
-[planned](docs/specs/DSH.01-documentation-sites.md#hosted-api-pairing-current-boundary-and-planned-contract)
-and are not implemented.
+Use the checkout's [publication pair check](docs/specs/DSH.01-documentation-sites.md#hosted-api-pairing)
+before rendering such an API reference. The published 1.0.0 archive lacks this
+additive API. Never attach a process-global current OpenAPI document to an older
+or differently authorized presentation.
 
 ## Try it interactively
 

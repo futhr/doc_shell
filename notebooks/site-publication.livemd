@@ -90,6 +90,19 @@ implements its own controls and recognizes its own label keys; the source
 supplies translations, destinations and brand content. The runnable baseline
 below uses no settings, so it also works with the pinned release.
 
+### Hosted API pairing in the current checkout
+
+A graph-backed host can call
+`DocShell.Presentation.HostedPair.validate(presentation, openapi, expected)`
+before invoking a renderer. Put the same `doc-shell-publication/v1` binding in
+the presentation's `:publication` field, OpenAPI's `x-doc-shell-publication`
+extension, and the host's expected request view. The required opaque fields are
+`publication_id`, `source_view`, `graph_position`, `locale`, `release`, and
+`disclosure_surface`. Missing or mismatched fields refuse, including stale
+inputs that agree with each other but differ from the expected publication.
+This checkout API is also awaiting release. Host authorization and source
+authenticity remain prerequisites; a matching declaration grants no access.
+
 ## Define a small renderer
 
 The renderer declares what it can provide, returns logical assets, and renders

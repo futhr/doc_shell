@@ -30,7 +30,8 @@ defmodule DocShell.Presentation.Source do
           required(:navigation) => [NavigationItem.t()],
           required(:search) => [SearchEntry.t()],
           required(:content) => %{optional(String.t()) => [DocShell.Ast.ast_node()]},
-          optional(:backlinks) => %{optional(String.t()) => [Backlink.t()]}
+          optional(:backlinks) => %{optional(String.t()) => [Backlink.t()]},
+          optional(:publication) => DocShell.Presentation.HostedPair.binding()
         }
 
   @callback project(keyword()) :: {:ok, presentation()} | {:error, term()}

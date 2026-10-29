@@ -12,10 +12,10 @@ when the host uses the corresponding optional integration.
 The [coordinated completion checklist](https://github.com/futhr/doc_shell/blob/main/docs/plans/documentation-sites.md#coordinated-completion)
 separates planned shared contracts from current APIs and renderer/consumer work.
 Use the implemented `presentation` site-source field for shared settings;
-publication pairing remains planned. Core validates inert host inputs; Phoenix Assets
+use `HostedPair.validate/3` for a hosted API pair. Core validates inert host inputs; Phoenix Assets
 owns visual controls/previews. Host source selection, authentication, disclosure,
 brand content, route choices, producer semantics and native readers stay at
-their owners. A matching publication binding will prove declared consistency,
+their owners. A matching publication binding proves declared consistency,
 not permission to disclose either input.
 
 For current-checkout site settings, use `DocShell.Presentation.Settings.validate/1`.
@@ -560,3 +560,15 @@ Cache-Control and Vary. Encoding happens during cache publication, not requests.
 - [OpenAPI adapters](https://hexdocs.pm/doc_shell/openapi-adapters.html)
 
 - [Serving artifacts](https://hexdocs.pm/doc_shell/serving-artifacts.html)
+
+## Hosted API publication pairs
+
+Use `DocShell.Presentation.HostedPair.validate(presentation, openapi, expected)`
+before rendering graph-backed API documentation. The typed presentation carries
+`:publication`; OpenAPI carries `"x-doc-shell-publication"`. Supply the same
+`doc-shell-publication/v1` binding as the expected request view. Required fields
+are `publication_id`, `source_view`, `graph_position`, `locale`, `release`, and
+`disclosure_surface`; each is a nonempty opaque string. Maintain immutable
+identities and admit sources in the host. Comparing declarations grants no
+access and cannot detect a host that lies about the source. This additive
+checkout API is awaiting release; it is absent from published 1.0.0.
