@@ -14,6 +14,49 @@ defmodule DocShell.Presentation.ArtifactBlockTest do
     end
   end
 
+  test "profile media and subject declarations are enforced before validation callbacks" do
+    for index <- [0, 1] do
+      {node, options} = fixture(DocShell.ArtifactLimitProbeFixture)
+      assert_receive :descriptor_called
+
+      changed =
+        put_in(
+          node,
+          ["meta", "artifact", "variants", Access.at(index), "media_type"],
+          "image/png"
+        )
+
+      assets = List.update_at(options[:assets], index, &%{&1 | media_type: "image/png"})
+
+      assert {:error, {:artifact_block, "chart", :artifact_producer_validation}} =
+               ArtifactBlock.project([changed], Keyword.put(options, :assets, assets))
+
+      assert_receive :descriptor_called
+      refute_received :validator_called
+    end
+
+    {node, options} = fixture(DocShell.ArtifactLimitProbeFixture)
+    assert_receive :descriptor_called
+
+    changed =
+      node
+      |> put_in(["meta", "artifact", "bindings", Access.at(0), "subject_kind"], "other/value")
+      |> stamp()
+
+    assert {:error, {:artifact_block, "chart", :artifact_producer_validation}} =
+             ArtifactBlock.project([changed], options)
+
+    assert_receive :descriptor_called
+    refute_received :validator_called
+  end
+
+  test "checked projections cannot extend the declared subject vocabulary" do
+    {node, options} = fixture(DocShell.ArtifactUndeclaredSubjectsFixture)
+
+    assert {:error, {:artifact_block, "chart", :artifact_producer_validation}} =
+             ArtifactBlock.project([node], options)
+  end
+
   test "state-specific runtime policy admits fallback even when enhancement needs scripts" do
     {node, options} = fixture(DocShell.ArtifactChartFixture)
     assert {:ok, receipt} = ArtifactBlock.project([node], options)

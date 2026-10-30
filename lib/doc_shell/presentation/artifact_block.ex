@@ -512,6 +512,7 @@ defmodule DocShell.Presentation.ArtifactBlock do
     projections = Keyword.get(opts, :projections, %{})
 
     with true <- digest == block["profile_digest"],
+         true <- declared_block?(block, descriptor),
          bytes when is_binary(bytes) <- Map.get(manifests, block["manifest_digest"]),
          true <-
            byte_size(bytes) <= opts[:limits].max_manifest_bytes and
@@ -528,6 +529,7 @@ defmodule DocShell.Presentation.ArtifactBlock do
            ]),
          :ok <- ArtifactLimits.json(checked, :max_projection_bytes, opts[:limits]),
          true <- checked?(checked, block, opts[:limits]),
+         true <- declared_subjects?(checked["subjects"], descriptor),
          {:ok, selection} <-
            ArtifactAdmission.select(block, descriptor, opts[:capabilities], opts[:constraints]) do
       {:ok, Map.put(selection, "checked_projection", checked)}
@@ -535,6 +537,14 @@ defmodule DocShell.Presentation.ArtifactBlock do
       _ -> {:error, :artifact_producer_validation}
     end
   end
+
+  defp declared_block?(block, descriptor) do
+    Enum.all?(block["variants"], &(&1["media_type"] in descriptor["media_types"])) and
+      declared_subjects?(block["bindings"], descriptor)
+  end
+
+  defp declared_subjects?(subjects, descriptor),
+    do: Enum.all?(subjects, &(&1["subject_kind"] in descriptor["subject_vocabulary"]))
 
   defp checked?(value, block, limits) when is_map(value) do
     DocShell.Json.valid?(value) and value["profile"] == block["profile"] and

@@ -222,3 +222,23 @@ defmodule DocShell.ArtifactDuplicateSubjectsFixture do
          do: {:ok, Map.update!(checked, "subjects", &(&1 ++ &1))}
   end
 end
+
+defmodule DocShell.ArtifactUndeclaredSubjectsFixture do
+  @moduledoc false
+  @spec describe() :: map()
+  defdelegate describe(), to: DocShell.ArtifactChartFixture
+
+  @spec validate(map(), map()) :: term()
+  def validate(block, context) do
+    with {:ok, checked} <- DocShell.ArtifactChartFixture.validate(block, context) do
+      extra = %{
+        "anchor" => "other",
+        "subject_ref" => "chart:sample#other",
+        "subject_kind" => "other/value",
+        "subject_id" => "other"
+      }
+
+      {:ok, Map.update!(checked, "subjects", &(&1 ++ [extra]))}
+    end
+  end
+end

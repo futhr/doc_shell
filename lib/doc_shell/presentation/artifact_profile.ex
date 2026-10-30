@@ -13,7 +13,9 @@ defmodule DocShell.Presentation.ArtifactProfile do
   `validate/2` returns a checked JSON projection or a located tagged error.
   DocShell checks the generic block and byte envelope before dispatch and
   contains callback exceptions, throws, exits and malformed replies. Producer
-  semantics and format-specific validation stay with this adapter's owner.
+  semantics and format-specific validation stay with this adapter's owner. Core
+  rejects variant media and subject kinds outside the descriptor before invoking
+  `validate/2`; returned subjects must use the same declared vocabulary.
   """
 
   @doc "Returns the immutable JSON descriptor for this producer profile."
