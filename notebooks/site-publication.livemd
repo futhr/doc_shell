@@ -16,7 +16,7 @@ preview/reader qualification. They are not options exercised by this notebook.
 The host supplies source policy and brand content; renderer packages own the
 visual controls and preview, while native readers and producer algorithms stay
 with their respective consumers/producers. The settings section below describes
-the checkout's additive contract, which is not in the pinned 1.0.0 archive yet.
+the settings contract included in the pinned 2.0.0 package.
 
 ## Setup
 
@@ -25,7 +25,7 @@ keeps this exact package version in sync with `mix.exs`.
 
 ```elixir
 Mix.install([
-  {:doc_shell, "== 1.0.0"}
+  {:doc_shell, "== 2.0.0"}
 ])
 
 Application.ensure_all_started(:doc_shell)
@@ -72,7 +72,7 @@ nearest navigation group. Explicit `previous`/`next` document IDs can cross
 sections or apply to a page omitted from navigation. Badges use nonempty text
 (up to 256 UTF-8 bytes), and `collapsed` is a boolean on a navigation group.
 
-### Presentation settings in the current checkout
+### Presentation settings in DocShell 2.0.0
 
 The source may also return a `presentation` object. For example:
 
@@ -94,7 +94,7 @@ implements its own controls and recognizes its own label keys; the source
 supplies translations, destinations and brand content. The runnable baseline
 below uses no settings, so it also works with the pinned release.
 
-### Page decoration data in the current checkout
+### Page decoration data in DocShell 2.0.0
 
 Page declarations may carry `banner` records (`label`, `text`, `href`) and
 `hero` records (`title`, `tagline`, `description`, ordinary link `actions`, and
@@ -104,7 +104,7 @@ stay inert and must be JSON-encodable. The complete projected page, including
 metadata and reading relationships, must fit its byte budget. These fields do
 not choose a host's product layout or supply executable rendering callbacks.
 
-### Hosted API pairing in the current checkout
+### Hosted API pairing in DocShell 2.0.0
 
 A graph-backed host can call
 `DocShell.Presentation.HostedPair.validate(presentation, openapi, expected)`
@@ -114,7 +114,7 @@ extension, and the host's expected request view. The required opaque fields are
 `publication_id`, `source_view`, `graph_position`, `locale`, `release`, and
 `disclosure_surface`. Missing or mismatched fields refuse, including stale
 inputs that agree with each other but differ from the expected publication.
-This checkout API is also awaiting release. Host authorization and source
+This API is included in DocShell 2.0.0. Host authorization and source
 authenticity remain prerequisites; a matching declaration grants no access.
 
 ## Define a small renderer
@@ -353,7 +353,7 @@ File.rm_rf!(workspace)
 :ok
 ```
 
-## Artifact input budgets in the current checkout
+## Artifact input budgets in DocShell 2.0.0
 
 For artifact-bearing pages, pass positive `:limits` through `:artifact_options`.
 `ArtifactLimits.new/1` supplies defaults for page/AST/JSON size and depth,
@@ -362,7 +362,7 @@ block/binding/variant counts, descriptors, manifests, projections and assets.
 then loads each descriptor once per invocation. Static export uses this batch
 path and applies the lower site page/depth ceilings. A late invalid page cannot
 invoke an earlier page's producer or replace the prior output. These APIs are
-checkout additions awaiting release; they do not relax source authentication,
+available in DocShell 2.0.0; they do not relax source authentication,
 producer limits or renderer qualification.
 
 The packaged `priv/contracts/artifact-contracts-v1.schema.json` contains

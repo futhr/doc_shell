@@ -133,8 +133,7 @@ otherwise qualified; package consumers and notebooks are separate executions.
 `doc-shell-cohort/coordinated-proof.json` in that directory are local lookup
 paths for the current archived cohort. Verify those content-addressed receipts
 against their source revisions, locks, package hashes and browser output.
-Generated release artifacts remain ignored by Git. Neither repository has been
-published by this buildout.
+Generated release artifacts remain ignored by Git. Registry publication is verified against the release tag and archive checksum.
 
 The maintainer's pushed revisions passed
 [Phoenix Assets 41008416945](https://github.com/ghostshift-assembly/phoenix-assets/actions/runs/41008416945)

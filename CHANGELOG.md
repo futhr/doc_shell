@@ -5,6 +5,41 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [v2.0.0](https://github.com/futhr/doc_shell/compare/v1.0.0...v2.0.0) (2026-10-30)
+### Breaking Changes:
+
+* require Elixir 1.20 across supported OTP versions by futhr
+
+
+
+### Features:
+
+* artifacts: verify admitted receipts without producer callbacks by futhr
+
+* artifacts: package structural schemas and independent contract vectors by futhr
+
+* artifacts: preflight complete batches before profile callbacks by futhr
+
+* json: check nesting before decoder allocation by futhr
+
+* presentation: validate portable page decorations and metadata by futhr
+
+* presentation: admit hosted narrative and OpenAPI pairs by futhr
+
+* presentation: validate shared site settings by futhr
+
+### Bug Fixes:
+
+* artifacts: enforce declared media and subject vocabularies by futhr
+
+* artifacts: require renderable anchors and fallback content by futhr
+
+* artifacts: localize selected manifest assets for file readers by futhr
+
+* presentation: keep reading flow within its declared view by futhr
+
+* deps: update the AshOaskit test fixture by Tobias Bohwalli
+
 ## [v1.0.0](https://github.com/futhr/doc_shell/compare/v0.5.0...v1.0.0) (2026-10-23)
 ### Breaking Changes:
 

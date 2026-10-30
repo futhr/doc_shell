@@ -18,8 +18,7 @@ The [coordinated completion checklist](docs/plans/documentation-sites.md#coordin
 records implemented presentation settings, hosted publication pairs, reading-flow
 projection and portable-artifact contracts, plus Phoenix Assets rendering and
 preview adoption. Automated checks cover the contracts, regressions, independent
-renderers and extracted packages. These additions are available in the checkout
-and are unreleased.
+renderers and extracted packages. These APIs are included in DocShell 2.0.0.
 DocShell owns portable validation;
 Phoenix Assets owns framework/browser rendering; consumers retain source,
 branding, authorization, deployment and native-reader responsibilities.
@@ -39,7 +38,7 @@ Add DocShell to `mix.exs`. Requires Elixir 1.20 or later.
 ```elixir
 def deps do
   [
-    {:doc_shell, "~> 1.0.0"}
+    {:doc_shell, "~> 2.0.0"}
   ]
 end
 ```
@@ -50,7 +49,7 @@ over HTTP:
 ```elixir
 def deps do
   [
-    {:doc_shell, "~> 1.0.0"},
+    {:doc_shell, "~> 2.0.0"},
     # Derive the OpenAPI document from Ash domains
     {:ash_oaskit, "~> 0.4.5"},
     # Serve artifacts over HTTP
@@ -394,7 +393,7 @@ expected `doc-shell-publication/v1` binding, including source view, graph positi
 locale, release and disclosure surface. Missing, mixed and stale pairs refuse.
 The host authenticates the request and supplies immutable source declarations;
 DocShell checks consistency without fetching or authorizing either input.
-This additive checkout API is awaiting release. See the
+This API is available in DocShell 2.0.0. See the
 [hosted pairing contract](docs/specs/DSH.01-documentation-sites.md#hosted-api-pairing).
 
 ### Shared presentation data
@@ -418,7 +417,7 @@ settings = %{
 :ok = DocShell.Presentation.Settings.validate(settings)
 ```
 
-These settings are additive checkout APIs awaiting release. Empty settings
+These settings are available in DocShell 2.0.0. Empty settings
 preserve defaults. Destinations must be root-relative or HTTP(S) URLs; invalid
 structures, conflicting indexing tokens, duplicate selectors and oversized
 values fail before renderer invocation. Hosts supply translations and release
@@ -735,9 +734,8 @@ A hosted graph needs no collection per repository. Collections and cohorts are
 used for the separate [portable site workflow](#portable-sites).
 
 A build's `generation_id` does not bind independently supplied hosted inputs.
-Use the checkout's [publication pair check](docs/specs/DSH.01-documentation-sites.md#hosted-api-pairing)
-before rendering such an API reference. The published 1.0.0 archive lacks this
-additive API. Never attach a process-global current OpenAPI document to an older
+Use the [publication pair check](docs/specs/DSH.01-documentation-sites.md#hosted-api-pairing)
+before rendering such an API reference. DocShell 2.0.0 includes this API; 1.0.0 does not. Never attach a process-global current OpenAPI document to an older
 or differently authorized presentation.
 
 ## Try it interactively
@@ -745,17 +743,17 @@ or differently authorized presentation.
 Run the tutorials in Livebook to inspect real build output. Start with the
 build pipeline:
 
-[![Run in Livebook](https://livebook.dev/badge/v1/blue.svg)](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv1.0.0%2Fnotebooks%2Fbuild-pipeline.livemd)
+[![Run in Livebook](https://livebook.dev/badge/v1/blue.svg)](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv2.0.0%2Fnotebooks%2Fbuild-pipeline.livemd)
 
-- [The Build Pipeline](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv1.0.0%2Fnotebooks%2Fbuild-pipeline.livemd):
+- [The Build Pipeline](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv2.0.0%2Fnotebooks%2Fbuild-pipeline.livemd):
   Follow one build from source files to generated artifacts.
-- [Artifact Contract](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv1.0.0%2Fnotebooks%2Fartifact-contract.livemd):
+- [Artifact Contract](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv2.0.0%2Fnotebooks%2Fartifact-contract.livemd):
   Inspect the public JSON shapes, envelopes, manifests, and presentation indexes.
-- [OpenAPI Adapters](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv1.0.0%2Fnotebooks%2Fopenapi-adapters.livemd):
+- [OpenAPI Adapters](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv2.0.0%2Fnotebooks%2Fopenapi-adapters.livemd):
   Work through the default document, shipped adapters, custom adapters, and validation errors.
-- [Serving Artifacts](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv1.0.0%2Fnotebooks%2Fserving-artifacts.livemd):
+- [Serving Artifacts](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv2.0.0%2Fnotebooks%2Fserving-artifacts.livemd):
   Walk through static serving, runtime caching, reloads, gates, and controller usage.
-- [Publish a Portable Site](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv1.0.0%2Fnotebooks%2Fsite-publication.livemd):
+- [Publish a Portable Site](https://livebook.dev/run/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffuthr%2Fdoc_shell%2Fv2.0.0%2Fnotebooks%2Fsite-publication.livemd):
   Load a collection, project routes and navigation, then publish a static site.
 
 ## Development

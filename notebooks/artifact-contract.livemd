@@ -36,7 +36,7 @@ version together with the package and the notebook links.
 
 ```elixir
 Mix.install([
-  {:doc_shell, "== 1.0.0"}
+  {:doc_shell, "== 2.0.0"}
 ])
 
 Application.ensure_all_started(:doc_shell)
@@ -527,9 +527,9 @@ the build does not write a backlinks artifact.
 
 ## Bound nesting before decoding
 
-The current checkout exposes `DocShell.Json.Depth.check/2` for integrations that
+DocShell 2.0.0 exposes `DocShell.Json.Depth.check/2` for integrations that
 need a positive nesting bound on original JSON bytes. The scanner skips quoted
 braces and escapes without allocating the decoded tree. Passing the check does
 not establish valid syntax or unique keys; `DocShell.Json.decode/1` still owns
 those checks. Collection imports keep their existing `collection_limit` errors.
-This utility is a checkout addition awaiting release.
+This utility is included in DocShell 2.0.0.

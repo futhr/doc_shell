@@ -19,13 +19,13 @@ brand content, route choices, producer semantics and native readers stay at
 their owners. A matching publication binding proves declared consistency,
 not permission to disclose either input.
 
-For current-checkout site settings, use `DocShell.Presentation.Settings.validate/1`.
+For shared site settings, use `DocShell.Presentation.Settings.validate/1`.
 Only `brand`, `footer`, `labels`, `locales`, `releases`, `metadata` and `robots`
 are accepted. Keep values inert; pass framework slots/snippets to the renderer
 directly. Locale/release entries declare exact destinations rather than asking
 DocShell to infer routes. Static export forwards settings through
 `Renderer.Context.presentation` and applies the explicit robots.txt rules.
-These additive APIs are not in the published 1.0.0 archive yet.
+These APIs require DocShell 2.0.0 or later.
 
 For the AshOaskit adapter, current host guidance selects `{:ash_oaskit, "~> 0.4.5"}`.
 Hex has released 0.4.5 and this checkout already locks it for development/tests.
@@ -197,7 +197,7 @@ writers or symlink aliases.
   current spec to an older presentation. Use `HostedPair.validate/3` with the
   expected `doc-shell-publication/v1` binding before renderer invocation. It
   checks declared consistency; the host still authenticates both inputs and
-  authorizes disclosure. This API is absent from the published 1.0.0 archive.
+  authorizes disclosure. This API requires DocShell 2.0.0 or later.
 
 - Do not manufacture per-package or per-repository collections merely to feed a
   hosted graph projection. Collections/cohorts are the portable site path, not
@@ -573,8 +573,8 @@ before rendering graph-backed API documentation. The typed presentation carries
 are `publication_id`, `source_view`, `graph_position`, `locale`, `release`, and
 `disclosure_surface`; each is a nonempty opaque string. Maintain immutable
 identities and admit sources in the host. Comparing declarations grants no
-access and cannot detect a host that lies about the source. This additive
-checkout API is awaiting release; it is absent from published 1.0.0.
+access and cannot detect a host that lies about the source. This API
+requires DocShell 2.0.0 or later.
 
 For projected reading flow, automatic links stay within the same locale,
 audience set and nearest navigation group. Explicit `previous`/`next` IDs may
