@@ -25,10 +25,9 @@ for these two libraries.
 | DSH-P15 | implemented; automated evidence below | DSH-P03/P06/P07 | Define additive inert presentation settings and propagate validated choices through hosted/static renderer context | Defaults and legacy fixtures unchanged; invalid links/settings refuse; hosts own brand, labels, locale/release destinations and robots policy |
 | DSH-P16 | implemented; automated evidence below | DSH-P04/P15 | Complete locale/audience/section reading-flow boundaries and validate navigation/page presentation metadata | Automatic flow stays within its declared view; explicit host relationships remain possible; badges, collapse defaults, hero/banner and metadata have valid/refusal fixtures |
 | DSH-P17 | implemented; automated evidence below | DSH-P08/P10–P16 and the selected renderer packages | Qualify the coordinated source/package/runtime cohort and reconcile documentation | Full gates, runtime matrix, notebooks, consumers, relevant benchmarks and immutable renderer evidence; external target checks retain their own status |
-| --- | --- | --- |
-| --- | --- | --- |
-| Package contents | Site contracts, conformance fixture, specification, plan, notebooks and benchmark reports are present |
-| --- | --- | --- |
+
+Site contracts, conformance fixtures, specifications, this plan, notebooks and
+benchmark reports are included in the package.
 
 ## Coordinated completion
 
@@ -52,7 +51,7 @@ found in the reviewed core/renderer paths.
 | 9 | Extend browser/accessibility evidence in Phoenix Assets  | PHA-P15; DSH-P14. Keyboard/focus, search, navigation, selectors, themes/contrast, RTL, zoom/reflow, print, offline/file/subpath and failed-enhancement cases; consumer deployment stays separate |
 | 10 | Close independent renderer conformance against one expanded upstream corpus | DSH-P08; PHA-P10/P16. Svelte, static HEEx and hosted LiveView agree on admitted content, routes, names, headings, digests and unavailable live capabilities |
 | 11 | Qualify fresh packages together without weakening compatibility | DSH-P17; PHA-P16. Both full gates, required runtimes, optional/minimum/unlocked consumers, notebooks, relevant benchmarks, local asset budgets, reviewed screenshots and new exact-archive receipts |
-| 12 | Reconcile docs, trackers and CI with the delivered behavior | DSH-P09/P17; both repositories' owning guidance. Record exact revisions/results/skips; investigate the Phoenix Assets Codecov upload failure; new local commits need another maintainer push for remote CI |
+| 12 | Reconcile docs, trackers and CI with the delivered behavior | DSH-P09/P17; both repositories' owning guidance. Record exact revisions/results/skips; record optional Codecov upload failures separately from enforced coverage floors; bind remote CI to each pushed revision |
 
 ### Portable artifact delivery
 
@@ -113,37 +112,44 @@ otherwise qualified; package consumers and notebooks are separate executions.
 - DocShell full gate: 441 checks (16 doctests, 35 properties, 390 tests), 95.6%
   line coverage; compiler, optional-free compile, strict lint, docs/spec coverage,
   audits and Dialyzer pass on Elixir 1.20.4/OTP 29.0.4.
-- Phoenix Assets full gate: 507 backend checks at 87.6% coverage. The full gate
-  against the current sibling passes 514 checks at 92.5%. Both pass 557 frontend
-  tests (324 DocShell), all 25 required checks, frontend coverage floors,
-  17 release-script tests and packaged optional consumers.
+- Phoenix Assets 3.0.1 with released DocShell 2.0.0: 514 backend checks at
+  92.5% coverage, 557 frontend tests (324 DocShell), all 25 required checks,
+  frontend coverage floors, 19 release-script tests and packaged optional
+  consumers. Elixir 1.20/OTP 28 compilation and tests also pass.
 - New regressions first failed on undeclared profile media/subject acceptance,
   a hidden nested receipt requirement and duplicate shell/source IDs. Corrected
   owners pass; Chromium also reproduces duplicate IDs against the previous archives.
-- Earlier coordinated archives passed 166 baseline and 152 expanded reader cases,
-  with 158 reviewed screenshots. Fresh evidence for the current source belongs
-  to its own archive receipt; old receipts are not relabelled.
+- The release archives passed 166 baseline and 152 expanded reader cases, with
+  158 captures inspected by Codex. HEEx and installed Svelte each admit the
+  matching hosted pair and refuse all 21 stale/missing cases. The release
+  retains new receipts; prior archive receipts keep their original scope.
 - Five checkout notebooks executed 64 cells; six benchmark reports identify their
-  source/runtime cohort. These records do not claim fresh Livebook installation
-  of unreleased APIs or a performance guarantee.
+  source/runtime cohort. These checkout runs do not prove hosted
+  Livebook installation or a performance guarantee.
 
 ## Package and CI evidence
 
-`phoenix-assets/dist/release/spec-completion/qualification.json` and
-`doc-shell-cohort/coordinated-proof.json` in that directory are local lookup
-paths for the current archived cohort. Verify those content-addressed receipts
-against their source revisions, locks, package hashes and browser output.
-Generated release artifacts remain ignored by Git. Registry publication is verified against the release tag and archive checksum.
+DocShell [2.0.0](https://github.com/futhr/doc_shell/releases/tag/v2.0.0)
+was published from `faea92a`; its Hex archive SHA-256 is
+`a391fabc5e366a30e3dfdee968ed5c2859277a08883eb58a1496e18caf050774`.
+Phoenix Assets [3.0.1](https://github.com/ghostshift-assembly/phoenix-assets/releases/tag/v3.0.1)
+was built from `931aefa` against the published `doc_shell ~> 2.0` requirement.
+The GitHub release retains all five archives, checksums, baseline qualification
+and `doc-shell-cohort-v3.0.1.tar.gz` with the expanded reader proof and both locks.
+Local copies live at `phoenix-assets/dist/release/v3.0.1/qualification.json`
+and `doc-shell-cohort/coordinated-proof.json`. These receipts bind the released
+revisions; later tracker edits do not become part of those source subjects.
+Generated archives remain ignored by Git.
 
-The maintainer's pushed revisions passed
-[Phoenix Assets 41008416945](https://github.com/ghostshift-assembly/phoenix-assets/actions/runs/41008416945)
-(`fc6e8f2`) and [DocShell 41008380235](https://github.com/futhr/doc_shell/actions/runs/41008380235)
-(`64e92b1`), including DocShell's Elixir 1.20/OTP 28 and 29 lanes. That Phoenix
-Assets run used the older candidate pin. CI now selects the current upstream
-implementation, runs the full gate on main pushes and has a regression that
-prevents silent receipt-API omission. New local commits need another maintainer push for CI.
-Codecov uploads reported `Repository not found`; the workflow tolerates that
-optional service failure. Coverage floors are enforced by the passing local gates.
+[DocShell release CI](https://github.com/futhr/doc_shell/actions/runs/41017938352)
+and [publication](https://github.com/futhr/doc_shell/actions/runs/41018477890)
+passed. Phoenix Assets' [main CI](https://github.com/ghostshift-assembly/phoenix-assets/actions/runs/41023640979),
+[archive build](https://github.com/ghostshift-assembly/phoenix-assets/actions/runs/41023678088)
+and [publisher](https://github.com/ghostshift-assembly/phoenix-assets/actions/runs/41025105343)
+passed, including both Elixir 1.20 runtime lanes. The unpublished 3.0.0 tag is
+preserved: its evidence upload rejected a colon in a filename; 3.0.1 fixes that
+path and adds a failing-before/passing-after regression. Optional Codecov uploads
+fail without a repository token; the enforced coverage floors pass independently.
 
 ## Ownership and history
 
