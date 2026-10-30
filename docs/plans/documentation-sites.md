@@ -113,9 +113,10 @@ otherwise qualified; package consumers and notebooks are separate executions.
 - DocShell full gate: 441 checks (16 doctests, 35 properties, 390 tests), 95.6%
   line coverage; compiler, optional-free compile, strict lint, docs/spec coverage,
   audits and Dialyzer pass on Elixir 1.20.4/OTP 29.0.4.
-- Phoenix Assets full gate against the current sibling: 514 backend checks,
-  92.5% coverage and 557 frontend tests (324 DocShell); all 25 required checks,
-  frontend coverage floors, 17 release-script tests and packaged optional consumers pass.
+- Phoenix Assets full gate: 507 backend checks at 87.6% coverage. The full gate
+  against the current sibling passes 514 checks at 92.5%. Both pass 557 frontend
+  tests (324 DocShell), all 25 required checks, frontend coverage floors,
+  17 release-script tests and packaged optional consumers.
 - New regressions first failed on undeclared profile media/subject acceptance,
   a hidden nested receipt requirement and duplicate shell/source IDs. Corrected
   owners pass; Chromium also reproduces duplicate IDs against the previous archives.
@@ -139,9 +140,9 @@ The maintainer's pushed revisions passed
 [Phoenix Assets 41008416945](https://github.com/ghostshift-assembly/phoenix-assets/actions/runs/41008416945)
 (`fc6e8f2`) and [DocShell 41008380235](https://github.com/futhr/doc_shell/actions/runs/41008380235)
 (`64e92b1`), including DocShell's Elixir 1.20/OTP 28 and 29 lanes. That Phoenix
-Assets run used the older candidate pin; the next source commit updates it to
-the current upstream implementation and adds a regression that prevents silent
-receipt-API omission. New local commits need another maintainer push for CI.
+Assets run used the older candidate pin. CI now selects the current upstream
+implementation, runs the full gate on main pushes and has a regression that
+prevents silent receipt-API omission. New local commits need another maintainer push for CI.
 Codecov uploads reported `Repository not found`; the workflow tolerates that
 optional service failure. Coverage floors are enforced by the passing local gates.
 
