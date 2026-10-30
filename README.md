@@ -17,9 +17,9 @@ and authorization policy.
 The [coordinated completion checklist](docs/plans/documentation-sites.md#coordinated-completion)
 records implemented presentation settings, hosted publication pairs, reading-flow
 projection and portable-artifact contracts, plus Phoenix Assets rendering and
-preview adoption. Fresh local archives pass the recorded automated qualification;
-external producer, native-application and human assistive-task evidence remains
-unverified. These additions are available in the checkout and are unreleased.
+preview adoption. Automated checks cover the contracts, regressions, independent
+renderers and extracted packages. These additions are available in the checkout
+and are unreleased.
 DocShell owns portable validation;
 Phoenix Assets owns framework/browser rendering; consumers retain source,
 branding, authorization, deployment and native-reader responsibilities.
@@ -62,7 +62,7 @@ end
 AshOaskit 0.4.5 is the current released adapter baseline and is already selected
 by this checkout's development/test lock. Hosts install it explicitly; DocShell's
 production requirements do not install AshOaskit. The
-[qualification record](docs/plans/documentation-sites.md#ashoaskit-release-baseline-2026-10-29)
+[qualification record](docs/plans/documentation-sites.md#ownership-and-history)
 distinguishes this resolution from new coordinated consumer proof.
 
 ## Quick start
@@ -510,8 +510,8 @@ experimental static subset for typed external artifacts.
   its map contains only selected artifact assets.
 - Artifact generation and interaction belong to the producer and host.
   Independent Svelte/HEEx archive readers pass the recorded automated browser,
-  print and offline/file tasks. External producer, native-application and human
-  assistive-task qualification remains unverified.
+  print and offline/file tasks. Producers and native applications retain their
+  own algorithms and deployment validation.
 - Artifact bindings resolve only textual document IDs. A JSON array/object or
   numeric/boolean `attrs.id` cannot create a target that a reader will not render.
 - Artifact fallbacks reject child content under void `br` elements so required

@@ -16,7 +16,9 @@ Framework controls, slots/snippets, CSS and visual previews belong in Phoenix
 Assets. Consumer source selection, route/brand/translation content, authorization,
 product state, native readers and producer algorithms remain at their owners.
 Keep per-call adapters generic; shared use alone does not establish library
-ownership. Record external native/human evidence separately from core tests.
+ownership. Library completion uses automated contract, regression and package
+checks, including independent renderer consumers. Human verification and a
+consumer's native application are not prerequisites for completing this library.
 
 ## Architecture
 

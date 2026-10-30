@@ -9,7 +9,8 @@ The implementation plan records executable evidence; this specification states
 the required behavior and does not treat core tests as renderer qualification.
 The [coordinated completion checklist](../plans/documentation-sites.md#coordinated-completion)
 records implemented upstream and Phoenix Assets behavior, exact local archive
-evidence and remaining external producer/native/human obligations. Checkout
+evidence and consumer ownership. Library completion uses automated tests;
+human verification and consumer deployment checks are not prerequisites. Checkout
 implementation and local qualification do not establish registry publication.
 
 ## Purpose
@@ -758,7 +759,7 @@ has an experimental static subset for typed external-artifact blocks, per-call
 producer profiles,
 state-specific runtime admission, exact semantic anchors and preview/export
 conformance. Core and Svelte/HEEx implementations have local archive/browser
-evidence under DSH-P11–P14 and the coordinated checklist. Actual producer, native
-application and human observations remain unverified. This extension is separate
+evidence under DSH-P11–P14 and the coordinated checklist. Producer algorithms
+and native application deployment remain consumer-owned. This extension is separate
 from the original v0.4.0 site baseline and its completion rule above. Existing v1 AST, site,
 renderer capability and fallback-digest semantics remain unchanged.

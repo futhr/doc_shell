@@ -1,15 +1,10 @@
 # Portable artifact capabilities
 
-**Status:** experimental static subset implemented. The 2026-10-29 coordinated
-archive run qualifies the synthetic profiles in independent Svelte/HEEx readers.
-Actual producer, native-application and human evidence remains unverified under
-DSH-P11–P14 in the
-[site plan](../plans/documentation-sites.md#portable-artifact-delivery).
-The [coordinated completion checklist](../plans/documentation-sites.md#coordinated-completion)
-assigns generic schema/admission/export work to DocShell and visual rendering
-and preview work to Phoenix Assets. Native reader implementation and human
-assistive tasks remain consumer/target obligations; their required evidence
-cannot be replaced with a core or browser test result.
+**Status:** static contract implemented. Automated acceptance covers projection,
+admission, bounds, refusal, callback isolation, atomic export and independent
+Elixir/TypeScript readers. The [site plan](../plans/documentation-sites.md#portable-artifact-delivery)
+maps each requirement to its tests. Human verification is not a library gate.
+Producer semantics, geometry and native applications remain consumer-owned.
 
 **Owner:** DocShell document bindings and presentation admission.
 
@@ -39,8 +34,8 @@ retains root-relative asset URLs. Renderer chrome assets do not enter this
 artifact selection map.
 Legacy calls and v1 capability/digest behavior retain their original path.
 
-Native reader parity, complete schema/limit compatibility and human target
-qualification remain required; publication alone does not establish them.
+Schema/limit compatibility and reader parity use the automated suites in the
+plan. Publication alone does not establish those results.
 
 ## Purpose and ownership
 
@@ -133,6 +128,10 @@ its namespaced profile ID, revision, input-schema digest, subject vocabulary,
 supported variant media types, fallback contract and finite limits. Duplicate
 IDs with different digests fail. Profiles never arrive by automatic discovery,
 global registration, dependency import side effects or network lookup.
+
+Every advertised variant media type and bound subject kind must occur in the
+profile descriptor. Core checks these declarations before `validate/2`; returned
+checked subjects must use the same vocabulary.
 
 Descriptor subject vocabularies and media types are nonempty sets of unique
 text values, each bounded to 4096 UTF-8 bytes. `limits` is a nonempty object
@@ -283,7 +282,7 @@ producer and renderer own format-specific validation.
 **DSH-A08 — Failure and recovery.** Projection and export preserve the prior
 complete site on structural, integrity, callback or output failures.
 
-A native
+A consumer-owned native
 reader preserves the previous permitted visual with its original binding and
 shows the successor failure; it cannot relabel old bytes as the requested
 scene.
@@ -351,8 +350,8 @@ Its fixture mode includes light, dark, monochrome and enlarged views. It
 cannot mark observations as reviewed or accepted. Native readers and browser
 renderers may differ in layout but preserve these semantics.
 
-Required vectors follow. Some static cases have source tests; the plan records
-their evidence. The complete compatibility and target matrix remains open.
+Required automated vectors follow; the plan records their owning tests and
+package/browser evidence.
 
 | Vector | Observable acceptance |
 | --- | --- |
@@ -361,12 +360,12 @@ their evidence. The complete compatibility and target matrix remains open.
 | DSH-A-V03 | Altered manifest, bytes, length, anchor, locale or fallback refuses; prior export survives |
 | DSH-A-V04 | Script-free preference chooses the static variant even when a JS enhancement exists; live-only output cannot pass static admission |
 | DSH-A-V05 | Two concurrent hosts with different descriptors/runtime policy remain isolated; passive package load starts nothing |
-| DSH-A-V06 | Independent HTML and native readers preserve IDs, text, units, warnings, locale and limitations; missing anchors are reported |
+| DSH-A-V06 | Independent Elixir and TypeScript readers preserve IDs, text, units, warnings, locale and limitations; missing anchors refuse |
 | DSH-A-V07 | Unsafe SVG, external assets, traversal, case collisions and all limit boundaries refuse before publication |
 | DSH-A-V08 | Preview and export share source digests and selected still state; print and JS-disabled offline browser retain complete fallback |
 | DSH-A-V09 | Legacy collection/site/capability fixtures remain unchanged and readable; new requirements cannot be downgraded to legacy success |
 | DSH-A-V10 | Three fixed seeds, at least 100 successful cases each, exercise ordering, round trips and admission against an independent small model |
 
-Browser screenshots qualify the renderer, not artifact meaning. Native paint,
-human keyboard/screen-reader tasks and installed-reader lifecycle need their
-own target evidence. DocShell core tests never close those claims.
+Automated reader checks cover the generic document contract. Producer meaning,
+geometry and native application lifecycle stay with their owners. No browser
+screenshot or core test certifies a consumer's deployment.

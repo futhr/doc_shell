@@ -10,8 +10,8 @@ Requires Elixir 1.20 or later. Install `ash_oaskit`, `open_api_spex`, or `plug`
 when the host uses the corresponding optional integration.
 
 The [coordinated completion checklist](https://github.com/futhr/doc_shell/blob/main/docs/plans/documentation-sites.md#coordinated-completion)
-separates implemented APIs and local archive evidence from remaining external
-producer, native-application and human checks.
+maps implemented APIs to automated contract, regression, browser and package
+checks.
 Use the implemented `presentation` site-source field for shared settings;
 use `HostedPair.validate/3` for a hosted API pair. Core validates inert host inputs; Phoenix Assets
 owns visual controls/previews. Host source selection, authentication, disclosure,
@@ -611,10 +611,13 @@ Use the packaged artifact structural schemas and frozen conformance vectors in
 `priv/contracts/` when implementing a reader. Descriptor vocabularies and media
 sets must contain unique nonempty bounded strings. Descriptor `limits` is a
 nonempty object of named positive integers at most 9,007,199,254,740,991; the
-producer owns each name's meaning and enforcement. Structural validation alone
+producer owns each name's meaning and enforcement. Every advertised variant
+media type and bound subject kind must occur in its descriptor. Core checks those
+declarations before invoking `validate/2` and checks returned subject kinds again.
+Structural validation alone
 does not check cross-record identity, byte integrity or producer semantics.
-The chart/drawing vectors are synthetic contract examples, not qualification
-of an external producer, native paint or human assistive tasks. Their schemas
+The chart/drawing vectors test the portable contract. Producer-specific meaning
+and native application behavior remain the consumer's responsibility. Their schemas
 exercise the listed 2020-12 subset; core does not execute producer JSON Schema.
 
 Resolve file-reader `presentation-manifest.json` asset URLs against that file's
