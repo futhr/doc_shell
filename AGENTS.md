@@ -59,6 +59,21 @@ Run the complete gate before finishing:
 mix check
 ```
 
+## Skills and discovery
+
+Shared skills live in tracked `.agents/skills/<name>/SKILL.md`. Automatically
+select matching descriptions and read the selected bodies before proceeding;
+users do not invoke skills manually. Keep implicit invocation enabled.
+Use [security-review](.agents/skills/security-review/SKILL.md) for requested
+security audits or changed import, artifact/path, cache or serving-gate
+boundaries. Keep consumer identity and renderer policy at their existing owners.
+
+Codex discovers `.agents/skills` natively. Clients without discovery must inspect
+descriptions and read matching files themselves. Claude discovery uses ignored
+individual `.claude/skills/<name>` directory symlinks to
+`../../.agents/skills/<name>`. Preserve local entries and settings; repair only
+repository-owned links. Keep client state ignored and shared skills versioned.
+
 ## Git operations
 
 Use GitOps-style Conventional Commit subjects with a natural imperative

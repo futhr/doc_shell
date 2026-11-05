@@ -17,5 +17,7 @@ erl_crash.dump
 /.dexter/
 
 # Local agent files
-/.agents/
+/.agents/*
+!/.agents/skills/
 /.codex/
+/.claude/
