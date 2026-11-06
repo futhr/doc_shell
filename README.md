@@ -482,6 +482,15 @@ The built-in `DocShell.Presentation.SearchAdapter.JSON` emits deterministic loca
 records and provides `query/3` as the reference filtering behavior. A different
 build-time adapter can produce another local index from the same records.
 
+The built-in adapter checks the represented JSON corpus before validating
+repeated text or encoding it. Its default `max_file_bytes` ceiling is 32 MiB;
+`build/2` also checks `max_output_bytes`. Pass positive `limits:` overrides to
+`build/2`, or as the fourth argument to `query/4`; the third query argument
+remains the filters. Static export forwards its effective limits to the built-in
+adapter and caps any `search_options: [limits: ...]` overrides at those ceilings.
+Custom adapters receive their options unchanged and own their indexing work;
+their returned assets still pass the exporter's final output checks.
+
 The [site publication notebook](notebooks/site-publication.livemd) is a complete
 executable example with a small host source and renderer.
 

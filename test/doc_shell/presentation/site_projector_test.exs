@@ -246,6 +246,15 @@ defmodule DocShell.Presentation.SiteProjectorTest do
     def build(_, _), do: :invalid
   end
 
+  defmodule CustomSearchAdapter do
+    @behaviour SearchAdapter
+    @impl true
+    def build(records, options) do
+      send(self(), {:custom_search_options, options})
+      SearchAdapter.JSON.build(records)
+    end
+  end
+
   defmodule InvalidSearchContract do
     @behaviour SearchAdapter
     @impl true
@@ -940,6 +949,77 @@ defmodule DocShell.Presentation.SiteProjectorTest do
   end
 
   describe "static export" do
+    test "bounds expanded imported search metadata before rendering and preserves the prior tree" do
+      root = tmp_dir!("expanded-search")
+      guides = Path.expand(".search-guides-#{System.unique_integer([:positive])}")
+      File.mkdir!(guides)
+      on_exit(fn -> File.rm_rf!(guides) end)
+      title = String.duplicate("t", 512)
+      headings = Enum.map_join(1..64, "\n\n", &"## Section #{&1}")
+      File.write!(Path.join(guides, "intro.md"), "---\ntitle: #{title}\n---\n#{headings}")
+      descriptor = loaded("imported", []).descriptor
+      descriptor = %{descriptor | artifact_dir: Path.join(root, "public")}
+
+      assert {:ok, _} =
+               DocShell.Build.run(
+                 modules: [],
+                 guide_bases: [guides],
+                 livebook_base: Path.join(root, "missing"),
+                 changelog_source: nil,
+                 public_dir: descriptor.artifact_dir,
+                 private_dir: Path.join(root, "private"),
+                 collection: descriptor
+               )
+
+      assert {:ok, collection} = Collection.load(descriptor)
+      guide = Enum.find(collection.documents, &(&1["kind"] == "guide"))
+
+      declaration =
+        declaration()
+        |> Map.put("pages", [%{"id" => guide["id"], "route" => "/guide/"}])
+        |> Map.put("navigation", [])
+        |> Map.put("redirects", %{})
+
+      assert {:ok, site} = project(declaration, [collection])
+      assert length(site.search) == 65
+      assert Enum.all?(site.search, &(&1.title == title))
+      destination = Path.join(root, "published")
+      File.mkdir!(destination)
+      File.write!(Path.join(destination, "keep.txt"), "previous publication")
+
+      for resource <- [:max_file_bytes, :max_output_bytes] do
+        assert {:error, {:site_limit, ^resource, _, 16_384}} =
+                 export(site, ContextRenderer,
+                   destination: destination,
+                   limits: [{resource, 16_384}],
+                   search_options: [limits: [{resource, 1_000_000}]]
+                 )
+
+        refute_received {:page_context, _}
+        assert File.ls!(destination) == ["keep.txt"]
+        assert File.read!(Path.join(destination, "keep.txt")) == "previous publication"
+      end
+    end
+
+    test "keeps custom search options intact and validates built-in overrides" do
+      assert {:ok, site} = project(declaration())
+      options = [host_option: :retained]
+
+      assert {:ok, _} =
+               export(site, HtmlRenderer,
+                 search_adapter: CustomSearchAdapter,
+                 search_options: options
+               )
+
+      assert_received {:custom_search_options, ^options}
+
+      assert {:error, {:invalid_presentation_limits, [max_file_bytes: 0]}} =
+               export(site, HtmlRenderer, search_options: [limits: [max_file_bytes: 0]])
+
+      assert {:error, {:site_limit, :max_file_bytes, _, 1}} =
+               export(site, HtmlRenderer, search_options: [limits: [max_file_bytes: 1]])
+    end
+
     test "publishes a bounded deterministic tree under a base path" do
       assert {:ok, site} = project(declaration())
       destination = tmp_dir!("static-site")

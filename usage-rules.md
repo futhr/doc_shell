@@ -373,6 +373,16 @@ custom `path_builder` when IDs intentionally represent a path hierarchy.
   the same `SiteSearchEntry` records and return local assets plus inert query
   metadata.
 
+- The built-in JSON adapter admits the represented corpus before repeated text
+  validation or encoding. `:max_file_bytes` defaults to 32 MiB and bounds both
+  `build/2` and queries, including empty queries or filters with no matches.
+  `build/2` also enforces `:max_output_bytes`. Supply a `Presentation.Limits`
+  value or positive overrides through `build(records, limits: ...)` or
+  `query(records, query, filters, limits: ...)`; keep filters in argument three.
+  Static export forwards its limits only to the built-in adapter and permits
+  search overrides to lower those ceilings. It leaves custom adapter options
+  unchanged and validates their returned assets against the output budgets.
+
 - `StaticExporter.export/1` owns final paths, content hashes, local-link checks,
   output budgets, staging, replacement, and rollback. Renderer and search
   callbacks return data; they never receive the destination.

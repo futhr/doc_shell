@@ -81,7 +81,7 @@ defmodule DocShell.Presentation.StaticExporter do
          {:ok, renderer_assets, asset_paths} <-
            renderer_assets(renderer, site, opts, artifact_assets),
          {:ok, presentation_entries} <- ArtifactExport.entry(presentation_binding, asset_paths),
-         {:ok, search_output} <- search_output(site, opts),
+         {:ok, search_output} <- search_output(site, opts, limits),
          {:ok, search_assets, search_contract} <- search_assets(search_output, site.base_path),
          {:ok, entries} <-
            render_entries(%{
@@ -273,15 +273,30 @@ defmodule DocShell.Presentation.StaticExporter do
     Path.join([base_prefix(base_path), "assets", relative])
   end
 
-  defp search_output(site, opts) do
+  defp search_output(site, opts, limits) do
     adapter = Keyword.get(opts, :search_adapter, SearchAdapter.JSON)
     search_options = Keyword.get(opts, :search_options, [])
 
     with :ok <- validate_search_adapter(adapter),
-         :ok <- validate_search_options(search_options) do
+         :ok <- validate_search_options(search_options),
+         {:ok, search_options} <- search_limits(adapter, search_options, limits) do
       invoke_search_adapter(adapter, site.search, search_options)
     end
   end
+
+  defp search_limits(SearchAdapter.JSON, options, limits) do
+    with {:ok, requested} <- Limits.normalize(Keyword.get(options, :limits, limits)) do
+      effective = %{
+        requested
+        | max_file_bytes: min(requested.max_file_bytes, limits.max_file_bytes),
+          max_output_bytes: min(requested.max_output_bytes, limits.max_output_bytes)
+      }
+
+      {:ok, Keyword.put(options, :limits, effective)}
+    end
+  end
+
+  defp search_limits(_, options, _), do: {:ok, options}
 
   defp validate_search_adapter(adapter) do
     if is_atom(adapter) and Code.ensure_loaded?(adapter) and

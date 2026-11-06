@@ -353,6 +353,13 @@ exceed the VM/filesystem integer range. Limit failures identify the resource,
 observed value and admitted maximum and leave the previous artifact tree
 unchanged.
 
+The built-in JSON search adapter applies the file ceiling to the represented
+corpus before repeated text validation or encoding; build also applies the
+aggregate output ceiling. Direct queries accept limits separately from filters
+in their fourth argument. Export forwards its effective limits to this adapter
+and caps search-specific overrides at those ceilings. Custom adapters own their
+indexing work and receive unchanged options; final asset limits still apply.
+
 ### Cohort descriptor
 
 `DocShell.Generate.Cohort` is an ordered list of collection descriptors plus a
@@ -364,7 +371,9 @@ output directories are excluded.
 Every site artifact carries both:
 
 - `generation_id`, which distinguishes one publication attempt; and
-- `cohort_digest`, which proves the source and configuration content.
+- `cohort_digest`, which binds the normalized collection descriptors, artifact
+  content digests, and selected profile. It does not bind SiteSource options or
+  the resulting site declaration.
 
 Two builds from identical source corpora and site configuration may have
 different generation IDs, but must have the same cohort digest and identical

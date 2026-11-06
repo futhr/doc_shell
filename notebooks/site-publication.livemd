@@ -321,11 +321,35 @@ self-referential digest. The tree also contains `404.html`, search data,
 The built-in adapter is both the default static index and a reference query
 implementation. Other adapters consume the same records.
 
+In the current checkout, the built-in adapter bounds the represented JSON corpus before repeated text
+validation or encoding. Its default `max_file_bytes` limit is 32 MiB, including
+for empty queries. `build/2` also checks `max_output_bytes`. Hosts can explicitly
+raise finite limits for larger corpora; query filters stay in argument three and
+limits belong in argument four. Static export caps built-in search overrides at
+its own limits. Custom adapter options pass through unchanged.
+These admission limits and the fourth query argument will be available in the
+next package release; the setup above pins the existing 2.0.0 API.
+
 ```elixir
 {:ok, matches} =
   DocShell.Presentation.SearchAdapter.JSON.query(site.search, "validated", locale: "en")
 
 Enum.map(matches, &{&1.id, &1.route})
+```
+
+The current checkout also accepts explicit finite overrides:
+
+<!-- livebook:{"eval":false} -->
+
+```elixir
+
+{:ok, matches} =
+  DocShell.Presentation.SearchAdapter.JSON.query(
+    site.search,
+    "validated",
+    %{locale: "en"},
+    limits: [max_file_bytes: 64 * 1_024 * 1_024]
+  )
 ```
 
 ## External artifact blocks (experimental)

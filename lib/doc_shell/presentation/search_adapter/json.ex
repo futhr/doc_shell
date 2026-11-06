@@ -3,29 +3,39 @@ defmodule DocShell.Presentation.SearchAdapter.JSON do
   Deterministic JSON search adapter and reference query implementation.
 
   The emitted index is sufficient for a small browser worker or client module.
-  `query/3` defines the portable substring and filter behavior without requiring
-  a hosted service.
+  `query/4` defines the portable substring and filter behavior without requiring
+  a hosted service. Both entry points admit the represented JSON corpus against
+  finite presentation limits before scanning repeated text or encoding records.
+  The default corpus ceiling is 32 MiB; hosts can explicitly raise it through
+  `:limits`. Export also enforces the aggregate output ceiling.
   """
 
   @behaviour DocShell.Presentation.SearchAdapter
 
   alias DocShell.Json.Canonical
-  alias DocShell.Presentation.{Asset, SearchAdapter, SiteSearchEntry}
+  alias DocShell.Presentation.{Asset, Limits, SearchAdapter, SiteSearchEntry}
+  alias DocShell.Presentation.SearchAdapter.JSON.Budget
 
   @filters ~w(collection kind locale audience version tag status)
   @record_fields ~w(id page_id route title section text locale audience kind collection version tags status)
 
   @impl DocShell.Presentation.SearchAdapter
   def build(records, opts \\ []) do
-    with :ok <- validate_options(opts),
+    with :ok <- validate_options(opts, [:path, :limits]),
+         {:ok, limits} <- Limits.normalize(Keyword.get(opts, :limits, [])),
+         :ok <- Budget.admit(records, limits, [:max_file_bytes, :max_output_bytes]),
          :ok <- validate_records(records),
          path = Keyword.get(opts, :path, "search-index.json"),
          true <- valid_path?(path),
-         {:ok, bytes} <-
-           Canonical.encode(%{
+         {:ok, iodata} <-
+           Canonical.encode_to_iodata(%{
              "schema_version" => "doc-shell-search/v1",
              "records" => records
-           }) do
+           }),
+         :ok <- Limits.check(limits, :max_file_bytes, :erlang.iolist_size(iodata)),
+         :ok <- Limits.check(limits, :max_output_bytes, :erlang.iolist_size(iodata)) do
+      bytes = :erlang.iolist_to_binary(iodata)
+
       {:ok,
        %SearchAdapter.Output{
          assets: [%Asset{path: path, media_type: "application/json", bytes: bytes}],
@@ -43,11 +53,21 @@ defmodule DocShell.Presentation.SearchAdapter.JSON do
     end
   end
 
-  @doc "Queries validated records using deterministic case-insensitive substring matching."
-  @spec query([SiteSearchEntry.t()], String.t(), map() | keyword()) ::
+  @doc """
+  Queries admitted records with deterministic case-insensitive substring matching.
+
+  The third argument remains the public filters map or keyword list. The fourth
+  accepts `:limits` as a `Limits` value or positive keyword overrides. The
+  represented corpus must fit `:max_file_bytes`, including for empty queries or
+  filters that select no records; query admission does not encode the corpus.
+  """
+  @spec query([SiteSearchEntry.t()], String.t(), map() | keyword(), keyword()) ::
           {:ok, [SiteSearchEntry.t()]} | {:error, term()}
-  def query(records, query, filters \\ %{}) do
-    with :ok <- validate_records(records),
+  def query(records, query, filters \\ %{}, opts \\ []) do
+    with :ok <- validate_options(opts, [:limits]),
+         {:ok, limits} <- Limits.normalize(Keyword.get(opts, :limits, [])),
+         :ok <- Budget.admit(records, limits, [:max_file_bytes]),
+         :ok <- validate_records(records),
          true <- is_binary(query) and String.valid?(query),
          {:ok, filters} <- normalize_filters(filters) do
       needle = normalize_text(query)
@@ -67,8 +87,8 @@ defmodule DocShell.Presentation.SearchAdapter.JSON do
     end
   end
 
-  defp validate_options(opts) do
-    if is_list(opts) and Keyword.keyword?(opts) and Keyword.keys(opts) -- [:path] == [],
+  defp validate_options(opts, allowed) do
+    if is_list(opts) and Keyword.keyword?(opts) and Keyword.keys(opts) -- allowed == [],
       do: :ok,
       else: {:error, {:invalid_search_options, opts}}
   end
@@ -95,10 +115,24 @@ defmodule DocShell.Presentation.SearchAdapter.JSON do
         record.version
       ],
       &(is_binary(&1) and String.valid?(&1))
-    ) and is_list(record.tags) and Enum.all?(record.tags, &is_binary/1)
+    ) and valid_strings?(record.tags) and valid_optional_string?(record.section) and
+      valid_optional_string?(record.status) and valid_audience?(record.audience)
   end
 
   defp valid_record?(_), do: false
+
+  defp valid_strings?([]), do: true
+
+  defp valid_strings?([value | rest]),
+    do: is_binary(value) and String.valid?(value) and valid_strings?(rest)
+
+  defp valid_strings?(_), do: false
+
+  defp valid_optional_string?(nil), do: true
+  defp valid_optional_string?(value), do: is_binary(value) and String.valid?(value)
+
+  defp valid_audience?(value) when is_list(value), do: valid_strings?(value)
+  defp valid_audience?(value), do: valid_optional_string?(value)
 
   defp valid_path?(path) when is_binary(path) do
     path != "" and Path.type(path) == :relative and not String.contains?(path, ["\\", <<0>>]) and
