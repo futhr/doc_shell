@@ -76,20 +76,20 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">SiteProjector.project/1</td>
-    <td style="white-space: nowrap; text-align: right">152.44</td>
-    <td style="white-space: nowrap; text-align: right">6.56 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;5.27%</td>
-    <td style="white-space: nowrap; text-align: right">6.53 ms</td>
-    <td style="white-space: nowrap; text-align: right">7.39 ms</td>
+    <td style="white-space: nowrap; text-align: right">147.48</td>
+    <td style="white-space: nowrap; text-align: right">6.78 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;9.83%</td>
+    <td style="white-space: nowrap; text-align: right">6.62 ms</td>
+    <td style="white-space: nowrap; text-align: right">9.58 ms</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">StaticExporter.export/1</td>
-    <td style="white-space: nowrap; text-align: right">56.25</td>
-    <td style="white-space: nowrap; text-align: right">17.78 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;9.17%</td>
-    <td style="white-space: nowrap; text-align: right">17.57 ms</td>
-    <td style="white-space: nowrap; text-align: right">25.24 ms</td>
+    <td style="white-space: nowrap; text-align: right">2.15</td>
+    <td style="white-space: nowrap; text-align: right">465.45 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;122.95%</td>
+    <td style="white-space: nowrap; text-align: right">83.53 ms</td>
+    <td style="white-space: nowrap; text-align: right">1419.24 ms</td>
   </tr>
 
 </table>
@@ -104,14 +104,14 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">SiteProjector.project/1</td>
-    <td style="white-space: nowrap;text-align: right">152.44</td>
+    <td style="white-space: nowrap;text-align: right">147.48</td>
     <td>&nbsp;</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">StaticExporter.export/1</td>
-    <td style="white-space: nowrap; text-align: right">56.25</td>
-    <td style="white-space: nowrap; text-align: right">2.71x</td>
+    <td style="white-space: nowrap; text-align: right">2.15</td>
+    <td style="white-space: nowrap; text-align: right">68.64x</td>
   </tr>
 
 </table>
@@ -128,13 +128,13 @@ Memory Usage
   </tr>
   <tr>
     <td style="white-space: nowrap">SiteProjector.project/1</td>
-    <td style="white-space: nowrap">12.05 MB</td>
+    <td style="white-space: nowrap">12.06 MB</td>
     <td>&nbsp;</td>
   </tr>
     <tr>
     <td style="white-space: nowrap">StaticExporter.export/1</td>
-    <td style="white-space: nowrap">9.85 MB</td>
-    <td>0.82x</td>
+    <td style="white-space: nowrap">10.73 MB</td>
+    <td>0.89x</td>
   </tr>
 </table>
 
@@ -156,20 +156,20 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">SiteProjector.project/1</td>
-    <td style="white-space: nowrap; text-align: right">13.10</td>
-    <td style="white-space: nowrap; text-align: right">76.34 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;7.01%</td>
-    <td style="white-space: nowrap; text-align: right">74.69 ms</td>
-    <td style="white-space: nowrap; text-align: right">96.98 ms</td>
+    <td style="white-space: nowrap; text-align: right">9.58</td>
+    <td style="white-space: nowrap; text-align: right">104.40 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;66.46%</td>
+    <td style="white-space: nowrap; text-align: right">83.56 ms</td>
+    <td style="white-space: nowrap; text-align: right">418.33 ms</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">StaticExporter.export/1</td>
-    <td style="white-space: nowrap; text-align: right">6.78</td>
-    <td style="white-space: nowrap; text-align: right">147.52 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;13.16%</td>
-    <td style="white-space: nowrap; text-align: right">143.75 ms</td>
-    <td style="white-space: nowrap; text-align: right">219.08 ms</td>
+    <td style="white-space: nowrap; text-align: right">4.70</td>
+    <td style="white-space: nowrap; text-align: right">212.73 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;16.29%</td>
+    <td style="white-space: nowrap; text-align: right">202.64 ms</td>
+    <td style="white-space: nowrap; text-align: right">361.92 ms</td>
   </tr>
 
 </table>
@@ -184,14 +184,14 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">SiteProjector.project/1</td>
-    <td style="white-space: nowrap;text-align: right">13.10</td>
+    <td style="white-space: nowrap;text-align: right">9.58</td>
     <td>&nbsp;</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">StaticExporter.export/1</td>
-    <td style="white-space: nowrap; text-align: right">6.78</td>
-    <td style="white-space: nowrap; text-align: right">1.93x</td>
+    <td style="white-space: nowrap; text-align: right">4.70</td>
+    <td style="white-space: nowrap; text-align: right">2.04x</td>
   </tr>
 
 </table>
@@ -208,13 +208,13 @@ Memory Usage
   </tr>
   <tr>
     <td style="white-space: nowrap">SiteProjector.project/1</td>
-    <td style="white-space: nowrap">120.37 MB</td>
+    <td style="white-space: nowrap">120.49 MB</td>
     <td>&nbsp;</td>
   </tr>
     <tr>
     <td style="white-space: nowrap">StaticExporter.export/1</td>
-    <td style="white-space: nowrap">96.42 MB</td>
-    <td>0.8x</td>
+    <td style="white-space: nowrap">104.71 MB</td>
+    <td>0.87x</td>
   </tr>
 </table>
 
@@ -236,20 +236,20 @@ Run Time
 
   <tr>
     <td style="white-space: nowrap">SiteProjector.project/1</td>
-    <td style="white-space: nowrap; text-align: right">2.60</td>
-    <td style="white-space: nowrap; text-align: right">384.30 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;29.16%</td>
-    <td style="white-space: nowrap; text-align: right">336.71 ms</td>
-    <td style="white-space: nowrap; text-align: right">671.85 ms</td>
+    <td style="white-space: nowrap; text-align: right">2.38</td>
+    <td style="white-space: nowrap; text-align: right">419.44 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;33.76%</td>
+    <td style="white-space: nowrap; text-align: right">349.84 ms</td>
+    <td style="white-space: nowrap; text-align: right">772.57 ms</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">StaticExporter.export/1</td>
-    <td style="white-space: nowrap; text-align: right">1.07</td>
-    <td style="white-space: nowrap; text-align: right">938.06 ms</td>
-    <td style="white-space: nowrap; text-align: right">&plusmn;23.01%</td>
-    <td style="white-space: nowrap; text-align: right">851.34 ms</td>
-    <td style="white-space: nowrap; text-align: right">1257.19 ms</td>
+    <td style="white-space: nowrap; text-align: right">1.14</td>
+    <td style="white-space: nowrap; text-align: right">876.05 ms</td>
+    <td style="white-space: nowrap; text-align: right">&plusmn;26.08%</td>
+    <td style="white-space: nowrap; text-align: right">734.80 ms</td>
+    <td style="white-space: nowrap; text-align: right">1184.75 ms</td>
   </tr>
 
 </table>
@@ -264,14 +264,14 @@ Run Time Comparison
     <th style="text-align: right">Slower</th>
   <tr>
     <td style="white-space: nowrap">SiteProjector.project/1</td>
-    <td style="white-space: nowrap;text-align: right">2.60</td>
+    <td style="white-space: nowrap;text-align: right">2.38</td>
     <td>&nbsp;</td>
   </tr>
 
   <tr>
     <td style="white-space: nowrap">StaticExporter.export/1</td>
-    <td style="white-space: nowrap; text-align: right">1.07</td>
-    <td style="white-space: nowrap; text-align: right">2.44x</td>
+    <td style="white-space: nowrap; text-align: right">1.14</td>
+    <td style="white-space: nowrap; text-align: right">2.09x</td>
   </tr>
 
 </table>
@@ -288,12 +288,12 @@ Memory Usage
   </tr>
   <tr>
     <td style="white-space: nowrap">SiteProjector.project/1</td>
-    <td style="white-space: nowrap">602.02 MB</td>
+    <td style="white-space: nowrap">602.61 MB</td>
     <td>&nbsp;</td>
   </tr>
     <tr>
     <td style="white-space: nowrap">StaticExporter.export/1</td>
-    <td style="white-space: nowrap">481.42 MB</td>
-    <td>0.8x</td>
+    <td style="white-space: nowrap">522.57 MB</td>
+    <td>0.87x</td>
   </tr>
 </table>
