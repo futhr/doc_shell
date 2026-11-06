@@ -42,17 +42,19 @@ defmodule DocShell.Presentation.SiteProjection.AnchorsTest do
   end
 
   defp reductions(count) do
-    Task.async(fn ->
-      content = List.duplicate(heading("Repeated"), count)
-      {:ok, limits} = Limits.new()
-      {:ok, _, _} = Anchors.project([heading("warmup")], limits)
-      {:reductions, before} = Process.info(self(), :reductions)
-      {:ok, _, headings} = Anchors.project(content, limits)
-      {:reductions, after_projection} = Process.info(self(), :reductions)
-      assert length(headings) == count
-      after_projection - before
-    end)
-    |> Task.await()
+    task =
+      Task.async(fn ->
+        content = List.duplicate(heading("Repeated"), count)
+        {:ok, limits} = Limits.new()
+        {:ok, _, _} = Anchors.project([heading("warmup")], limits)
+        {:reductions, before} = Process.info(self(), :reductions)
+        {:ok, _, headings} = Anchors.project(content, limits)
+        {:reductions, after_projection} = Process.info(self(), :reductions)
+        assert length(headings) == count
+        after_projection - before
+      end)
+
+    Task.await(task)
   end
 
   defp project(content, opts \\ []) do

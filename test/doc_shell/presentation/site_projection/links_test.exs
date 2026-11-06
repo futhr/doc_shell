@@ -97,16 +97,18 @@ defmodule DocShell.Presentation.SiteProjection.LinksTest do
   end
 
   defp reductions(pages) do
-    Task.async(fn ->
-      {:ok, limits} = Limits.new()
-      {:ok, %{}} = Links.resolve(%{}, limits)
-      {:reductions, before} = Process.info(self(), :reductions)
-      {:ok, resolved} = Links.resolve(pages, limits)
-      {:reductions, after_resolution} = Process.info(self(), :reductions)
-      assert map_size(resolved) == map_size(pages)
-      after_resolution - before
-    end)
-    |> Task.await()
+    task =
+      Task.async(fn ->
+        {:ok, limits} = Limits.new()
+        {:ok, %{}} = Links.resolve(%{}, limits)
+        {:reductions, before} = Process.info(self(), :reductions)
+        {:ok, resolved} = Links.resolve(pages, limits)
+        {:reductions, after_resolution} = Process.info(self(), :reductions)
+        assert map_size(resolved) == map_size(pages)
+        after_resolution - before
+      end)
+
+    Task.await(task)
   end
 
   defp resolve(pages, opts \\ []) do
