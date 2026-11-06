@@ -987,12 +987,13 @@ defmodule DocShell.Presentation.SiteProjectorTest do
       File.mkdir!(destination)
       File.write!(Path.join(destination, "keep.txt"), "previous publication")
 
-      for resource <- [:max_file_bytes, :max_output_bytes] do
+      for resource <- [:max_file_bytes, :max_output_bytes],
+          search_options <- [[], [limits: [{resource, 1_000_000}]]] do
         assert {:error, {:site_limit, ^resource, _, 16_384}} =
                  export(site, ContextRenderer,
                    destination: destination,
                    limits: [{resource, 16_384}],
-                   search_options: [limits: [{resource, 1_000_000}]]
+                   search_options: search_options
                  )
 
         refute_received {:page_context, _}
