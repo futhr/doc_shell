@@ -17,22 +17,25 @@ defmodule DocShell.Presentation.SiteProjection.Links do
       end)
       |> Map.delete(nil)
 
+    context = %{
+      pages: pages,
+      source_index: source_index,
+      route_index: Map.new(pages, fn {id, page} -> {page.route, id} end),
+      heading_index:
+        Map.new(pages, fn {id, page} -> {id, MapSet.new(page.headings, & &1.id)} end),
+      limits: limits
+    }
+
     Enum.reduce_while(pages, {:ok, %{}}, fn {id, page}, {:ok, resolved} ->
-      case resolve_page(page, pages, source_index, limits) do
+      case resolve_page(page, context) do
         {:ok, page} -> {:cont, {:ok, Map.put(resolved, id, page)}}
         {:error, _} = error -> {:halt, error}
       end
     end)
   end
 
-  defp resolve_page(page, pages, source_index, limits) do
-    context = %{
-      page: page,
-      pages: pages,
-      source_index: source_index,
-      headings: MapSet.new(page.headings, & &1.id),
-      limits: limits
-    }
+  defp resolve_page(page, context) do
+    context = Map.put(context, :page, page)
 
     with {:ok, content} <- map_nodes(page.content, &resolve_link_node(&1, context)) do
       {:ok,
@@ -53,7 +56,7 @@ defmodule DocShell.Presentation.SiteProjection.Links do
   defp resolve_link_node(node, _), do: {:ok, node}
 
   defp resolve_href("#" <> anchor = href, context) do
-    if MapSet.member?(context.headings, anchor),
+    if MapSet.member?(context.heading_index[context.page.id], anchor),
       do: {:ok, href},
       else: {:error, {:unknown_page_anchor, context.page.id, anchor}}
   end
@@ -62,7 +65,7 @@ defmodule DocShell.Presentation.SiteProjection.Links do
     {id, anchor} = split_anchor(target)
 
     with {:ok, target_page} <- Map.fetch(context.pages, id),
-         :ok <- target_anchor(target_page, anchor),
+         :ok <- target_anchor(target_page, anchor, context),
          href = target_page.route <> anchor_suffix(anchor),
          :ok <- Limits.check(context.limits, :max_route_bytes, byte_size(href)) do
       {:ok, href}
@@ -75,12 +78,14 @@ defmodule DocShell.Presentation.SiteProjection.Links do
   defp resolve_href("/" <> _ = href, context) do
     {path, anchor} = split_anchor(href)
 
-    case Enum.find(Map.values(context.pages), &(&1.route == path)) do
-      nil ->
+    case Map.fetch(context.route_index, path) do
+      :error ->
         {:error, {:unknown_site_route, path}}
 
-      page ->
-        with :ok <- target_anchor(page, anchor),
+      {:ok, id} ->
+        page = Map.fetch!(context.pages, id)
+
+        with :ok <- target_anchor(page, anchor, context),
              :ok <- Limits.check(context.limits, :max_route_bytes, byte_size(href)) do
           {:ok, href}
         end
@@ -123,10 +128,10 @@ defmodule DocShell.Presentation.SiteProjection.Links do
     end
   end
 
-  defp target_anchor(_, nil), do: :ok
+  defp target_anchor(_, nil, _), do: :ok
 
-  defp target_anchor(page, anchor) do
-    if Enum.any?(page.headings, &(&1.id == anchor)),
+  defp target_anchor(page, anchor, context) do
+    if MapSet.member?(context.heading_index[page.id], anchor),
       do: :ok,
       else: {:error, {:unknown_page_anchor, page.id, anchor}}
   end
